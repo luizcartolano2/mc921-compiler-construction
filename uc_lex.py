@@ -87,6 +87,8 @@ class UCLexer():
         'RPAREN',
         'LBRACE',
         'RBRACE',
+        'LBRACKET',
+        'RBRACKET',
         'INT_CONST',
         'FLOAT_CONST',
         'STRING_LITERAL',
@@ -126,6 +128,8 @@ class UCLexer():
     t_RPAREN      = r'\)'
     t_LBRACE      = r'\{'
     t_RBRACE      = r'\}'
+    t_LBRACKET    = r'\['
+    t_RBRACKET    = r'\]'
     t_SEMI        = r';'
     t_EQ          = r'=='
     t_COMMA       = r'\,'
@@ -162,17 +166,17 @@ class UCLexer():
         return t
 
 
-    def t_INT_CONST(self, t):
-        r'[0-9]+'
-        t.value = str((t.value))
-   
+    def t_FLOAT_CONST(self, t):
+        r'([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+)'
+        t.value = str(t.value)
+            
         return t
 
 
-    def t_FLOAT_CONST(self, t):
-        r'([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+)'
-        t.value = str(float(t.value))
-            
+    def t_INT_CONST(self, t):
+        r'[0-9]+'
+        t.value = str(t.value)
+   
         return t
 
 
@@ -212,12 +216,17 @@ class UCLexer():
 
     # Scanner (used only for test)
     def scan(self, data):
+        output = ""
+
         self.lexer.input(data)
         while True:
             tok = self.lexer.token()
             if not tok:
                 break
-            print(tok)
+            # print(tok)
+            output += str(tok) + '\n'
+
+        return output
 
 
 if __name__ == '__main__':
@@ -227,4 +236,4 @@ if __name__ == '__main__':
 
     m = UCLexer(print_error)
     m.build()  # Build the lexer
-    m.scan(open(sys.argv[1]).read()) 
+    print(m.scan(open(sys.argv[1]).read()) )
