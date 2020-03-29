@@ -43,7 +43,7 @@ class UCParser():
     def p_global_declaration(self, p):
         '''
             global_declaration : function_definition
-                               | <declaration>
+                               | declaration
         '''
         p[0] = p[1]
 
@@ -125,6 +125,13 @@ class UCParser():
         pass
 
 
+    #TODO
+    def p_identifier(self, p):
+            '''
+
+            '''
+            pass
+
     def p_constant_expression(self, p):
         '''
             constant_expression : binary_expression
@@ -194,7 +201,6 @@ class UCParser():
         '''
             primary_expression : identifier
                                | constant
-                               | string
                                | LPAREN expression RPAREN
         '''
         pass
@@ -202,9 +208,9 @@ class UCParser():
 
     def p_constant(self, p):
         '''
-            constant : integer_constant
-                     | character_constant
-                     | floating_constant
+            constant : INT_CONST
+                     | STRING_LITERAL
+                     | FLOAT_CONST
         '''
         pass
 
@@ -259,7 +265,7 @@ class UCParser():
 
     def p_assignment_operator(self, p):
         '''
-            assignment_operator : =
+            assignment_operator : EQUALS
                                 | TIMESEQUAL
                                 | DIVIDEEQUAL
                                 | MODEQUAL
@@ -274,11 +280,11 @@ class UCParser():
 
     def p_unary_operator(self, p):
         '''
-            unary_operator : &
-                           | *
-                           | +
-                           | -
-                           | !
+            unary_operator : ADDRESS
+                           | TIMES
+                           | PLUS
+                           | MINUS
+                           | NOT
         '''
         #checar quais tokens vão aqui
         pass
