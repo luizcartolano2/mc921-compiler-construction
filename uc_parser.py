@@ -24,6 +24,7 @@ class UCParser():
         '''
         self.parser = yacc(module=self,)
 
+
     def p_program(self, p):
         '''
             program : global_declaration_list
@@ -39,10 +40,11 @@ class UCParser():
         '''
         p[0] = p[1]
 
+
     def p_global_declaration_list(self, p):
         '''
-            global_declaration_list : global_declaration_list global_declaration
-                                    | global_declaration
+            global_declaration_list : global_declaration
+                                    | global_declaration_list global_declaration
         '''
         if len(p) == 2:
             p[0] = p[1]
@@ -67,6 +69,7 @@ class UCParser():
         '''
         p[0] = p[1]
 
+
     def p_type_specifier_opt(self, p):
         '''
             type_specifier_opt : type_specifier
@@ -77,11 +80,13 @@ class UCParser():
         else:
             p[0] = None
 
+
     def p_empty(self, p):
         '''
             empty :
         '''
         p[0] = None
+
 
     #TODO
     def p_declarator(self, p):
@@ -90,11 +95,14 @@ class UCParser():
         '''
         pass
 
+
     def p_pointer(self, p):
         '''
-            pointer : ADDRESS pointer_opt
+            pointer : TIMES pointer
+                    | TIMES empty
         '''
         p[0] = (p[1], p[2])
+
 
     def p_pointer_opt(self, p):
         '''
@@ -106,10 +114,11 @@ class UCParser():
         else:
             p[0] = None
 
+
     #TODO
     def p_direct_declarator(self, p):
         '''
-            direct_declarator : ID
+            direct_declarator : identifier
                               | LPAREN declarator RPAREN
                               | direct_declarator LBRACKET constant_expression_opt RBRACKET
                               | direct_declarator LPAREN parameter_list RPAREN
@@ -117,21 +126,31 @@ class UCParser():
         '''
         pass
 
+
+    def p_identifier(self, p):
+        '''
+            identifier : ID
+        '''
+        pass
+
+
     def p_identifier_list(self, p):
         '''
-            identifier_list : ID
-                            | identifier_list COMMA ID
+            identifier_list : identifier
+                            | identifier_list identifier
         '''
         if len(p) == 2:
             p[0] = p[1]
         else:
             p[0] = p[1] + (p[3])
 
+
     def p_constant_expression(self, p):
         '''
             constant_expression : binary_expression
         '''
         p[0] = p[1]
+
 
     def p_constant_expression_opt(self, p):
         '''
@@ -143,27 +162,29 @@ class UCParser():
         else:
             p[0] = None
 
+
     def p_binary_expression(self, p):
         '''
             binary_expression : cast_expression
                               | binary_expression  TIMES   binary_expression
-                              | binary_expression  DIVIDE   binary_expression
-                              | binary_expression  MOD   binary_expression
-                              | binary_expression  PLUS   binary_expression
+                              | binary_expression  DIVIDE  binary_expression
+                              | binary_expression  MOD     binary_expression
+                              | binary_expression  PLUS    binary_expression
                               | binary_expression  MINUS   binary_expression
-                              | binary_expression  LT   binary_expression
-                              | binary_expression  LE  binary_expression
-                              | binary_expression  GT   binary_expression
-                              | binary_expression  GE  binary_expression
-                              | binary_expression  EQ  binary_expression
-                              | binary_expression  NE  binary_expression
-                              | binary_expression  AND  binary_expression
-                              | binary_expression  OR  binary_expression
+                              | binary_expression  LT      binary_expression
+                              | binary_expression  LE      binary_expression
+                              | binary_expression  GT      binary_expression
+                              | binary_expression  GE      binary_expression
+                              | binary_expression  EQ      binary_expression
+                              | binary_expression  NE      binary_expression
+                              | binary_expression  AND     binary_expression
+                              | binary_expression  OR      binary_expression
         '''
         if len(p) == 2:
             p[0] = p[1]
         else:
             p[0] = (p[2], p[1], p[3])
+
 
     def p_cast_expression(self, p):
         '''
@@ -198,6 +219,7 @@ class UCParser():
         '''
         pass
 
+
     def p_primary_expression(self, p):
         '''
             primary_expression : ID
@@ -208,6 +230,7 @@ class UCParser():
             p[0] = p[1]
         else:
             p[0] = p[2]
+
 
     def p_constant(self, p):
         '''
@@ -226,15 +249,17 @@ class UCParser():
         '''
         pass
 
+
     def p_expression_list(self, p):
         '''
-            expression_list : expression_list expression
-                            | expression
+            expression_list : expression
+                            | expression_list expression
         '''
         if len(p) == 2:
             p[0] = p[1]
         else:
             p[0] = p[1] + (p[2])
+
 
     def p_expression_opt(self, p):
         '''
@@ -246,6 +271,7 @@ class UCParser():
         else:
             p[0] = None
 
+
     #TODO
     def p_argument_expression(self, p):
         '''
@@ -253,6 +279,7 @@ class UCParser():
                                 | argument_expression COMMA assignment_expression
         '''
         pass
+
 
     def p_argument_expression_opt(self, p):
         '''
@@ -264,6 +291,7 @@ class UCParser():
         else:
             p[0] = None
 
+
     #TODO
     def p_assignment_expression(self, p):
         '''
@@ -271,6 +299,7 @@ class UCParser():
                                   | unary_expression assignment_operator assignment_expression
         '''
         pass
+
 
     def p_assignment_operator(self, p):
         '''
@@ -285,6 +314,7 @@ class UCParser():
             p[0] = p[2]
         else:
             p[0] = (p[1], p[3], p[4])
+
 
     def p_unary_operator(self, p):
         '''
@@ -305,6 +335,7 @@ class UCParser():
         '''
         pass
 
+
     def p_parameter_declaration(self, p):
         '''
             parameter_declaration : type_specifier declarator
@@ -319,15 +350,17 @@ class UCParser():
         '''
         pass
 
+
     def p_declaration_list(self, p):
         '''
-            declaration_list : declaration_list COMMA declaration
-                             | declaration
+            declaration_list : declaration
+                             | declaration_list declaration
         '''
         if len(p) == 2:
             p[0] = p[1]
         else:
             p[0] = p[1] + (p[2])
+
 
     def p_init_declarator_list(self, p):
         '''
@@ -339,6 +372,7 @@ class UCParser():
         else:
             p[0] = p[1] + (p[2])
 
+
     def p_init_declarator_list_opt(self, p):
         '''
             init_declarator_list_opt : init_declarator_list
@@ -348,6 +382,7 @@ class UCParser():
             p[0] = p[1]
         else:
             p[0] = None
+
 
     def p_init_declarator(self, p):
         '''
@@ -359,6 +394,7 @@ class UCParser():
         else:
             p[0] = (p[1], p[2])
 
+   
     #TODO
     def p_initializer(self, p):
         '''
@@ -385,6 +421,7 @@ class UCParser():
         '''
         pass
 
+
     def p_statement(self, p):
         '''
             statement : expression_statement
@@ -398,6 +435,7 @@ class UCParser():
         '''
         p[0] = p[1]
 
+
     def p_statement_list(self, p):
         '''
             statement_list : statement_list statement
@@ -408,11 +446,13 @@ class UCParser():
         else:
             p[0] = p[1] + (p[2])
 
+
     def p_expression_statement(self, p):
         '''
             expression_statement : expression_opt SEMI
         '''
         p[0] = p[1]
+
 
     #TODO
     def p_selection_statement(self, p):
@@ -421,6 +461,7 @@ class UCParser():
                                 | IF LPAREN expression RPAREN statement ELSE statement
         '''
         pass
+
 
     def p_iteration_statement(self, p):
         '''
@@ -443,6 +484,7 @@ class UCParser():
         else:
             p[0] = (p[1], p[2])
 
+
     def p_assert_statement(self, p):
         '''
             assert_statement : ASSERT expression SEMI
@@ -463,23 +505,32 @@ class UCParser():
         '''
         p[0] = ("read", p[3])
 
+
     def p_error(self, p):
         if p:
             print("Error near the symbol %s" % p.value)
         else:
             print("Error at the end of input")
 
+
     precedence = (
-        ('left', 'SEMI'),
-        ('right', 'EQUALS', 'PLUSEQUAL', 'MINUSEQUAL', 'TIMESEQUAL', 'DIVIDEEQUAL', 'MODEQUAL'),
         ('left', 'OR'),
         ('left', 'AND'),
         ('left', 'EQ', 'NE'),
         ('left', 'GT', 'GE', 'LT', 'LE'),
         ('left', 'PLUS', 'MINUS'),
         ('left', 'TIMES', 'DIVIDE', 'MOD'),
-        ('right', 'PLUSPLUS', 'MINUSMINUS', 'ADDRESS'),
+        # ('left', 'SEMI'),
+        # ('right', 'EQUALS', 'PLUSEQUAL', 'MINUSEQUAL', 'TIMESEQUAL', 'DIVIDEEQUAL', 'MODEQUAL'),
+        # ('left', 'OR'),
+        # ('left', 'AND'),
+        # ('left', 'EQ', 'NE'),
+        # ('left', 'GT', 'GE', 'LT', 'LE'),
+        # ('left', 'PLUS', 'MINUS'),
+        # ('left', 'TIMES', 'DIVIDE', 'MOD'),
+        # ('right', 'PLUSPLUS', 'MINUSMINUS', 'ADDRESS'),
     )
+
 
 if __name__ == '__main__':
     def print_error(msg, x, y):
