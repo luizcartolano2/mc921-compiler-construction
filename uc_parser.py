@@ -47,9 +47,9 @@ class UCParser():
                                     | global_declaration_list global_declaration
         '''
         if len(p) == 2:
-            p[0] = p[1]
+            p[0] = [p[1]]
         else:
-            p[0] = p[1] + (p[2])
+            p[0] = p[1] + [p[2]]
 
 
     #TODO
