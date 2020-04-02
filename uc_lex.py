@@ -90,6 +90,7 @@ class UCLexer():
         'LBRACKET',
         'RBRACKET',
         'INT_CONST',
+        'CHAR_CONST',
         'FLOAT_CONST',
         'STRING_LITERAL',
         'ID',
@@ -120,6 +121,7 @@ class UCLexer():
     # Rules
     #
     t_PLUS        = r'\+'
+    t_CHAR_CONST  = r"""'.'"""
     t_MINUS       = r'-'
     t_TIMES       = r'\*'
     t_DIVIDE      = r'/'
