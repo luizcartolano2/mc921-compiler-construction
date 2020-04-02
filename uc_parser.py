@@ -58,9 +58,16 @@ class UCParser():
         p[0] = p[1]
 
 
-    def p_function_definition(self, p):
+    def p_function_definition_1(self, p):
         '''
-            function_definition : type_specifier_opt declarator declaration_list compound_statement
+            function_definition : declarator declaration_list compound_statement
+        '''
+        pass
+
+
+    def p_function_definition_2(self, p):
+        '''
+            function_definition : type_specifier declarator declaration_list compound_statement
         '''
         pass
 
@@ -83,17 +90,6 @@ class UCParser():
         pass
 
 
-    def p_type_specifier_opt(self, p):
-        '''
-            type_specifier_opt : empty
-                               | type_specifier
-        '''
-        if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = None
-
-
     def p_type_specifier(self, p):
         '''
             type_specifier : VOID
@@ -106,37 +102,44 @@ class UCParser():
 
     def p_declarator(self, p):
         '''
-            declarator : pointer_opt direct_declarator
+            declarator : pointer direct_declarator
         '''
         pass
-
-
-    def p_pointer_opt(self, p):
-        '''
-            pointer_opt : TIMES empty
-                        | TIMES pointer 
-                        
-        '''
-        if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = None
 
 
     def p_pointer(self, p):
         '''
-            pointer : pointer_opt   
+            pointer : TIMES
+                    | TIMES pointer   
         '''
         pass
 
 
-    def p_direct_declarator(self, p):
+    def p_direct_declarator_1(self, p):
         '''
-            direct_declarator : identifier
-                              | LPAREN declarator RPAREN
-                              | direct_declarator LBRACKET constant_expression_opt RBRACKET
-                              | direct_declarator LPAREN parameter_list RPAREN
-                              | direct_declarator LPAREN identifier_list RPAREN
+            direct_declarator : identifier 
+        '''
+        pass
+
+
+    def p_direct_declarator_2(self, p):
+        '''
+            direct_declarator : LPAREN declarator RPAREN 
+        '''
+        pass
+
+
+    def p_direct_declarator_3(self, p):
+        '''
+            direct_declarator : direct_declarator LBRACKET constant_expression_opt RBRACKET
+        '''
+        pass
+
+
+    def p_direct_declarator_4(self, p):
+        '''
+            direct_declarator : direct_declarator LPAREN parameter_list RPAREN
+                              | direct_declarator LPAREN identifier_list_opt RPAREN
         '''
         pass
 
@@ -151,12 +154,20 @@ class UCParser():
     def p_identifier_list(self, p):
         '''
             identifier_list : identifier
-                            | identifier_list identifier
+                            | identifier_list COMMA identifier
         '''
         if len(p) == 2:
             p[0] = p[1]
         else:
             p[0] = p[1] + (p[3])
+
+
+    def p_identifier_list_opt(self, p):
+        """ 
+            identifier_list_opt : identifier_list
+                                | empty
+        """
+        pass
 
 
     def p_constant_expression(self, p):
@@ -375,13 +386,12 @@ class UCParser():
     def p_initializer(self, p):
         '''
             initializer : assignment_expression
-                        | LBRACE initializer_list RBRACE
+                        | LBRACE initializer_list_opt RBRACE
                         | LBRACE initializer_list COMMA RBRACE
         '''
         pass
 
 
-    #TODO
     def p_initializer_list(self, p):
         '''
             initializer_list : initializer
@@ -390,7 +400,14 @@ class UCParser():
         pass
 
 
-    #TODO
+    def p_initializer_list_opt(self, p):
+        '''
+            initializer_list_opt : empty
+                                 | initializer_list
+        '''
+        pass
+
+
     def p_compound_statement(self, p):
         '''
             compound_statement : LBRACE declaration_list statement_list RBRACE
