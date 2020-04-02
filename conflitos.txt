@@ -1,10 +1,16 @@
-WARNING: shift/reduce conflict for TIMES in state 7 resolved as shift
-WARNING: shift/reduce conflict for TIMES in state 46 resolved as shift
-WARNING: shift/reduce conflict for PLUS in state 46 resolved as shift
-WARNING: shift/reduce conflict for MINUS in state 46 resolved as shift
-WARNING: shift/reduce conflict for LPAREN in state 52 resolved as shift
-WARNING: shift/reduce conflict for PLUSPLUS in state 52 resolved as shift
-WARNING: shift/reduce conflict for MINUSMINUS in state 52 resolved as shift
-WARNING: shift/reduce conflict for ELSE in state 195 resolved as shift
-WARNING: reduce/reduce conflict in state 7 resolved using rule (type_specifier_opt -> type_specifier)
-WARNING: rejected rule (empty -> <empty>) in state 7
+# State 7
+	WARNING: shift/reduce conflict for TIMES in state 7 resolved as shift
+
+# State 45
+	WARNING: shift/reduce conflict for TIMES in state 45 resolved as shift
+	WARNING: shift/reduce conflict for PLUS in state 45 resolved as shift
+	WARNING: shift/reduce conflict for MINUS in state 45 resolved as shift
+
+# State 51
+	WARNING: shift/reduce conflict for LPAREN in state 51 resolved as shift
+	WARNING: shift/reduce conflict for PLUSPLUS in state 51 resolved as shift
+	WARNING: shift/reduce conflict for MINUSMINUS in state 51 resolved as shift
+
+# Esse aqui é para ter mesmo entao ta bala!
+	WARNING: shift/reduce conflict for ELSE in state 195 resolved as shift
+

@@ -33,10 +33,16 @@ class UCParser():
         p[0] = p[1]
 
 
-    def p_global_declaration(self, p):
+    def p_global_declaration_1(self, p):
         '''
             global_declaration : function_definition
-                               | declaration
+        '''
+        p[0] = p[1]
+
+
+    def p_global_declaration_2(self, p):
+        '''
+            global_declaration : declaration
         '''
         p[0] = p[1]
 
@@ -52,7 +58,6 @@ class UCParser():
             p[0] = p[1] + [p[2]]
 
 
-    #TODO
     def p_function_definition(self, p):
         '''
             function_definition : type_specifier_opt declarator declaration_list compound_statement
@@ -72,8 +77,8 @@ class UCParser():
 
     def p_type_specifier_opt(self, p):
         '''
-            type_specifier_opt : type_specifier
-                               | empty
+            type_specifier_opt : empty
+                               | type_specifier
         '''
         if len(p) == 2:
             p[0] = p[1]
@@ -98,16 +103,16 @@ class UCParser():
 
     def p_pointer(self, p):
         '''
-            pointer : TIMES pointer
-                    | TIMES empty
+            pointer : pointer_opt   %prec PTIMES
         '''
-        p[0] = (p[1], p[2])
+        pass
 
 
     def p_pointer_opt(self, p):
         '''
-            pointer_opt : pointer
-                        | empty
+            pointer_opt : TIMES empty
+                        | TIMES pointer 
+                        
         '''
         if len(p) == 2:
             p[0] = p[1]
@@ -118,20 +123,24 @@ class UCParser():
     #TODO
     def p_direct_declarator(self, p):
         '''
-            direct_declarator : identifier
-                              | LPAREN declarator RPAREN
+            direct_declarator : LPAREN declarator RPAREN
                               | direct_declarator LBRACKET constant_expression_opt RBRACKET
                               | direct_declarator LPAREN parameter_list RPAREN
                               | direct_declarator LPAREN identifier_list RPAREN
         '''
         pass
 
+    def p_direct_declarator_01(self, p):
+        '''
+            direct_declarator : identifier
+        '''
+
 
     def p_identifier(self, p):
         '''
             identifier : ID
         '''
-        pass
+        p[0] = ('ID', p[1])
 
 
     def p_identifier_list(self, p):
@@ -154,13 +163,11 @@ class UCParser():
 
     def p_constant_expression_opt(self, p):
         '''
-            constant_expression_opt : constant_expression
-                                    | empty
+            constant_expression_opt : empty
+                                    | constant_expression
         '''
         if len(p) == 2:
             p[0] = p[1]
-        else:
-            p[0] = None
 
 
     def p_binary_expression(self, p):
@@ -201,8 +208,8 @@ class UCParser():
     def p_unary_expression(self, p):
         '''
             unary_expression : postfix_expression
-                             | PLUSPLUS unary_expression
-                             | MINUSMINUS unary_expression
+                             | PLUSPLUS unary_expression %prec UPLUSPLUS
+                             | MINUSMINUS unary_expression %prec UMINUSMINUS
                              | unary_operator cast_expression
         '''
         pass
@@ -263,8 +270,8 @@ class UCParser():
 
     def p_expression_opt(self, p):
         '''
-            expression_opt : expression
-                           | empty
+            expression_opt : empty
+                           | expression
         '''
         if len(p) == 2:
             p[0] = p[1]
@@ -283,8 +290,8 @@ class UCParser():
 
     def p_argument_expression_opt(self, p):
         '''
-            argument_expression_opt : argument_expression
-                                    | empty
+            argument_expression_opt : empty
+                                    | argument_expression
         '''
         if len(p) == 2:
             p[0] = p[1]
@@ -318,11 +325,11 @@ class UCParser():
 
     def p_unary_operator(self, p):
         '''
-            unary_operator : ADDRESS
-                           | TIMES
-                           | PLUS
-                           | MINUS
-                           | NOT
+            unary_operator : ADDRESS    %prec UADDRESS
+                           | TIMES      %prec UTIMES
+                           | PLUS       %prec UPLUS
+                           | MINUS      %prec UMINUS
+                           | NOT        %prec UNOT
         '''
         p[0] = p[1]
 
@@ -375,8 +382,8 @@ class UCParser():
 
     def p_init_declarator_list_opt(self, p):
         '''
-            init_declarator_list_opt : init_declarator_list
-                                     | empty
+            init_declarator_list_opt : empty
+                                     | init_declarator_list
         '''
         if len(p) == 2:
             p[0] = p[1]
@@ -518,17 +525,11 @@ class UCParser():
         ('left', 'AND'),
         ('left', 'EQ', 'NE'),
         ('left', 'GT', 'GE', 'LT', 'LE'),
-        ('left', 'PLUS', 'MINUS'),
+        ('left', 'PLUS', 'MINUS', 'PLUSPLUS', 'MINUSMINUS'),
         ('left', 'TIMES', 'DIVIDE', 'MOD'),
-        # ('left', 'SEMI'),
-        # ('right', 'EQUALS', 'PLUSEQUAL', 'MINUSEQUAL', 'TIMESEQUAL', 'DIVIDEEQUAL', 'MODEQUAL'),
-        # ('left', 'OR'),
-        # ('left', 'AND'),
-        # ('left', 'EQ', 'NE'),
-        # ('left', 'GT', 'GE', 'LT', 'LE'),
-        # ('left', 'PLUS', 'MINUS'),
-        # ('left', 'TIMES', 'DIVIDE', 'MOD'),
-        # ('right', 'PLUSPLUS', 'MINUSMINUS', 'ADDRESS'),
+        ('right', 'PTIMES'),
+        # precedence for unary operators
+        ('right', 'UADDRESS', 'UPLUSPLUS', 'UMINUSMINUS', 'UTIMES', 'UPLUS', 'UMINUS', 'UNOT'),
     )
 
 
