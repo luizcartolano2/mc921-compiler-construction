@@ -44,30 +44,18 @@ class UCParser():
             p[0] = p[1] + [p[2]]
 
 
-    def p_global_declaration_1(self, p):
+    def p_global_declaration(self, p):
         '''
             global_declaration : function_definition
+                               | declaration
         '''
         p[0] = p[1]
 
 
-    def p_global_declaration_2(self, p):
-        '''
-            global_declaration : declaration
-        '''
-        p[0] = p[1]
-
-
-    def p_function_definition_1(self, p):
+    def p_function_definition(self, p):
         '''
             function_definition : declarator declaration_list compound_statement
-        '''
-        pass
-
-
-    def p_function_definition_2(self, p):
-        '''
-            function_definition : type_specifier declarator declaration_list compound_statement
+                                | type_specifier declarator declaration_list compound_statement
         '''
         pass
 
@@ -115,30 +103,12 @@ class UCParser():
         pass
 
 
-    def p_direct_declarator_1(self, p):
+    def p_direct_declarator(self, p):
         '''
             direct_declarator : identifier 
-        '''
-        pass
-
-
-    def p_direct_declarator_2(self, p):
-        '''
-            direct_declarator : LPAREN declarator RPAREN 
-        '''
-        pass
-
-
-    def p_direct_declarator_3(self, p):
-        '''
-            direct_declarator : direct_declarator LBRACKET constant_expression_opt RBRACKET
-        '''
-        pass
-
-
-    def p_direct_declarator_4(self, p):
-        '''
-            direct_declarator : direct_declarator LPAREN parameter_list RPAREN
+                              | LPAREN declarator RPAREN 
+                              | direct_declarator LBRACKET constant_expression_opt RBRACKET
+                              | direct_declarator LPAREN parameter_list RPAREN
                               | direct_declarator LPAREN identifier_list_opt RPAREN
         '''
         pass
@@ -154,7 +124,7 @@ class UCParser():
     def p_identifier_list(self, p):
         '''
             identifier_list : identifier
-                            | identifier_list COMMA identifier
+                            | identifier_list identifier
         '''
         if len(p) == 2:
             p[0] = p[1]
@@ -519,9 +489,6 @@ class UCParser():
         ('left', 'GT', 'GE', 'LT', 'LE'),
         ('left', 'PLUS', 'MINUS', 'PLUSPLUS', 'MINUSMINUS'),
         ('left', 'TIMES', 'DIVIDE', 'MOD'),
-        # ('right', 'PTIMES'),
-        # precedence for unary operators
-        # ('right', 'UADDRESS', 'UPLUSPLUS', 'UMINUSMINUS', 'UTIMES', 'UPLUS', 'UMINUS', 'UNOT'),
     )
 
 
