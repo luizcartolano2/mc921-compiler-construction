@@ -429,6 +429,7 @@ class UCParser():
         '''
             iteration_statement : WHILE LPAREN expression RPAREN statement
                                 | FOR LPAREN expression_opt SEMI expression_opt SEMI expression_opt RPAREN statement
+                                | FOR LPAREN declaration expression_opt SEMI expression_opt RPAREN statement
         '''
         if p[1] == "WHILE":
             p[0] = (p[1], p[3], p[5])
