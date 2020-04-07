@@ -97,31 +97,31 @@ class Node(object):
     ################################
     #   Classes representadas      #
     #------------------------------#
-    #   ArrayDecl  - Done          #
+    #   ArrayDecl       - Done     #
     #------------------------------#
-    #   ArrayRef   - Done          #
+    #   ArrayRef        - Done     #
     #------------------------------#
     #   Assert                     #
     #------------------------------#
-    #   Assignment - Done          #
+    #   Assignment      - Done     #
     #------------------------------#
-    #   BinaryOp   - Done          #
+    #   BinaryOp        - Done     #
     #------------------------------#
-    #   Break      - Done          #
+    #   Break           - Done     #
     #------------------------------#
-    #   Cast       - Done          #
+    #   Cast            - Done     #
     #------------------------------#
-    #   Compound   - Done          #
+    #   Compound        - Done     #
     #------------------------------#
-    #   Constant   - Done          #
+    #   Constant        - Done     #
     #------------------------------#
-    #   Decl       - Done          #
+    #   Decl            - Done     #
     #------------------------------#
-    #   DeclList   - Done          #
+    #   DeclList        - Done     #
     #------------------------------#
-    #   EmptyStatement             #
+    #   EmptyStatement  - Done     #
     #------------------------------#
-    #   ExprList                   #
+    #   ExprList        - Done     #
     #------------------------------#
     #   For                        #
     #------------------------------#
@@ -468,8 +468,50 @@ class Node(object):
         attr_names = ()
 
 
+    class EmptyStatement(Node):
+        __slots__ = ('coord')
 
 
+        def __init__(self, coord=None):
+            self.coord = coord
+
+
+        def children(self):
+            return tuple()
+
+
+        def __iter__(self):
+            return
+            yield
+
+
+        attr_names = ()
+
+
+    class ExprList(Node):
+        __slots__ = ('exprs', 'coord')
+
+
+        def __init__(self, exprs, coord=None):
+            self.exprs = exprs
+            self.coord = coord
+
+
+        def children(self):
+            nodelist = []
+
+            for i, child in enumerate(self.exprs or []):
+                nodelist.append(("exprs[%d]" % i, child))
+        
+            return tuple(nodelist)
+
+
+        def __iter__(self):
+            for child in (self.exprs or []):
+                yield child
+
+
+        attr_names = ()
 
 
 
