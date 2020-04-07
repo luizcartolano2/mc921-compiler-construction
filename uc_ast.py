@@ -139,13 +139,13 @@ class Node(object):
     #------------------------------#
     #   InitList        - Done     #
     #------------------------------#
-    #   ParamList                  #
+    #   ParamList       - Done     #
     #------------------------------#
     #   Print                      #
     #------------------------------#
-    #   Program                    #
+    #   Program         - Done     #
     #------------------------------#
-    #   PtrDecl                    #
+    #   PtrDecl         - Done     #
     #------------------------------#
     #   Read                       #
     #------------------------------#
@@ -751,24 +751,92 @@ class Node(object):
 
         def __iter__(self):
 
-            for child in enumerate(self.expressions or []):
+            for child in (self.expressions or []):
                 yield child
 
 
         attr_names = ()
 
 
+    class ParamList(Node):
+        __slots__ = ('params', 'coord')
 
 
+        def __init__(self, params, coord=None):
+            self.params = params
+            self.coord  = coord
 
 
+        def children(self):
+            nodelist = []
+
+            for i, child in enumerate(self.params or []):
+                nodelist.append(("params[%d]" % i, child))
+
+            return tuple(nodelist)
 
 
+        def __iter__(self):
+
+            for child in (self.params or []):
+                yield child
 
 
+        attr_names = ()
 
 
+    class Program(Node):
+        __slots__ = ('gdecls', 'coord')
 
+
+        def __init__(self, gdecls, coord=None):
+            self.gdecls = gdecls
+            self.coord  = coord
+
+
+        def children(self):
+            nodelist = []
+
+            for i, child in enumerate(self.gdecls or []):
+                nodelist.append(("gdecls[%d]" % i, child))
+
+            return tuple(nodelist)
+
+
+        def __iter__(self):
+
+            for child in (self.gdecls or []):
+                yield child
+
+
+        attr_names = ()
+
+
+    class PtrDecl(Node):
+        __slots__ = ('ptr_quals', 'ptr_type', 'coord')
+
+
+        def __init__(self, ptr_quals, ptr_type, coord=None):
+            self.ptr_quals = ptr_quals
+            self.ptr_type  = ptr_type
+            self.coord     = coord
+
+
+        def children(self):
+            
+            nodelist = []
+
+            if self.ptr_type is not None:
+                nodelist.append(("ptr_type", self.ptr_type))
+
+
+        def __iter__(self):
+            
+            if self.ptr_type is not None:
+                yield self.ptr_type
+
+
+        attr_names = ('ptr_quals')
 
 
 
