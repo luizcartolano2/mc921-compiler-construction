@@ -97,9 +97,9 @@ class Node(object):
     ################################
     #   Classes representadas      #
     #------------------------------#
-    #   ArrayDecl                  #
+    #   ArrayDecl - Done           #
     #------------------------------#
-    #   ArrayRef                   #
+    #   ArrayRef  - Done           #
     #------------------------------#
     #   Assert                     #
     #------------------------------#
@@ -179,7 +179,7 @@ class Node(object):
                 nodelist.append(("type", self.type))
 
             if self.dim is not None: 
-                nodelist.append(("dim", self.dimension))
+                nodelist.append(("dimension", self.dimension))
 
             return tuple(nodelist)
 
@@ -191,7 +191,58 @@ class Node(object):
             if self.dimension is not None:
                 yield self.dimension
 
+
         attr_names = ('dimension_quals')
+
+
+    class ArrayRef(Node):
+        __slots__ = ('name', 'subscript', 'coord')
+
+
+        def __init__(self, array_name, array_subscript, coord=None):
+            self.array_name = array_name
+            self.array_subscript = array_subscript
+            self.coord = coord
+
+
+        def children(self):
+            nodelist = []
+
+            if self.array_name is not None: 
+                nodelist.append(("array_name", self.array_name))
+
+            if self.array_subscript is not None: 
+                nodelist.append(("array_subscript", self.array_subscript))
+
+            return tuple(nodelist)
+
+
+        def __iter__(self):
+            if self.array_name is not None:
+                yield self.array_name
+
+            if self.array_subscript is not None:
+                yield self.array_subscript
+
+
+        attr_names = ()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
