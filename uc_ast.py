@@ -155,9 +155,9 @@ class Node(object):
     #------------------------------#
     #   VarDecl                    #
     #------------------------------#
-    #   UnaryOp                    #
+    #   UnaryOp         - Done     #
     #------------------------------#
-    #   While                      #
+    #   While           - Done     #
     ################################
 
 
@@ -229,11 +229,11 @@ class Node(object):
 
 
     class Assignment(Node):
-        __slots__ = ('operation', 'left_value', 'right_value', 'coord')
+        __slots__ = ('op', 'left_value', 'right_value', 'coord')
 
 
-        def __init__(self, operation, left_value, right_value, coord=None):
-            self.operation      = operation
+        def __init__(self, op, left_value, right_value, coord=None):
+            self.op      = op
             self.left_value     = left_value
             self.right_value    = right_value
             self.coord          = coord
@@ -259,15 +259,15 @@ class Node(object):
                 yield self.right_value
 
 
-        attr_names = ('operation')
+        attr_names = ('op')
 
 
     class BinaryOp(Node):
-        __slots__ = ('operation', 'left_value', 'right_value', 'coord')
+        __slots__ = ('op', 'left_value', 'right_value', 'coord')
 
 
-        def __init__(self, operation, left_value, right_value, coord=None):
-            self.operation      = operation
+        def __init__(self, op, left_value, right_value, coord=None):
+            self.op      = op
             self.left_value     = left_value
             self.right_value    = right_value
             self.coord          = coord
@@ -293,7 +293,7 @@ class Node(object):
                 yield self.right_value
 
 
-        attr_names = ('operation')
+        attr_names = ('op')
 
 
     class Break(Node):
@@ -399,11 +399,11 @@ class Node(object):
 
 
     class Decl(Node):
-        __slots__ = ('decl_name', 'decl_quals', 'decl_storage', 'decl_func_spec', 'decl_type', 'decl_init', 'decl_bitsize', 'coord')
+        __slots__ = ('name', 'decl_quals', 'decl_storage', 'decl_func_spec', 'decl_type', 'decl_init', 'decl_bitsize', 'coord')
 
 
-        def __init__(self, decl_name, decl_quals, decl_storage, decl_func_spec, decl_type, decl_init, decl_bitsize, coord=None):
-            self.decl_name      = decl_name
+        def __init__(self, name, decl_quals, decl_storage, decl_func_spec, decl_type, decl_init, decl_bitsize, coord=None):
+            self.name           = name
             self.decl_quals     = decl_quals
             self.decl_storage   = decl_storage
             self.decl_func_spec = decl_func_spec
@@ -439,7 +439,7 @@ class Node(object):
                 yield self.decl_bitsize
 
 
-        attr_names = ('decl_name', 'decl_quals', 'decl_storage', 'decl_func_spec')
+        attr_names = ('name', 'decl_quals', 'decl_storage', 'decl_func_spec')
 
 
     class DeclList(Node):
@@ -895,12 +895,65 @@ class Node(object):
         attr_names = ('name', 'type_quals')
 
 
+    class UnaryOp(Node):
+        __slots__  = ('op', 'expr', 'coord')
 
 
+        def __init__(self, op, expr, coord=None):
+            self.op    = op
+            self.expr  = expr
+            self.coord = coord
 
 
+        def children(self):
+            nodelist = []
+
+            if self.expr is not None:
+                nodelist.append(("expr", self.expr))
+
+            return tuple(nodelist)
 
 
+        def __iter__(self):
+            if self.expr is not None:
+                yield self.expr
+
+
+        attr_names = ('op')
+
+
+    class While(Node):
+        __slots__ = ('while_cond', 'while_stmt', 'coord')
+
+
+        def __init__(self, while_cond, while_stmt, coord=None):
+            self.while_cond = while_cond
+            self.while_stmt = while_stmt
+            self.coord      = coord
+
+
+        def children(self):
+            nodelist = []
+
+            if self.while_cond is not None:
+                nodelist.append(("while_cond", self.while_cond))
+
+            if self.while_stmt is not None:
+                nodelist.append(("while_stmt", self.while_stmt))
+
+            return tuple(nodelist)
+
+
+        def __iter__(self):
+
+            if self.while_cond is not None:
+                yield self.while_cond
+
+            if self.while_stmt is not None:
+                yield self.while_stmt
+
+
+        attr_names = ()
 
 
 
