@@ -97,19 +97,19 @@ class Node(object):
     ################################
     #   Classes representadas      #
     #------------------------------#
-    #   ArrayDecl - Done           #
+    #   ArrayDecl  - Done          #
     #------------------------------#
-    #   ArrayRef  - Done           #
+    #   ArrayRef   - Done          #
     #------------------------------#
     #   Assert                     #
     #------------------------------#
-    #   Assignment                 #
+    #   Assignment - Done          #
     #------------------------------#
-    #   BinaryOp                   #
+    #   BinaryOp   - Done          #
     #------------------------------#
-    #   Break                      #
+    #   Break      - Done          #
     #------------------------------#
-    #   Cast                       #
+    #   Cast       - Done          #
     #------------------------------#
     #   Compound                   #
     #------------------------------#
@@ -166,10 +166,10 @@ class Node(object):
 
 
         def __init__(self, type, dimension, dimension_quals, coord=None):
-            self.type = type
-            self.dimension = dimension
+            self.type            = type
+            self.dimension       = dimension
             self.dimension_quals = dimension_quals
-            self.coord = coord
+            self.coord           = coord
 
 
         def children(self):
@@ -200,9 +200,9 @@ class Node(object):
 
 
         def __init__(self, array_name, array_subscript, coord=None):
-            self.array_name = array_name
+            self.array_name      = array_name
             self.array_subscript = array_subscript
-            self.coord = coord
+            self.coord           = coord
 
 
         def children(self):
@@ -228,11 +228,125 @@ class Node(object):
         attr_names = ()
 
 
+    class Assignment(Node):
+        __slots__ = ('operation', 'left_value', 'right_value', 'coord')
 
 
+        def __init__(self, operation, left_value, right_value, coord=None):
+            self.operation      = operation
+            self.left_value     = left_value
+            self.right_value    = right_value
+            self.coord          = coord
 
 
+        def children(self):
+            nodelist = []
 
+            if self.left_value is not None: 
+                nodelist.append(("left_value", self.left_value))
+
+            if self.right_value is not None: 
+                nodelist.append(("right_value", self.right_value))
+
+            return tuple(nodelist)
+
+
+        def __iter__(self):
+            if self.left_value is not None:
+                yield self.left_value
+
+            if self.right_value is not None:
+                yield self.right_value
+
+
+        attr_names = ('operation')
+
+
+    class BinaryOp(Node):
+        __slots__ = ('operation', 'left_value', 'right_value', 'coord')
+
+
+        def __init__(self, operation, left_value, right_value, coord=None):
+            self.operation      = operation
+            self.left_value     = left_value
+            self.right_value    = right_value
+            self.coord          = coord
+
+
+        def children(self):
+            nodelist = []
+
+            if self.left_value is not None: 
+                nodelist.append(("left_value", self.left_value))
+
+            if self.right_value is not None: 
+                nodelist.append(("right_value", self.right_value))
+
+            return tuple(nodelist)
+
+
+        def __iter__(self):
+            if self.left_value is not None:
+                yield self.left_value
+
+            if self.right_value is not None:
+                yield self.right_value
+
+
+        attr_names = ('operation')
+
+
+    class Break(Node):
+        __slots__ = ('coord')
+
+
+        def __init__(self, coord=None):
+            self.coord = coord
+
+
+        def children(self):
+            return tuple()
+
+
+        def __iter__(self):
+            return
+            yield
+
+
+        attr_names = ()
+
+
+    class Cast(Node):
+        __slots__ = ('to_type', 'expression', 'coord')
+
+
+        def __init__(self, to_type, expression, coord=None):
+            self.to_type    = to_type
+            self.expression = expression
+            self.coord      = coord
+
+
+        def children(self):
+            nodelist = []
+
+            if self.to_type is not None: 
+                nodelist.append(("to_type", self.to_type))
+
+            if self.expression is not None: 
+                nodelist.append(("expression", self.expression))
+
+            return tuple(nodelist)
+
+
+        def __iter__(self):
+            if self.to_type is not None:
+                yield self.to_type
+
+            if self.expression is not None:
+                yield self.expression
+
+
+        attr_names = ()
 
 
 
