@@ -111,9 +111,9 @@ class Node(object):
     #------------------------------#
     #   Cast       - Done          #
     #------------------------------#
-    #   Compound                   #
+    #   Compound   - Done          #
     #------------------------------#
-    #   Constant                   #
+    #   Constant   - Done          #
     #------------------------------#
     #   Decl                       #
     #------------------------------#
@@ -347,6 +347,91 @@ class Node(object):
 
 
         attr_names = ()
+
+
+    class Compound(Node):
+        __slots__ = ('block_items', 'coord')
+
+
+        def __init__(self, block_items, coord=None):
+            self.block_items = block_items
+            self.coord       = coord
+
+
+        def children(self):
+            nodelist = []
+
+            for i, child in enumerate(self.block_items or []):
+                nodelist.append(("block_items[%d]" % i, child))
+        
+            return tuple(nodelist)
+
+
+        def __iter__(self):
+            for child in (self.block_items or []):
+                yield child
+
+
+        attr_names = ()
+
+
+    class Constant(Node):
+        __slots__ = ('type', 'value', 'coord')
+
+
+        def __init__(self, type, value, coord=None):
+            self.type  = type
+            self.value = value
+            self.coord = coord
+
+
+        def children(self):
+
+            return tuple([])
+
+
+        def __iter__(self):
+            return
+            yield
+
+
+        attr_names = ('type', 'value')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
