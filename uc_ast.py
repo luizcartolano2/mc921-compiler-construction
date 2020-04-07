@@ -115,9 +115,9 @@ class Node(object):
     #------------------------------#
     #   Constant   - Done          #
     #------------------------------#
-    #   Decl                       #
+    #   Decl       - Done          #
     #------------------------------#
-    #   DeclList                   #
+    #   DeclList   - Done          #
     #------------------------------#
     #   EmptyStatement             #
     #------------------------------#
@@ -398,11 +398,74 @@ class Node(object):
         attr_names = ('type', 'value')
 
 
+    class Decl(Node):
+        __slots__ = ('decl_name', 'decl_quals', 'decl_storage', 'decl_func_spec', 'decl_type', 'decl_init', 'decl_bitsize', 'coord')
 
 
+        def __init__(self, decl_name, decl_quals, decl_storage, decl_func_spec, decl_type, decl_init, decl_bitsize, coord=None):
+            self.decl_name      = decl_name
+            self.decl_quals     = decl_quals
+            self.decl_storage   = decl_storage
+            self.decl_func_spec = decl_func_spec
+            self.decl_type      = decl_type
+            self.decl_init      = decl_init
+            self.decl_bitsize   = decl_bitsize
+            self.coord          = coord
 
 
+        def children(self):
+            nodelist = []
 
+            if self.decl_init is not None: 
+                nodelist.append(("decl_init", self.decl_init))
+
+            if self.decl_type is not None: 
+                nodelist.append(("decl_type", self.decl_type))
+
+            if self.decl_bitsize is not None: 
+                nodelist.append(("decl_bitsize", self.decl_bitsize))
+
+            return tuple(nodelist)
+
+
+        def __iter__(self):
+            if self.decl_type is not None:
+                yield self.decl_type
+
+            if self.decl_init is not None:
+                yield self.decl_init
+
+            if self.decl_bitsize is not None:
+                yield self.decl_bitsize
+
+
+        attr_names = ('decl_name', 'decl_quals', 'decl_storage', 'decl_func_spec')
+
+
+    class DeclList(Node):
+        __slots__ = ('decls', 'coord')
+
+
+        def __init__(self, decls, coord=None):
+            self.decls = decls
+            self.coord = coord
+
+
+        def children(self):
+            nodelist = []
+
+            for i, child in enumerate(self.decls or []):
+                nodelist.append(("decls[%d]" % i, child))
+        
+            return tuple(nodelist)
+
+
+        def __iter__(self):
+            for child in (self.decls or []):
+                yield child
+
+
+        attr_names = ()
 
 
 
