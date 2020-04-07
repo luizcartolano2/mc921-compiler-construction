@@ -32,7 +32,7 @@ class UCParser():
 
         p[0] = p[1]
 
-    
+
     def p_global_declaration_list(self, p):
         '''
             global_declaration_list : global_declaration
@@ -57,7 +57,10 @@ class UCParser():
             function_definition : declarator declaration_list compound_statement
                                 | type_specifier declarator declaration_list compound_statement
         '''
-        pass
+        if p.length() == 4:
+            p[0] = ("function_definition", p[1], p[2], p[3])
+        else:
+            p[0] = ("function_definition", p[2], p[3], p[4], p[1])
 
 
     def p_declaration_list(self, p):
@@ -75,7 +78,7 @@ class UCParser():
         '''
             declaration :  type_specifier init_declarator_list_opt SEMI
         '''
-        pass
+        p[0] = ("declaration", p[1], p[2])
 
 
     def p_type_specifier(self, p):
@@ -92,26 +95,34 @@ class UCParser():
         '''
             declarator : pointer direct_declarator
         '''
-        pass
+        p[0] = ("declarator", p[2])
 
 
     def p_pointer(self, p):
         '''
             pointer : TIMES
-                    | TIMES pointer   
+                    | TIMES pointer
         '''
-        pass
+        if p.length() == 2:
+            p[0] = ("pointer")
+        else:
+            p[0] = ("pointer", p_pointer(self, p[2]))
 
 
     def p_direct_declarator(self, p):
         '''
-            direct_declarator : identifier 
-                              | LPAREN declarator RPAREN 
+            direct_declarator : identifier
+                              | LPAREN declarator RPAREN
                               | direct_declarator LBRACKET constant_expression_opt RBRACKET
                               | direct_declarator LPAREN parameter_list RPAREN
                               | direct_declarator LPAREN identifier_list_opt RPAREN
         '''
-        pass
+        if p.length() == 2:
+            p[0] = p[1]
+        elif p.length() == 4:
+            p[0] = p[2]
+        else:
+            p[0] = (p[1], p[3])
 
 
     def p_identifier(self, p):
@@ -133,11 +144,11 @@ class UCParser():
 
 
     def p_identifier_list_opt(self, p):
-        """ 
+        """
             identifier_list_opt : identifier_list
                                 | empty
         """
-        pass
+        p[0] = p[1]
 
 
     def p_constant_expression(self, p):
@@ -197,7 +208,10 @@ class UCParser():
                              | MINUSMINUS unary_expression
                              | unary_operator cast_expression
         '''
-        pass
+        if p.length() == 2:
+            p[0] = p[1]
+        else:
+            p[0] = (p[1], p[2])
 
 
     def p_postfix_expression(self, p):
@@ -208,7 +222,12 @@ class UCParser():
                                | postfix_expression PLUSPLUS
                                | postfix_expression MINUSMINUS
         '''
-        pass
+        if p.length() == 2:
+            p[0] = p[1]
+        elif p.length() == 3:
+            p[0] = (p[1], p[2])
+        else:
+            p[0] = (p[1], p[3])
 
 
     def p_argument_expression(self, p):
@@ -216,7 +235,10 @@ class UCParser():
             argument_expression : assignment_expression
                                 | argument_expression COMMA assignment_expression
         '''
-        pass
+        if p.length() == 2:
+            p[0] = p[1]
+        else:
+            p[0] = (p[1], p[3])
 
 
     def p_argument_expression_opt(self, p):
@@ -257,7 +279,10 @@ class UCParser():
             expression : assignment_expression
                        | expression COMMA assignment_expression
         '''
-        pass
+        if p.length() == 2:
+            p[0] = p[1]
+        else:
+            p[0] = (p[1], p[3])
 
 
     def p_expression_opt(self, p):
@@ -276,7 +301,10 @@ class UCParser():
             assignment_expression : binary_expression
                                   | unary_expression assignment_operator assignment_expression
         '''
-        pass
+        if p.length() == 2:
+            p[0] = p[1]
+        else:
+            p[0] = (p[1], p[2], p[3])
 
 
     def p_assignment_operator(self, p):
@@ -296,11 +324,11 @@ class UCParser():
 
     def p_unary_operator(self, p):
         '''
-            unary_operator : ADDRESS    
-                           | TIMES      
-                           | PLUS       
-                           | MINUS      
-                           | NOT        
+            unary_operator : ADDRESS
+                           | TIMES
+                           | PLUS
+                           | MINUS
+                           | NOT
         '''
         p[0] = p[1]
 
@@ -310,7 +338,10 @@ class UCParser():
             parameter_list : parameter_declaration
                            | parameter_list COMMA parameter_declaration
         '''
-        pass
+        if p.length() == 2:
+            p[0] = p[1]
+        else:
+            p[0] = (p[1], p[3])
 
 
     def p_parameter_declaration(self, p):
@@ -352,14 +383,17 @@ class UCParser():
         else:
             p[0] = (p[1], p[2])
 
-   
+
     def p_initializer(self, p):
         '''
             initializer : assignment_expression
                         | LBRACE initializer_list_opt RBRACE
                         | LBRACE initializer_list COMMA RBRACE
         '''
-        pass
+        if p.length() == 2:
+            p[0] = p[1]
+        else:
+            p[0] = p[2]
 
 
     def p_initializer_list(self, p):
@@ -367,7 +401,10 @@ class UCParser():
             initializer_list : initializer
                              | initializer_list COMMA initializer
         '''
-        pass
+        if len(p) == 2:
+            p[0] = p[1]
+        else:
+            p[0] = (p[1], p[3])
 
 
     def p_initializer_list_opt(self, p):
@@ -375,14 +412,14 @@ class UCParser():
             initializer_list_opt : empty
                                  | initializer_list
         '''
-        pass
+        p[0] = p[1]
 
 
     def p_compound_statement(self, p):
         '''
             compound_statement : LBRACE declaration_list statement_list RBRACE
         '''
-        pass
+        p[0] = (p[2], p[3])
 
 
     def p_statement(self, p):
@@ -422,7 +459,10 @@ class UCParser():
             selection_statement : IF LPAREN expression RPAREN statement
                                 | IF LPAREN expression RPAREN statement ELSE statement
         '''
-        pass
+        if len(p) == 6:
+            p[0] = (p[1], p[3], p[5])
+        else:
+            p[0] = (p[1], p[3], p[5], p[7])
 
 
     def p_iteration_statement(self, p):
