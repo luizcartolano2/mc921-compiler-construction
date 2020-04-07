@@ -149,7 +149,7 @@ class Node(object):
     #------------------------------#
     #   Read                       #
     #------------------------------#
-    #   Return                     #
+    #   Return          - Done     #
     #------------------------------#
     #   Type                       #
     #------------------------------#
@@ -829,6 +829,8 @@ class Node(object):
             if self.ptr_type is not None:
                 nodelist.append(("ptr_type", self.ptr_type))
 
+            return tuple(nodelist)
+
 
         def __iter__(self):
             
@@ -837,6 +839,53 @@ class Node(object):
 
 
         attr_names = ('ptr_quals')
+
+
+    class Return(Node):
+        __slots__ = ('expression', 'coord')
+
+
+        def __init__(self, expression, coord=None):
+            self.expression = expression
+            self.coord      = coord
+
+
+        def children(self):
+            if self.expression is not None:
+                nodelist.append(("expression", self.expression))
+
+            return tuple(nodelist)
+
+
+        def __iter__(self):
+            if self.expression is not None:
+                yield self.expression
+
+
+        attr_names = ()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
