@@ -123,13 +123,13 @@ class Node(object):
     #------------------------------#
     #   ExprList        - Done     #
     #------------------------------#
-    #   For                        #
+    #   For             - Done     #
     #------------------------------#
-    #   FuncCall                   #
+    #   FuncCall        - Done     #
     #------------------------------#
-    #   FuncDecl                   #
+    #   FuncDecl        - Done     #
     #------------------------------#
-    #   FuncDef                    #
+    #   FuncDef         - Done     #
     #------------------------------#
     #   GlobalDecl                 #
     #------------------------------# 
@@ -514,16 +514,159 @@ class Node(object):
         attr_names = ()
 
 
+    class For(Node):
+        __slots__ = ('for_init', 'for_cond', 'for_next', 'for_statement', 'coord')
 
 
+        def __init__(self, for_init, for_cond, for_next, for_statement, coord=None):
+            self.for_init      = for_init
+            self.for_cond      = for_cond
+            self.for_next      = for_next
+            self.for_statement = for_statement
+            self.coord         = coord
 
 
+        def children(self):
+            nodelist = []
+
+            if self.for_init is not None: 
+                nodelist.append(("for_init", self.for_init))
+
+            if self.for_cond is not None: 
+                nodelist.append(("for_cond", self.for_cond))
+
+            if self.for_next is not None: 
+                nodelist.append(("for_next", self.for_next))
+
+            if self.for_statement is not None: 
+                nodelist.append(("for_statement", self.for_statement))
+
+            return tuple(nodelist)
 
 
+        def __iter__(self):
+            if self.for_init is not None:
+                yield self.for_init
+
+            if self.for_cond is not None:
+                yield self.for_cond
+
+            if self.for_next is not None:
+                yield self.for_next
+
+            if self.for_statement is not None:
+                yield self.for_statement
 
 
+        attr_names = ()
 
 
+    class FuncCall(Node):
+        __slots__ = ('func_name', 'func_args', 'coord')
+
+
+        def __init__(self, func_name, func_args, coord=None):
+            self.func_name = func_name
+            self.func_args = func_args
+            self.coord     = coord
+
+
+        def children(self):
+            nodelist = []
+
+            if self.func_name is not None: 
+                nodelist.append(("func_name", self.func_name))
+
+            if self.func_args is not None: 
+                nodelist.append(("func_args", self.func_args))
+
+            return tuple(nodelist)
+
+
+        def __iter__(self):
+            if self.func_name is not None:
+                yield self.func_name
+
+            if self.func_args is not None:
+                yield self.func_args
+
+
+        attr_names = ()
+
+
+    class FuncDecl(Node):
+        __slots__ = ('func_args', 'func_type', 'coord')
+
+
+        def __init__(self, func_args, func_type, coord=None):
+            self.func_args = func_args
+            self.func_type = func_type
+            self.coord     = coord
+
+
+        def children(self):
+            nodelist = []
+
+            if self.func_args is not None: 
+                nodelist.append(("func_args", self.func_args))
+
+            if self.func_type is not None: 
+                nodelist.append(("func_type", self.func_type))
+
+            return tuple(nodelist)
+
+
+        def __iter__(self):
+
+            if self.func_args is not None:
+                yield self.func_args
+
+            if self.func_type is not None:
+                yield self.func_type
+
+
+        attr_names = ()
+
+
+    class FuncDef(Node):
+        __slots__ = ('func_decl', 'func_param_decls', 'func_body', 'coord')
+
+
+        def __init__(self, func_decl, func_param_decls, func_body, coord=None):
+            self.func_decl        = func_decl
+            self.func_param_decls = func_param_decls
+            self.func_body        = func_body
+            self.coord            = coord
+
+
+        def children(self):
+            nodelist = []
+
+            if self.func_decl is not None: 
+                nodelist.append(("func_decl", self.func_decl))
+
+            if self.func_body is not None: 
+                nodelist.append(("func_body", self.func_body))
+
+            for i, child in enumerate(self.func_param_decls or []):
+                nodelist.append(("func_param_decls[%d]" % i, child))
+
+            return tuple(nodelist)
+
+
+        def __iter__(self):
+
+            if self.func_decl is not None:
+                yield self.func_decl
+
+            if self.func_body is not None:
+                yield self.func_body
+
+            for child in (self.func_param_decls or []):
+                yield child
+
+
+        attr_names = ()
 
 
 
