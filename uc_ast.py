@@ -25,7 +25,7 @@ class Node(object):
         indent = ''
         separator = ''
 
-        for name in self.__slots__[:-2]:
+        for name in self.__slots__[:-1]:
             result += separator
             result += indent
             result += name + '=' + (_repr(getattr(self, name)).replace('\n', '\n  ' + (' ' * (len(name) + len(self.__class__.__name__)))))
@@ -141,19 +141,19 @@ class Node(object):
     #------------------------------#
     #   ParamList       - Done     #
     #------------------------------#
-    #   Print                      #
+    #   Print           - Done     #
     #------------------------------#
     #   Program         - Done     #
     #------------------------------#
     #   PtrDecl         - Done     #
     #------------------------------#
-    #   Read                       #
+    #   Read            - Done     #
     #------------------------------#
     #   Return          - Done     #
     #------------------------------#
     #   Type            - Done     #
     #------------------------------#
-    #   VarDecl                    #
+    #   VarDecl         - Done     #
     #------------------------------#
     #   UnaryOp         - Done     #
     #------------------------------#
@@ -162,13 +162,12 @@ class Node(object):
 
 
     class ArrayDecl(Node):
-        __slots__ = ('type', 'dimension', 'dimension_quals', 'coord')
+        __slots__ = ('type', 'dimension', 'coord')
 
 
-        def __init__(self, type, dimension, dimension_quals, coord=None):
+        def __init__(self, type, dimension, coord=None):
             self.type            = type
             self.dimension       = dimension
-            self.dimension_quals = dimension_quals
             self.coord           = coord
 
 
@@ -192,7 +191,7 @@ class Node(object):
                 yield self.dimension
 
 
-        attr_names = ('dimension_quals')
+        attr_names = ()
 
 
     class ArrayRef(Node):
@@ -399,17 +398,13 @@ class Node(object):
 
 
     class Decl(Node):
-        __slots__ = ('name', 'decl_quals', 'decl_storage', 'decl_func_spec', 'decl_type', 'decl_init', 'decl_bitsize', 'coord')
+        __slots__ = ('name', 'decl_type', 'decl_init', 'coord')
 
 
-        def __init__(self, name, decl_quals, decl_storage, decl_func_spec, decl_type, decl_init, decl_bitsize, coord=None):
+        def __init__(self, name, decl_type, decl_init, coord=None):
             self.name           = name
-            self.decl_quals     = decl_quals
-            self.decl_storage   = decl_storage
-            self.decl_func_spec = decl_func_spec
             self.decl_type      = decl_type
             self.decl_init      = decl_init
-            self.decl_bitsize   = decl_bitsize
             self.coord          = coord
 
 
@@ -422,9 +417,6 @@ class Node(object):
             if self.decl_type is not None: 
                 nodelist.append(("decl_type", self.decl_type))
 
-            if self.decl_bitsize is not None: 
-                nodelist.append(("decl_bitsize", self.decl_bitsize))
-
             return tuple(nodelist)
 
 
@@ -435,11 +427,7 @@ class Node(object):
             if self.decl_init is not None:
                 yield self.decl_init
 
-            if self.decl_bitsize is not None:
-                yield self.decl_bitsize
-
-
-        attr_names = ('name', 'decl_quals', 'decl_storage', 'decl_func_spec')
+        attr_names = ('name')
 
 
     class DeclList(Node):
@@ -785,6 +773,34 @@ class Node(object):
         attr_names = ()
 
 
+    class Print(Node):
+        __slots__ = ('expr', 'coord')
+
+
+        def __init__(self, expr, coord=None):
+            self.expr  = expr
+            self.coord = coord
+
+
+        def children(self):
+            
+            nodelist = []
+
+            if self.expr is not None:
+                nodelist.append(("expr", self.expr))
+
+            return tuple(nodelist)
+
+
+        def __iter__(self):
+
+            if self.expr is not None:
+                yield self.expr
+
+
+        attr_names = ()
+
+
     class Program(Node):
         __slots__ = ('gdecls', 'coord')
 
@@ -841,6 +857,34 @@ class Node(object):
         attr_names = ('ptr_quals')
 
 
+    class Read(Node):
+        __slots__ = ('names', 'coord')
+
+
+        def __init__(self, names, coord=None):
+            self.names = names
+            self.coord = coord
+
+
+        def children(self):
+
+            nodelist = []
+
+            if self.names is not None:
+                nodelist.append(("names", self.names))
+
+            return tuple(nodelist)
+
+
+        def __iter__(self):
+
+            if self.names is not None:
+                yield self.names
+
+
+        attr_names = ()
+
+
     class Return(Node):
         __slots__ = ('expression', 'coord')
 
@@ -866,18 +910,39 @@ class Node(object):
 
 
     class Type(Node):
-        __slots__ = ('name', 'type_quals', 'type', 'coord')
+        __slots__ = ('names', 'coord')
 
 
-        def __init__(self, name, type_quals, type, coord=None):
+        def __init__(self, name, coord=None):
             self.name       = name
-            self.type_quals = type_quals
-            self.type       = type
             self.coord      = coord
 
 
         def children(self):
 
+            return tuple([])
+
+
+        def __iter__(self):
+
+            return
+            yield
+
+
+        attr_names = ('names')
+
+
+    class VarDecl(Node):
+        __slots__ = ('declname', 'type', 'coord')
+
+
+        def __init__(self, declname, type, coord=None):
+            self.declname = declname
+            self.type     = type
+            self.coord    = coord
+
+
+        def children(self):
             nodelist = []
 
             if self.type is not None:
@@ -892,7 +957,7 @@ class Node(object):
                 yield self.type
 
 
-        attr_names = ('name', 'type_quals')
+        attr_names = ('declname')
 
 
     class UnaryOp(Node):
@@ -954,23 +1019,3 @@ class Node(object):
 
 
         attr_names = ()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
