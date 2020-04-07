@@ -133,11 +133,11 @@ class Node(object):
     #------------------------------#
     #   GlobalDecl                 #
     #------------------------------# 
-    #   ID                         #
+    #   ID              - Done     #
     #------------------------------#
-    #   If                         #
+    #   If              - Done     #
     #------------------------------#
-    #   InitList                   #
+    #   InitList        - Done     #
     #------------------------------#
     #   ParamList                  #
     #------------------------------#
@@ -669,11 +669,93 @@ class Node(object):
         attr_names = ()
 
 
+    class ID(Node):
+        __slots__ = ('name', 'coord')
 
 
+        def __init__(self):
+            self.name = name
 
 
+        def children(self):
+            return tuple([])
 
+
+        def __iter__(self):
+            return
+            yield
+
+
+        attr_names = ('name')
+
+
+    class If(Node):
+        __slots__ = ('if_cond', 'if_true', 'if_false', 'coord')
+
+
+        def __init__(self, if_cond, if_true, if_false, coord=None):
+            self.if_cond   = if_cond
+            self.if_true   = if_true
+            self.if_false  = if_false
+            self.coord     = coord
+
+
+        def children(self):
+            nodelist = []
+
+            if self.if_cond is not None: 
+                nodelist.append(("if_cond", self.if_cond))
+
+            if self.if_true is not None: 
+                nodelist.append(("if_true", self.if_true))
+
+            if self.if_false is not None: 
+                nodelist.append(("if_false", self.if_false))
+
+            return tuple(nodelist)
+
+
+        def __iter__(self):
+
+            if self.if_cond is not None:
+                yield self.if_cond
+
+            if self.if_true is not None:
+                yield self.if_true
+
+            if self.if_false is not None:
+                yield self.if_false
+
+
+        attr_names = ()
+
+
+    class InitList(Node):
+        __slots__ = ('expressions', 'coord')
+
+
+        def __init__(self, expressions, coord=None):
+            self.expressions = expressions
+            self.coord       = coord
+
+
+        def children(self):
+
+            nodelist = []
+
+            for i, child in enumerate(self.expressions or []):
+                nodelist.append(("expressions[%d]" % i, child))
+
+            return tuple(nodelist)
+
+
+        def __iter__(self):
+
+            for child in enumerate(self.expressions or []):
+                yield child
+
+
+        attr_names = ()
 
 
 
