@@ -151,7 +151,7 @@ class Node(object):
     #------------------------------#
     #   Return          - Done     #
     #------------------------------#
-    #   Type                       #
+    #   Type            - Done     #
     #------------------------------#
     #   VarDecl                    #
     #------------------------------#
@@ -865,7 +865,34 @@ class Node(object):
         attr_names = ()
 
 
+    class Type(Node):
+        __slots__ = ('name', 'type_quals', 'type', 'coord')
 
+
+        def __init__(self, name, type_quals, type, coord=None):
+            self.name       = name
+            self.type_quals = type_quals
+            self.type       = type
+            self.coord      = coord
+
+
+        def children(self):
+
+            nodelist = []
+
+            if self.type is not None:
+                nodelist.append(("type", self.type))
+
+            return tuple(nodelist)
+
+
+        def __iter__(self):
+
+            if self.type is not None:
+                yield self.type
+
+
+        attr_names = ('name', 'type_quals')
 
 
 
