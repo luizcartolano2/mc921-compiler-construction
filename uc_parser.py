@@ -8,11 +8,15 @@ from ply.yacc import yacc
 tokens = UCLexer.tokens
 
 
+def print_error(msg, x, y):
+    print("Lexical error: %s at %d:%d" % (msg, x, y))
+
+
 class UCParser():
     '''
         A parser for the uC language.
     '''
-    def __init__(self, error_function):
+    def __init__(self, error_function=print_error):
         # get the tokens list
         self.tokens = UCLexer.tokens
         # create lexer object
@@ -72,7 +76,7 @@ class UCParser():
         self.parser = yacc(module=self,)
 
 
-    def parse(self, text, debug=False):
+    def parse(self, text, filename='', debug=False):
         return self.parser.parse(
                 input=text,
                 lexer=self.lexer,
