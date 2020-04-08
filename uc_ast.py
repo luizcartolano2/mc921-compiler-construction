@@ -292,7 +292,7 @@ class Assignment(Node):
             yield self.right_value
 
 
-    attr_names = ('op')
+    attr_names = ('op',)
 
 
 class BinaryOp(Node):
@@ -326,7 +326,7 @@ class BinaryOp(Node):
             yield self.right_value
 
 
-    attr_names = ('op')
+    attr_names = ('op',)
 
 
 class Break(Node):
@@ -428,40 +428,41 @@ class Constant(Node):
         yield
 
 
-    attr_names = ('type', 'value')
+    attr_names = ('type', 'value',)
 
 
 class Decl(Node):
-    __slots__ = ('name', 'decl_type', 'decl_init', 'coord')
+    __slots__ = ('name', 'type', 'init', 'coord')
 
 
-    def __init__(self, name, decl_type, decl_init, coord=None):
-        self.name           = name
-        self.decl_type      = decl_type
-        self.decl_init      = decl_init
-        self.coord          = coord
+    def __init__(self, name, type, init, coord=None):
+        self.name      = name
+        self.type      = type
+        self.init      = init
+        self.coord     = coord
 
 
     def children(self):
         nodelist = []
 
-        if self.decl_init is not None: 
-            nodelist.append(("decl_init", self.decl_init))
+        if self.init is not None: 
+            nodelist.append(("init", self.init))
 
-        if self.decl_type is not None: 
-            nodelist.append(("decl_type", self.decl_type))
+        if self.type is not None: 
+            nodelist.append(("type", self.type))
 
         return tuple(nodelist)
 
 
     def __iter__(self):
-        if self.decl_type is not None:
-            yield self.decl_type
+        if self.type is not None:
+            yield self.type
 
-        if self.decl_init is not None:
-            yield self.decl_init
+        if self.init is not None:
+            yield self.init
 
-    attr_names = ('name')
+    
+    attr_names = ('name',)
 
 
 class DeclList(Node):
@@ -737,7 +738,7 @@ class ID(Node):
         yield
 
 
-    attr_names = ('name')
+    attr_names = ('name',)
 
 
 class If(Node):
@@ -917,7 +918,7 @@ class PtrDecl(Node):
             yield self.ptr_type
 
 
-    attr_names = ('ptr_quals')
+    attr_names = ('ptr_quals',)
 
 
 class Read(Node):
@@ -992,7 +993,7 @@ class Type(Node):
         yield
 
 
-    attr_names = ('names')
+    attr_names = ('names',)
 
 
 class VarDecl(Node):
@@ -1020,7 +1021,7 @@ class VarDecl(Node):
             yield self.type
 
 
-    attr_names = ('declname')
+    attr_names = ('declname',)
 
 
 class UnaryOp(Node):
@@ -1047,7 +1048,7 @@ class UnaryOp(Node):
             yield self.expr
 
 
-    attr_names = ('op')
+    attr_names = ('op',)
 
 
 class While(Node):

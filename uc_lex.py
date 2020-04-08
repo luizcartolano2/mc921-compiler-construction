@@ -65,7 +65,7 @@ class UCLexer():
 
     # Reserved keywords
     keywords = (
-        'IF','FOR','VOID','INT','FLOAT','CHAR','ASSERT','ELSE','WHILE','BREAK','PRINT','READ','RETURN',
+        'ASSERT', 'BREAK', 'CHAR', 'ELSE', 'FLOAT', 'FOR', 'IF', 'INT', 'PRINT', 'READ', 'RETURN', 'VOID', 'WHILE',
     )
 
     keyword_map = {}
@@ -168,48 +168,49 @@ class UCLexer():
         return t
 
 
-    def t_FLOAT_CONST(self, t):
-        r'([0-9]+\.[0-9]*)|([0-9]*\.[0-9]+)'
-        t.value = str(t.value)
-            
-        return t
-
-
-    def t_INT_CONST(self, t):
-        r'[0-9]+'
-        t.value = str(t.value)
-   
-        return t
-
-
-    def t_STRING_LITERAL(self, t):
-        r'\"(\\.|[^\"\\])*\"'
-        t.value = str(t.value)
-    
-        return t
-
-
-    def t_comment(self, t):
+    def t_COMMENT(self, t):
         r'/\*(.|\n)*?\*/'
-        t.lexer.lineno += t.value.count('\n')
+        pass
 
 
-    # define a comment //
-    def t_COMMENT_2(self, t):
-        r'\/\/[^\n\r]*?(?:\*\)|[\n\r])'
-        t.lexer.lineno += t.value.count('\n')
-
-    
     def t_error_comment(self, t):
         r'/\*(.|\n)*$'
         msg = "{}: Unterminated comment".format(t.lexer.lineno)
         self._error(msg, t)
 
 
+    # define a comment //
+    def t_COMMENT_2(self, t):
+        r'//.*'
+        pass
+
+
+    def t_FLOAT_CONST(self, t):
+        r'([0-9]*\.[0-9]+)|([0-9]+\.)'
+        t.value = float(t.value)
+            
+        return t
+
+
+    def t_INT_CONST(self, t):
+        r'0|[1-9][0-9]*'
+        t.value = int(t.value)
+   
+        return t
+
+
+    def t_STRING_LITERAL(self, t):
+        r'".*?"'
+        t.value = str(t.value)
+    
+        return t
+
+
     def t_error_string(self, t):
-        r'\"[^\"]*$'
+        r'".*$'
         msg = "{}: Unterminated string".format(t.lexer.lineno)
         self._error(msg, t)
+        pass
 
 
     def t_error(self, t):
@@ -218,17 +219,17 @@ class UCLexer():
 
     # Scanner (used only for test)
     def scan(self, data):
-        output = ""
+        # output = ""
 
         self.lexer.input(data)
         while True:
             tok = self.lexer.token()
             if not tok:
                 break
-            # print(tok)
-            output += str(tok) + '\n'
+            print(tok)
+            # output += str(tok) + '\n'
 
-        return output
+        # return output
 
 
 if __name__ == '__main__':

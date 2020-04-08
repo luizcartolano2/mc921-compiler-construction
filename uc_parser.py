@@ -121,8 +121,8 @@ class UCParser():
             assert decl['decl'] is not None
             declaration = uc_ast.Decl(
                     name=None,
-                    decl_type=decl['decl'],
-                    decl_init=decl.get('init'),
+                    type=decl['decl'],
+                    init=decl.get('init'),
                     coord=decl['decl'].coord)
 
             fixed_decl = self._fix_decl_name_type(declaration, spec)
@@ -160,7 +160,10 @@ class UCParser():
         '''
             program : global_declaration_list
         '''
-        p[0] = uc_ast.Program(gdecls=p[1], coord=self._token_coord(p,1))
+        p[0] = uc_ast.Program(
+            gdecls=p[1], 
+            coord=self._token_coord(p,1)
+        )
 
 
     def p_global_declaration_list(self, p):
@@ -185,26 +188,15 @@ class UCParser():
         '''
             global_declaration : declaration
         '''
-        p[0] = uc_ast.GlobalDecl(p[1], self._token_coord(p,1))
+        p[0] = uc_ast.GlobalDecl(
+                decls=p[1], 
+                coord=self._token_coord(p,1)
+            )
 
 
     def p_function_definition_1(self, p):
         '''
-            function_definition : type_specifier declarator declaration_list compound_statement
-        '''
-        specification = p[1]
-
-        p[0] = self._build_function_definition(
-                spec=specification,
-                decl=p[2],
-                param_decls=p[3],
-                body=p[4],
-            )
-
-
-    def p_function_definition_2(self, p):
-        '''
-            function_definition : declarator declaration_list compound_statement
+            function_definition : declarator declaration_list_opt compound_statement
         '''
         specification = dict(
                 type=[uc_ast.Type(['void'], coord=self._token_coord(p,1))],
@@ -219,6 +211,28 @@ class UCParser():
             )
 
 
+    def p_function_definition_2(self, p):
+        '''
+            function_definition : type_specifier declarator declaration_list compound_statement
+        '''
+        specification = p[1]
+
+        p[0] = self._build_function_definition(
+                spec=specification,
+                decl=p[2],
+                param_decls=p[3],
+                body=p[4],
+            )
+
+
+    def p_declaration_list_opt(self,p):
+        '''
+            declaration_list_opt : empty
+                                 | declaration_list
+        '''
+        p[0] = p[1]
+
+
     def p_declaration_list(self, p):
         '''
             declaration_list : declaration
@@ -227,14 +241,31 @@ class UCParser():
         if len(p) == 2:
             p[0] = p[1]
         else:
-            p[0] = p[1] + (p[2])
+            p[0] = p[1] + p[2]
+
+
+    def p_declaration_body(self,p):
+        '''
+            declaration_body :  type_specifier init_declarator_list_opt
+        '''
+        specification = p[1]
+
+        if p[2] is not None:
+            decls = self._build_declarations(
+                    spec=specification,
+                    decls=p[2]
+                )
+        else:
+            decls = None
+
+        p[0] = decls
 
 
     def p_declaration(self, p):
         '''
-            declaration :  type_specifier init_declarator_list_opt SEMI
+            declaration :  declaration_body SEMI
         '''
-        p[0] = ("declaration", p[1], p[2])
+        p[0] = p[1]
 
 
     def p_type_specifier(self, p):
@@ -244,7 +275,10 @@ class UCParser():
                            | INT
                            | FLOAT
         '''
-        p[0] = uc_ast.Type(names=[p[1]], coord=self._token_coord(p,1))
+        p[0] = uc_ast.Type(
+            names=[p[1]], 
+            coord=self._token_coord(p,1)
+            )
 
 
     def p_declarator_1(self, p):
@@ -266,10 +300,22 @@ class UCParser():
             pointer : TIMES
                     | TIMES pointer
         '''
-        if len(p) == 2:
-            p[0] = ("pointer")
+        nest_type = uc_ast.PtrDecl(
+                ptr_quals=p[2] or [],
+                type=None,
+                coord=self._token_coord(p,1)
+            )
+
+        if len(p) > 3:
+            tail_type = p[3]
+            while tail_type.type is not None:
+                tail_type = tail_type.type
+
+            tail_type.type = nest_type
+
+            p[0] = p[3]
         else:
-            p[0] = ("pointer", p_pointer(self, p[2]))
+            p[0] = nest_type
 
 
     def p_direct_declarator_1(self, p):
@@ -321,7 +367,10 @@ class UCParser():
         '''
             identifier : ID
         '''
-        p[0] = uc_ast.ID(name=p[1], coord=self._token_coord(p,1))
+        p[0] = uc_ast.ID(
+                name=p[1], 
+                coord=self._token_coord(p,1)
+            )
 
 
     def p_identifier_list(self, p):
@@ -335,7 +384,7 @@ class UCParser():
                     coord=p[1].coord
                 )
         else:
-            p[1].append(p[3])
+            p[1].params.append(p[3])
             p[0] = p[1]
 
 
@@ -351,8 +400,7 @@ class UCParser():
             constant_expression_opt : empty
                                     | constant_expression
         '''
-        if len(p) == 2:
-            p[0] = p[1]
+        p[0] = p[1]
 
 
     def p_binary_expression(self, p):
@@ -468,9 +516,13 @@ class UCParser():
                                 | argument_expression COMMA assignment_expression
         '''
         if len(p) == 2:
-            p[0] = p[1]
+            p[0] = uc_ast.ExprList(
+                    exprs=[p[1]],
+                    coord=p[1].coord
+                )
         else:
-            p[0] = (p[1], p[3])
+            p[1].exprs.append(p[3])
+            p[0] = p[1]
 
 
     def p_argument_expression_opt(self, p):
@@ -478,32 +530,68 @@ class UCParser():
             argument_expression_opt : empty
                                     | argument_expression
         '''
-        if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = None
+        p[0] = p[1]
 
 
-    def p_primary_expression(self, p):
+    def p_primary_expression_1(self, p):
         '''
             primary_expression : identifier
-                               | constant
-                               | STRING_LITERAL
-                               | LPAREN expression RPAREN
-        '''
-        if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = p[2]
-
-
-    def p_constant(self, p):
-        '''
-            constant : INT_CONST
-                     | CHAR_CONST
-                     | FLOAT_CONST
         '''
         p[0] = p[1]
+
+
+    def p_primary_expression_2(self, p):
+        '''
+            primary_expression : constant
+        '''
+        p[0] = p[1]
+
+
+    def p_primary_expression_3(self, p):
+        '''
+            primary_expression : STRING_LITERAL
+        '''
+        p[0] = p[1]
+
+
+    def p_primary_expression_4(self, p):
+        '''
+            primary_expression : LPAREN expression RPAREN
+        '''
+        p[0] = p[2]
+
+
+    def p_constant_1(self, p):
+        '''
+            constant : INT_CONST
+        '''
+        p[0] = uc_ast.Constant(
+                type='int',
+                value=p[1],
+                coord=self._token_coord(p,1)
+            )
+
+
+    def p_constant_2(self, p):
+        '''
+            constant : CHAR_CONST
+        '''
+        p[0] = uc_ast.Constant(
+                type='char',
+                value=p[1],
+                coord=self._token_coord(p,1)
+            )
+
+
+    def p_constant_3(self, p):
+        '''
+            constant : FLOAT_CONST
+        '''
+        p[0] = uc_ast.Constant(
+                type='float',
+                value=p[1],
+                coord=self._token_coord(p,1)
+            )
 
 
     def p_expression(self, p):
@@ -514,7 +602,14 @@ class UCParser():
         if len(p) == 2:
             p[0] = p[1]
         else:
-            p[0] = (p[1], p[3])
+            if not isinstance(p[1], uc_ast.ExprList):
+                p[1] = uc_ast.ExprList(
+                        exprs=[p[1]],
+                        coord=p[1].coord
+                    )
+
+            p[1].exprs.append(p[3])
+            p[0] = p[1]
 
 
     def p_expression_opt(self, p):
@@ -522,10 +617,7 @@ class UCParser():
             expression_opt : empty
                            | expression
         '''
-        if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = None
+        p[0] = p[1]
 
 
     def p_assignment_expression(self, p):
@@ -573,9 +665,13 @@ class UCParser():
                            | parameter_list COMMA parameter_declaration
         '''
         if len(p) == 2:
-            p[0] = p[1]
+            p[0] = ParamList(
+                    params=[p[1]],
+                    coord=p[1].coord
+                )
         else:
-            p[0] = (p[1], p[3])
+            p[1].params.append(p[3])
+            p[0] = p[1]
 
 
     def p_parameter_declaration(self, p):
@@ -590,10 +686,10 @@ class UCParser():
             init_declarator_list : init_declarator
                                  | init_declarator_list COMMA init_declarator
         '''
-        if len(p) == 2:
-            p[0] = p[1]
+        if len(p) == 4:
+            p[0] = p[1] + [p[3]]
         else:
-            p[0] = p[1] + (p[2])
+            p[0] = [p[1]]
 
 
     def p_init_declarator_list_opt(self, p):
@@ -601,10 +697,7 @@ class UCParser():
             init_declarator_list_opt : empty
                                      | init_declarator_list
         '''
-        if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = None
+        p[0] = p[1]
 
 
     def p_init_declarator(self, p):
@@ -612,33 +705,31 @@ class UCParser():
             init_declarator : declarator
                             | declarator EQUALS initializer
         '''
-        if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = (p[1], p[2])
+        p[0] = dict(
+                decl=p[1],
+                init=(p[3] if len(p) > 2 else None)
+            )
 
 
-    def p_initializer(self, p):
+    def p_initializer_1(self, p):
         '''
             initializer : assignment_expression
-                        | LBRACE initializer_list_opt RBRACE
+        '''
+        p[0] = p[1]
+
+
+    def p_initializer_2(self, p):
+        '''
+            initializer : LBRACE initializer_list_opt RBRACE
                         | LBRACE initializer_list COMMA RBRACE
         '''
-        if len(p) == 2:
-            p[0] = p[1]
+        if p[2] is None:
+            p[0] = uc_ast.InitList(
+                    expressions=[],
+                    coord=self._token_coord(p,1),
+                )
         else:
             p[0] = p[2]
-
-
-    def p_initializer_list(self, p):
-        '''
-            initializer_list : initializer
-                             | initializer_list COMMA initializer
-        '''
-        if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = (p[1], p[3])
 
 
     def p_initializer_list_opt(self, p):
@@ -647,6 +738,21 @@ class UCParser():
                                  | initializer_list
         '''
         p[0] = p[1]
+
+
+    def p_initializer_list(self, p):
+        '''
+            initializer_list : initializer
+                             | initializer_list COMMA initializer
+        '''
+        if len(p) == 2:
+            p[0] = uc_ast.InitList(
+                    expressions=[p[1]],
+                    coord=p[1].coord
+                )
+        else:
+            p[1].expressions.append(p[3])
+            p[0] = p[1]
 
 
     def p_compound_statement(self, p):
@@ -685,62 +791,127 @@ class UCParser():
         '''
             expression_statement : expression_opt SEMI
         '''
-        p[0] = p[1]
+        if p[1] is None:
+            p[0] = uc_ast.EmptyStatement(
+                    coord=self._token_coord(p,2)
+                )
+        else:
+            p[0] = p[1]
 
 
-    def p_selection_statement(self, p):
+    def p_selection_statement_1(self, p):
         '''
             selection_statement : IF LPAREN expression RPAREN statement
-                                | IF LPAREN expression RPAREN statement ELSE statement
         '''
-        if len(p) == 6:
-            p[0] = (p[1], p[3], p[5])
-        else:
-            p[0] = (p[1], p[3], p[5], p[7])
+        p[0] = uc.ast_If(
+                    if_cond=p[3],
+                    if_true=p[5],
+                    if_false=None,
+                    coord=self._token_coord(p,1)
+                )
 
 
-    def p_iteration_statement(self, p):
+    def p_selection_statement_2(self, p):
+        '''
+            selection_statement : IF LPAREN expression RPAREN statement ELSE statement
+        '''
+        p[0] = uc_ast.If(
+                    if_cond=p[3],
+                    if_true=p[5],
+                    if_false=p[7],
+                    coord=self._token_coord(p,1)
+                )        
+
+
+    def p_iteration_statement_1(self, p):
         '''
             iteration_statement : WHILE LPAREN expression RPAREN statement
-                                | FOR LPAREN expression_opt SEMI expression_opt SEMI expression_opt RPAREN statement
-                                | FOR LPAREN declaration expression_opt SEMI expression_opt RPAREN statement
         '''
-        if p[1] == "WHILE":
-            p[0] = (p[1], p[3], p[5])
-        else:
-            p[0] = (p[1], p[3], p[5], p[7], p[9])
+        p[0] = uc_ast.While(
+                    while_cond=p[3],
+                    while_stmt=p[5],
+                    coord=self._token_coord(p,1)
+            )
 
 
-    def p_jump_statement(self, p):
+    def p_iteration_statement_2(self, p):
+        '''
+            iteration_statement : FOR LPAREN expression_opt SEMI expression_opt SEMI expression_opt RPAREN statement
+        '''
+        p[0] = uc_ast.For(
+                for_init=p[3],
+                for_cond=p[5],
+                for_next=p[7],
+                for_statement=p[9],
+                coord=self._token_coord(p,1)
+            )
+
+
+    def p_iteration_statement_3(self, p):
+        '''
+            iteration_statement : FOR LPAREN declaration expression_opt SEMI expression_opt RPAREN statement
+        '''
+        decl = uc_ast.DeclList(
+                decls=p[3],
+                coord=self._token_coord(p,1)
+            )
+
+        p[0] = uc_ast.For(
+                for_init=decl,
+                for_cond=p[4],
+                for_next=p[6],
+                for_statement=p[8],
+                coord=self._token_coord(p,1)
+            )
+
+
+    def p_jump_statement_1(self, p):
         '''
             jump_statement : BREAK SEMI
-                           | RETURN expression_opt SEMI
         '''
-        if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = (p[1], p[2])
+        p[0] = uc_ast.Break(
+                coord=self._token_coord(p,1)
+            )
+
+
+    def p_jump_statement_2(self, p):
+        '''
+            jump_statement : RETURN expression_opt SEMI
+        '''
+        p[0] = uc_ast.Return(
+                expression=p[2],
+                coord=self._token_coord(p,1)
+            )
 
 
     def p_assert_statement(self, p):
         '''
             assert_statement : ASSERT expression SEMI
         '''
-        p[0] = ("assert", p[2])
+        p[0] = uc_ast.Assert(
+                expr=p[2],
+                coord=self._token_coord(p,1)
+            )
 
 
     def p_print_statement(self, p):
         '''
             print_statement : PRINT LPAREN expression_opt RPAREN SEMI
         '''
-        p[0] = ("print", p[3])
+        p[0] = uc_ast.Print(
+                expr=p[3],
+                coord=self._token_coord(p,1)
+            )
 
 
     def p_read_statement(self, p):
         '''
             read_statement : READ LPAREN argument_expression RPAREN SEMI
         '''
-        p[0] = ("read", p[3])
+        p[0] = uc_ast.Read(
+                names=p[3],
+                coord=self._token_coord(p,1)
+            )
 
 
     def p_error(self, p):

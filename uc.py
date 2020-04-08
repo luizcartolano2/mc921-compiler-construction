@@ -105,6 +105,7 @@ class Compiler:
         self.total_errors = 0
         self.total_warnings = 0
 
+  
     def _parse(self, susy, ast_file, debug):
         """ 
             Parses the source code. If ast_file != None,
@@ -118,10 +119,12 @@ class Compiler:
         elif ast_file is not None:
             self.ast.show(buf=ast_file, showcoord=True)
 
+  
     def _do_compile(self, susy, ast_file, debug):
         """ Compiles the code to the given file object. """
         self._parse(susy, ast_file, debug)
 
+  
     def compile(self, code, susy, ast_file, debug):
         """ Compiles the given code string """
         self.code = code
