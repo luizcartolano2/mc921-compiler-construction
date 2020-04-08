@@ -21,6 +21,10 @@ class UCParser():
         self.tokens = UCLexer.tokens
         # create lexer object
         self.lexer = UCLexer(error_function)
+        # build the lexer
+        self.lexer  = self.lexer.build()
+        # build the parser
+        self.parser = yacc(module=self,)
 
 
     def _token_coord(self, p, token_idx):
@@ -65,15 +69,6 @@ class UCParser():
             decl_tail.type = modifier_head
             
             return decl
-
-
-    def build(self):
-        '''
-            Builds the parser from the specification. Must be
-            called after the parser object is created.
-        '''
-        self.lexer  = self.lexer.build()
-        self.parser = yacc(module=self,)
 
 
     def parse(self, text, filename='', debug=False):
