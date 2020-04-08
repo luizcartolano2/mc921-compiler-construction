@@ -139,9 +139,9 @@ class UCParser():
 
         declaration = self._build_declarations(
             spec=spec,
-            decls=[dict(decl=decl, init=None)])#[0]
+            decls=[dict(decl=decl, init=None)])[0]
 
-        return c_ast.FuncDef(
+        return uc_ast.FuncDef(
             func_decl=declaration,
             func_param_decls=param_decls,
             func_body=body,
@@ -213,7 +213,7 @@ class UCParser():
 
     def p_function_definition_2(self, p):
         '''
-            function_definition : type_specifier declarator declaration_list compound_statement
+            function_definition : type_specifier declarator declaration_list_opt compound_statement
         '''
         specification = p[1]
 
@@ -225,23 +225,18 @@ class UCParser():
             )
 
 
-    def p_declaration_list_opt(self,p):
+    def p_statement(self, p):
         '''
-            declaration_list_opt : empty
-                                 | declaration_list
+            statement : expression_statement
+                      | compound_statement
+                      | selection_statement
+                      | iteration_statement
+                      | jump_statement
+                      | assert_statement
+                      | print_statement
+                      | read_statement
         '''
         p[0] = p[1]
-
-
-    def p_declaration_list(self, p):
-        '''
-            declaration_list : declaration
-                             | declaration_list declaration
-        '''
-        if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = p[1] + p[2]
 
 
     def p_declaration_body(self,p):
@@ -268,6 +263,17 @@ class UCParser():
         p[0] = p[1]
 
 
+    def p_declaration_list(self, p):
+        '''
+            declaration_list : declaration
+                             | declaration_list declaration
+        '''
+        if len(p) == 2:
+            p[0] = p[1]
+        else:
+            p[0] = p[1] + p[2]
+
+
     def p_type_specifier(self, p):
         '''
             type_specifier : VOID
@@ -281,6 +287,28 @@ class UCParser():
             )
 
 
+    def p_init_declarator_list(self, p):
+        '''
+            init_declarator_list : init_declarator
+                                 | init_declarator_list COMMA init_declarator
+        '''
+        if len(p) == 4:
+            p[0] = p[1] + [p[3]]
+        else:
+            p[0] = [p[1]]
+
+
+    def p_init_declarator(self, p):
+        '''
+            init_declarator : declarator
+                            | declarator EQUALS initializer
+        '''
+        p[0] = dict(
+                decl=p[1],
+                init=(p[3] if len(p) > 2 else None)
+            )
+
+   
     def p_declarator_1(self, p):
         '''
             declarator : direct_declarator
@@ -293,6 +321,14 @@ class UCParser():
             declarator : pointer direct_declarator
         '''
         p[0] = self._type_modify_decl(p[2],p[1])
+
+
+    def p_declaration_list_opt(self,p):
+        '''
+            declaration_list_opt : empty
+                                 | declaration_list
+        '''
+        p[0] = p[1]
 
 
     def p_pointer(self, p):
@@ -352,11 +388,11 @@ class UCParser():
     def p_direct_declarator_4(self, p):
         '''
             direct_declarator : direct_declarator LPAREN parameter_list RPAREN
-                              | direct_declarator LPAREN identifier_list RPAREN
+                              | direct_declarator LPAREN identifier_list_opt RPAREN
         '''
         func_decl = uc_ast.FuncDecl(
-                func_args=p[3],
-                func_type=None,
+                args=p[3],
+                type=None,
                 coord=p[1].coord,
             )
 
@@ -386,6 +422,14 @@ class UCParser():
         else:
             p[1].params.append(p[3])
             p[0] = p[1]
+
+
+    def p_identifier_list_opt(self, p):
+        '''
+            identifier_list_opt : empty
+                                | identifier_list
+        '''
+        p[0] = p[1]
 
 
     def p_constant_expression(self, p):
@@ -681,34 +725,12 @@ class UCParser():
         p[0] = (p[1], p[2])
 
 
-    def p_init_declarator_list(self, p):
-        '''
-            init_declarator_list : init_declarator
-                                 | init_declarator_list COMMA init_declarator
-        '''
-        if len(p) == 4:
-            p[0] = p[1] + [p[3]]
-        else:
-            p[0] = [p[1]]
-
-
     def p_init_declarator_list_opt(self, p):
         '''
             init_declarator_list_opt : empty
                                      | init_declarator_list
         '''
         p[0] = p[1]
-
-
-    def p_init_declarator(self, p):
-        '''
-            init_declarator : declarator
-                            | declarator EQUALS initializer
-        '''
-        p[0] = dict(
-                decl=p[1],
-                init=(p[3] if len(p) > 2 else None)
-            )
 
 
     def p_initializer_1(self, p):
@@ -755,25 +777,41 @@ class UCParser():
             p[0] = p[1]
 
 
-    def p_compound_statement(self, p):
+    def p_block_item(self, p):
         '''
-            compound_statement : LBRACE declaration_list statement_list RBRACE
+            block_item : declaration
+                       | statement
         '''
-        p[0] = (p[2], p[3])
+        p[0] = p[1] if isinstance(p[1], list) else [p[1]]
 
 
-    def p_statement(self, p):
+    def p_block_item_list(self, p):
         '''
-            statement : expression_statement
-                      | compound_statement
-                      | selection_statement
-                      | iteration_statement
-                      | jump_statement
-                      | assert_statement
-                      | print_statement
-                      | read_statement
+            block_item_list : block_item
+                            | block_item_list block_item
+        '''
+        if len(p) == 2 or p[2] == [None]:
+            p[0] = p[1]
+        else:
+            p[0] = p[1] + p[2]
+
+
+    def p_block_item_list_opt(self, p):
+        '''
+            block_item_list_opt : empty
+                                | block_item_list
         '''
         p[0] = p[1]
+
+
+    def p_compound_statement(self, p):
+        '''
+            compound_statement : LBRACE block_item_list_opt RBRACE
+        '''
+        p[0] = uc_ast.Compound(
+                block_items=p[2],
+                coord=self._token_coord(p,1)
+            )
 
 
     def p_statement_list(self, p):
@@ -784,7 +822,7 @@ class UCParser():
         if len(p) == 2:
             p[0] = p[1]
         else:
-            p[0] = p[1] + (p[2])
+            p[0] = p[1] + p[2]
 
 
     def p_expression_statement(self, p):
@@ -876,10 +914,11 @@ class UCParser():
 
     def p_jump_statement_2(self, p):
         '''
-            jump_statement : RETURN expression_opt SEMI
+            jump_statement : RETURN expression SEMI
+                           | RETURN SEMI
         '''
         p[0] = uc_ast.Return(
-                expression=p[2],
+                expression=p[2] if len(p) == 4 else None,
                 coord=self._token_coord(p,1)
             )
 

@@ -618,34 +618,34 @@ class FuncCall(Node):
 
 
 class FuncDecl(Node):
-    __slots__ = ('func_args', 'func_type', 'coord')
+    __slots__ = ('args', 'type', 'coord')
 
 
-    def __init__(self, func_args, func_type, coord=None):
-        self.func_args = func_args
-        self.func_type = func_type
-        self.coord     = coord
+    def __init__(self, args, type, coord=None):
+        self.args  = args
+        self.type  = type
+        self.coord = coord
 
 
     def children(self):
         nodelist = []
 
-        if self.func_args is not None: 
-            nodelist.append(("func_args", self.func_args))
+        if self.args is not None: 
+            nodelist.append(("args", self.args))
 
-        if self.func_type is not None: 
-            nodelist.append(("func_type", self.func_type))
+        if self.type is not None: 
+            nodelist.append(("type", self.type))
 
         return tuple(nodelist)
 
 
     def __iter__(self):
 
-        if self.func_args is not None:
-            yield self.func_args
+        if self.args is not None:
+            yield self.args
 
-        if self.func_type is not None:
-            yield self.func_type
+        if self.type is not None:
+            yield self.type
 
 
     attr_names = ()
