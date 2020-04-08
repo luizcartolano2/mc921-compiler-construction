@@ -22,7 +22,7 @@ class UCParser():
         # create lexer object
         self.lexer = UCLexer(error_function)
         # build the lexer
-        self.lexer  = self.lexer.build()
+        self.lexer.build()
         # build the parser
         self.parser = yacc(module=self,)
 
@@ -71,6 +71,83 @@ class UCParser():
             return decl
 
 
+    def _fix_decl_name_type(self, decl, typename):
+        """ 
+            Fixes a declaration. Modifies decl.
+        """
+        
+        # Reach the underlying basic type
+        type = decl
+        while not isinstance(type, uc_ast.VarDecl):
+            type = type.type
+
+        decl.name = type.declname
+
+        # The typename is a list of types. If any type in this
+        # list isn't an Type, it must be the only
+        # type in the list.
+        # If all the types are basic, they're collected in the
+        # Type holder.
+        for tn in typename:
+            if not isinstance(tn, uc_ast.Type):
+                if len(typename) > 1:
+                    self._parse_error(
+                        "Invalid multiple types specified", tn.coord)
+                else:
+                    type.type = tn
+                    return decl
+
+        if not typename:
+            # Functions default to returning int
+            if not isinstance(decl.type, uc_ast.FuncDecl):
+                self._parse_error("Missing type in declaration", decl.coord)
+            type.type = uc_ast.Type(['int'], coord=decl.coord)
+        else:
+            # At this point, we know that typename is a list of Type
+            # nodes. Concatenate all the names into a single list.
+            type.type = uc_ast.Type(
+                [typename.names[0]],
+                coord=typename.coord)
+        return decl
+
+
+    def _build_declarations(self, spec, decls):
+        """ 
+            Builds a list of declarations all sharing the given specifiers.
+        """
+        declarations = []
+
+        for decl in decls:
+            assert decl['decl'] is not None
+            declaration = uc_ast.Decl(
+                    name=None,
+                    decl_type=decl['decl'],
+                    decl_init=decl.get('init'),
+                    coord=decl['decl'].coord)
+
+            fixed_decl = self._fix_decl_name_type(declaration, spec)
+            declarations.append(fixed_decl)
+
+        return declarations
+
+
+    def _build_function_definition(self, spec, decl, param_decls, body):
+        """ 
+            Builds a function definition.
+        """
+        # assert 'typedef' not in spec['storage']
+
+        declaration = self._build_declarations(
+            spec=spec,
+            decls=[dict(decl=decl, init=None)])#[0]
+
+        return c_ast.FuncDef(
+            func_decl=declaration,
+            func_param_decls=param_decls,
+            func_body=body,
+            coord=decl.coord)
+
+
     def parse(self, text, filename='', debug=False):
         return self.parser.parse(
                 input=text,
@@ -83,8 +160,7 @@ class UCParser():
         '''
             program : global_declaration_list
         '''
-
-        p[0] = p[1]
+        p[0] = uc_ast.Program(gdecls=p[1], coord=self._token_coord(p,1))
 
 
     def p_global_declaration_list(self, p):
@@ -98,23 +174,49 @@ class UCParser():
             p[0] = p[1] + [p[2]]
 
 
-    def p_global_declaration(self, p):
+    def p_global_declaration_1(self, p):
         '''
             global_declaration : function_definition
-                               | declaration
         '''
         p[0] = p[1]
 
 
-    def p_function_definition(self, p):
+    def p_global_declaration_2(self, p):
+        '''
+            global_declaration : declaration
+        '''
+        p[0] = uc_ast.GlobalDecl(p[1], self._token_coord(p,1))
+
+
+    def p_function_definition_1(self, p):
+        '''
+            function_definition : type_specifier declarator declaration_list compound_statement
+        '''
+        specification = p[1]
+
+        p[0] = self._build_function_definition(
+                spec=specification,
+                decl=p[2],
+                param_decls=p[3],
+                body=p[4],
+            )
+
+
+    def p_function_definition_2(self, p):
         '''
             function_definition : declarator declaration_list compound_statement
-                                | type_specifier declarator declaration_list compound_statement
         '''
-        if p.length() == 4:
-            p[0] = ("function_definition", p[1], p[2], p[3])
-        else:
-            p[0] = ("function_definition", p[2], p[3], p[4], p[1])
+        specification = dict(
+                type=[uc_ast.Type(['void'], coord=self._token_coord(p,1))],
+                function=[]
+            )
+
+        p[0] = self._build_function_definition(
+                spec=specification,
+                decl=p[1],
+                param_decls=p[2],
+                body=p[3]
+            )
 
 
     def p_declaration_list(self, p):
@@ -142,14 +244,21 @@ class UCParser():
                            | INT
                            | FLOAT
         '''
+        p[0] = uc_ast.Type(names=[p[1]], coord=self._token_coord(p,1))
+
+
+    def p_declarator_1(self, p):
+        '''
+            declarator : direct_declarator
+        '''
         p[0] = p[1]
 
 
-    def p_declarator(self, p):
+    def p_declarator_2(self, p):
         '''
             declarator : pointer direct_declarator
         '''
-        p[0] = ("declarator", p[2])
+        p[0] = self._type_modify_decl(p[2],p[1])
 
 
     def p_pointer(self, p):
@@ -157,52 +266,77 @@ class UCParser():
             pointer : TIMES
                     | TIMES pointer
         '''
-        if p.length() == 2:
+        if len(p) == 2:
             p[0] = ("pointer")
         else:
             p[0] = ("pointer", p_pointer(self, p[2]))
 
 
-    def p_direct_declarator(self, p):
+    def p_direct_declarator_1(self, p):
         '''
             direct_declarator : identifier
-                              | LPAREN declarator RPAREN
-                              | direct_declarator LBRACKET constant_expression_opt RBRACKET
-                              | direct_declarator LPAREN parameter_list RPAREN
-                              | direct_declarator LPAREN identifier_list_opt RPAREN
         '''
-        if p.length() == 2:
-            p[0] = p[1]
-        elif p.length() == 4:
-            p[0] = p[2]
-        else:
-            p[0] = (p[1], p[3])
+        p[0] = uc_ast.VarDecl(
+                declname=p[1],
+                type=None,
+                coord=self._token_coord(p,1),
+            )
+
+
+    def p_direct_declarator_2(self, p):
+        '''
+            direct_declarator : LPAREN declarator RPAREN
+        '''
+        p[0] = p[2]
+
+
+    def p_direct_declarator_3(self, p):
+        '''
+            direct_declarator : direct_declarator LBRACKET constant_expression_opt RBRACKET
+        '''
+        array = uc_ast.ArrayDecl(
+                type=None,
+                dimension=p[3] if len(p) > 4 else None,
+                coord=p[1].coord
+            )
+
+        p[0] = self._type_modify_decl(p[1], array)
+
+
+    def p_direct_declarator_4(self, p):
+        '''
+            direct_declarator : direct_declarator LPAREN parameter_list RPAREN
+                              | direct_declarator LPAREN identifier_list RPAREN
+        '''
+        func_decl = uc_ast.FuncDecl(
+                func_args=p[3],
+                func_type=None,
+                coord=p[1].coord,
+            )
+
+        p[0] = self._type_modify_decl(p[1], func_decl)
 
 
     def p_identifier(self, p):
         '''
             identifier : ID
         '''
-        p[0] = ('ID', p[1])
+        p[0] = uc_ast.ID(name=p[1], coord=self._token_coord(p,1))
 
 
     def p_identifier_list(self, p):
         '''
             identifier_list : identifier
-                            | identifier_list identifier
+                            | identifier_list COMMA identifier
         '''
         if len(p) == 2:
-            p[0] = p[1]
+            p[0] = uc_ast.ParamList(
+                    params=[p[1]],
+                    coord=p[1].coord
+                )
         else:
-            p[0] = p[1] + (p[3])
-
-
-    def p_identifier_list_opt(self, p):
-        """
-            identifier_list_opt : identifier_list
-                                | empty
-        """
-        p[0] = p[1]
+            p[1].append(p[3])
+            p[0] = p[1]
 
 
     def p_constant_expression(self, p):
@@ -241,47 +375,91 @@ class UCParser():
         if len(p) == 2:
             p[0] = p[1]
         else:
-            p[0] = (p[2], p[1], p[3])
+            p[0] = uc_ast.BinaryOp(
+                    op=p[2],
+                    left_value=p[1],
+                    right_value=p[3],
+                    coord=p[1].coord
+                )
 
 
-    def p_cast_expression(self, p):
+    def p_cast_expression_1(self, p):
         '''
             cast_expression : unary_expression
-                            | LPAREN type_specifier RPAREN cast_expression
         '''
-        if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = (p[2], p[4])
+        p[0] = p[1]
 
 
-    def p_unary_expression(self, p):
+    def p_cast_expression_2(self, p):
+        '''
+            cast_expression : LPAREN type_specifier RPAREN cast_expression
+        '''
+        p[0] = uc_ast.Cast(
+                to_type=p[2],
+                expression=p[4],
+                coord=self._token_coord(p,1)
+            )
+
+
+    def p_unary_expression_1(self, p):
         '''
             unary_expression : postfix_expression
-                             | PLUSPLUS unary_expression
+        '''
+        p[0] = p[1]
+
+        
+    def p_unary_expression_2(self, p):
+        '''
+            unary_expression : PLUSPLUS unary_expression
                              | MINUSMINUS unary_expression
                              | unary_operator cast_expression
         '''
-        if p.length() == 2:
-            p[0] = p[1]
-        else:
-            p[0] = (p[1], p[2])
+        p[0] = uc_ast.UnaryOp(
+                op=p[1],
+                expr=p[2],
+                coord=p[2].coord
+            )
 
 
-    def p_postfix_expression(self, p):
+    def p_postfix_expression_1(self, p):
         '''
             postfix_expression : primary_expression
-                               | postfix_expression LBRACKET expression RBRACKET
-                               | postfix_expression LPAREN argument_expression_opt RPAREN
-                               | postfix_expression PLUSPLUS
+        '''
+        p[0] = p[1]
+
+
+    def p_postfix_expression_2(self, p):
+        '''
+            postfix_expression : postfix_expression LBRACKET expression RBRACKET
+        '''
+        p[0] = ArrayRef(
+                name=p[1],
+                subscript=p[3],
+                coord=p[1].coord
+            )
+
+
+    def p_postfix_expression_3(self, p):
+        '''
+            postfix_expression : postfix_expression LPAREN argument_expression_opt RPAREN
+        '''
+        p[0] = uc_ast.FuncCall(
+                func_name=p[1],
+                func_args=p[3] if len(p) == 5 else None,
+                coord=p[1].coord
+            )
+
+
+    def p_postfix_expression_4(self, p):
+        '''
+            postfix_expression : postfix_expression PLUSPLUS
                                | postfix_expression MINUSMINUS
         '''
-        if p.length() == 2:
-            p[0] = p[1]
-        elif p.length() == 3:
-            p[0] = (p[1], p[2])
-        else:
-            p[0] = (p[1], p[3])
+        p[0] = uc_ast.UnaryOp(
+                op=p[2], #talvez deva ser 'p'+p[2]
+                expr=p[1],
+                coord=p[1].coord
+            )
 
 
     def p_argument_expression(self, p):
@@ -289,7 +467,7 @@ class UCParser():
             argument_expression : assignment_expression
                                 | argument_expression COMMA assignment_expression
         '''
-        if p.length() == 2:
+        if len(p) == 2:
             p[0] = p[1]
         else:
             p[0] = (p[1], p[3])
@@ -333,7 +511,7 @@ class UCParser():
             expression : assignment_expression
                        | expression COMMA assignment_expression
         '''
-        if p.length() == 2:
+        if len(p) == 2:
             p[0] = p[1]
         else:
             p[0] = (p[1], p[3])
@@ -355,10 +533,15 @@ class UCParser():
             assignment_expression : binary_expression
                                   | unary_expression assignment_operator assignment_expression
         '''
-        if p.length() == 2:
+        if len(p) == 2:
             p[0] = p[1]
         else:
-            p[0] = (p[1], p[2], p[3])
+            p[0] = uc_ast.Assignment(
+                    op=p[2],
+                    left_value=p[1],
+                    right_value=p[3],
+                    coord=p[1].coord
+                )
 
 
     def p_assignment_operator(self, p):
@@ -370,10 +553,7 @@ class UCParser():
                                 | PLUSEQUAL
                                 | MINUSEQUAL
         '''
-        if p[1] == "=":
-            p[0] = p[2]
-        else:
-            p[0] = (p[1], p[3], p[4])
+        p[0] = [1]
 
 
     def p_unary_operator(self, p):
@@ -392,7 +572,7 @@ class UCParser():
             parameter_list : parameter_declaration
                            | parameter_list COMMA parameter_declaration
         '''
-        if p.length() == 2:
+        if len(p) == 2:
             p[0] = p[1]
         else:
             p[0] = (p[1], p[3])
@@ -444,7 +624,7 @@ class UCParser():
                         | LBRACE initializer_list_opt RBRACE
                         | LBRACE initializer_list COMMA RBRACE
         '''
-        if p.length() == 2:
+        if len(p) == 2:
             p[0] = p[1]
         else:
             p[0] = p[2]

@@ -723,8 +723,9 @@ class ID(Node):
     __slots__ = ('name', 'coord')
 
 
-    def __init__(self):
-        self.name = name
+    def __init__(self, name, coord=None):
+        self.name  = name
+        self.coord = coord
 
 
     def children(self):
@@ -975,9 +976,9 @@ class Type(Node):
     __slots__ = ('names', 'coord')
 
 
-    def __init__(self, name, coord=None):
-        self.name       = name
-        self.coord      = coord
+    def __init__(self, names, coord=None):
+        self.names       = names
+        self.coord       = coord
 
 
     def children(self):
