@@ -94,6 +94,26 @@ class Node(object):
                 _my_node_name=child_name)
 
 
+class Coord(object):
+    """ 
+        Coordinates of a syntactic element. Consists of:
+            - Line number
+            - (optional) column number, for the Lexer
+    """
+    __slots__ = ('line', 'column')
+
+    def __init__(self, line, column=None):
+        self.line = line
+        self.column = column
+
+    def __str__(self):
+        if self.line:
+            coord_str = "   @ %s:%s" % (self.line, self.column)
+        else:
+            coord_str = ""
+        return coord_str
+
+
 class NodeVisitor(object):
     """ 
         A base NodeVisitor class for visiting c_ast nodes.
