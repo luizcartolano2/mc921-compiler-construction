@@ -1,3 +1,5 @@
+# import the AST classes
+import uc_ast
 # import the lex class
 from uc_lex import UCLexer
 # import the yacc lib
@@ -17,12 +19,65 @@ class UCParser():
         self.lexer = UCLexer(error_function)
 
 
+    def _token_coord(self, p, token_idx):
+        last_cr = p.lexer.lexer.lexdata.rfind('\n', 0, p.lexpos(token_idx))
+        
+        if last_cr < 0:
+            last_cr = -1
+        column = (p.lexpos(token_idx) - (last_cr))
+        
+        return uc_ast.Coord(p.lineno(token_idx), column)
+
+
+    def _type_modify_decl(self, decl, modifier):
+        """ 
+            Tacks a type modifier on a declarator, and returns
+            the modified declarator.
+            Note: the declarator and modifier may be modified
+        """
+        modifier_head = modifier
+        modifier_tail = modifier
+
+        # The modifier may be a nested list. Reach its tail.
+        while modifier_tail.type:
+            modifier_tail = modifier_tail.type
+
+        # If the decl is a basic type, just tack the modifier onto it
+        if isinstance(decl, uc_ast.VarDecl):
+            modifier_tail.type = decl
+            
+            return modifier
+        
+        else:
+            # Otherwise, the decl is a list of modifiers. Reach
+            # its tail and splice the modifier onto the tail,
+            # pointing to the underlying basic type.
+            decl_tail = decl
+
+            while not isinstance(decl_tail.type, uc_ast.VarDecl):
+                decl_tail = decl_tail.type
+
+            modifier_tail.type = decl_tail.type
+            decl_tail.type = modifier_head
+            
+            return decl
+
+
     def build(self):
         '''
-        Builds the parser from the specification. Must be
-        called after the parser object is created.
+            Builds the parser from the specification. Must be
+            called after the parser object is created.
         '''
+        self.lexer  = self.lexer.build()
         self.parser = yacc(module=self,)
+
+
+    def parse(self, text, debug=False):
+        return self.parser.parse(
+                input=text,
+                lexer=self.lexer,
+                debug=debug,
+            )
 
 
     def p_program(self, p):
