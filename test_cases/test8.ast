@@ -1,0 +1,11 @@
+Program:  (at )
+  FuncDef:  (at )
+    Decl: ID(name='main'
+   ) (at )
+      FuncDecl:  (at )
+        VarDecl: ID(name='main'
+   ) (at )
+          Type: ['int'] (at    @ 1:1)
+    Compound:  (at    @ 1:12)
+      Print:  (at    @ 2:2)
+        Constant: int, 1 (at    @ 2:8)
