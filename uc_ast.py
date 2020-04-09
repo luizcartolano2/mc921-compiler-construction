@@ -17,21 +17,18 @@ class Node(object):
         Abstract base class for AST nodes.
     """
     def __repr__(self):
-        """ 
-            Generates a python representation of the current node
+        """ Generates a python representation of the current node
         """
         result = self.__class__.__name__ + '('
-        
         indent = ''
         separator = ''
-
+        
         for name in self.__slots__[:-1]:
             result += separator
             result += indent
             result += name + '=' + (_repr(getattr(self, name)).replace('\n', '\n  ' + (' ' * (len(name) + len(self.__class__.__name__)))))
-            
             separator = ','
-            indent = '\n ' + (' ' * len(self.__class__.__name__))
+            indent = ' ' * len(self.__class__.__name__)
         
         result += indent + ')'
         
@@ -982,7 +979,7 @@ class Type(Node):
 
     def children(self):
 
-        return tuple([])
+        return ()
 
 
     def __iter__(self):

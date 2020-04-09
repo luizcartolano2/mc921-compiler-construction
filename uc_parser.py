@@ -70,12 +70,11 @@ class UCParser():
             
             return decl
 
-
+  
     def _fix_decl_name_type(self, decl, typename):
         """ 
             Fixes a declaration. Modifies decl.
         """
-        
         # Reach the underlying basic type
         type = decl
         while not isinstance(type, uc_ast.VarDecl):
@@ -83,6 +82,9 @@ class UCParser():
 
         decl.name = type.declname
 
+        # AQUI E MIGUE PODE DAR PAU DEPOIS
+        type.declname = ''
+        
         # The typename is a list of types. If any type in this
         # list isn't an Type, it must be the only
         # type in the list.
@@ -101,13 +103,20 @@ class UCParser():
             # Functions default to returning int
             if not isinstance(decl.type, uc_ast.FuncDecl):
                 self._parse_error("Missing type in declaration", decl.coord)
-            type.type = uc_ast.Type(['int'], coord=decl.coord)
+            
+            type.type = uc_ast.Type(
+                            ['int'], 
+                            coord=decl.coord
+                        )
+        
         else:
             # At this point, we know that typename is a list of Type
             # nodes. Concatenate all the names into a single list.
             type.type = uc_ast.Type(
-                [typename.names[0]],
-                coord=typename.coord)
+                            [typename.names[0]],
+                            coord=typename.coord
+                        )
+        
         return decl
 
 
@@ -115,7 +124,6 @@ class UCParser():
         """ 
             Builds a list of declarations all sharing the given specifiers.
         """
-        # import pdb; pdb.set_trace()
         declarations = []
 
         for decl in decls:
@@ -126,7 +134,11 @@ class UCParser():
                     init=decl.get('init'),
                     coord=decl['decl'].coord)
 
-            fixed_decl = self._fix_decl_name_type(declaration, spec)
+            if isinstance(declaration.type, uc_ast.Type):
+                fixed_decl = declaration
+            else:
+                fixed_decl = self._fix_decl_name_type(declaration, spec)
+            
             declarations.append(fixed_decl)
 
         return declarations
@@ -136,18 +148,18 @@ class UCParser():
         """ 
             Builds a function definition.
         """
-        # assert 'typedef' not in spec['storage']
-
         declaration = self._build_declarations(
-            spec=spec,
-            decls=[dict(decl=decl, init=None)])[0]
+                            spec=spec,
+                            decls=[dict(decl=decl, init=None)]
+                        )[0]
 
         return uc_ast.FuncDef(
-            spec=spec,
-            decl=declaration,
-            param_decls=param_decls,
-            body=body,
-            coord=decl.coord)
+                    spec=spec,
+                    decl=declaration,
+                    param_decls=param_decls,
+                    body=body,
+                    coord=decl.coord
+                )
 
 
     def parse(self, text, filename='', debug=False):
@@ -724,7 +736,14 @@ class UCParser():
         '''
             parameter_declaration : type_specifier declarator
         '''
-        p[0] = (p[1], p[2])
+        decls = dict(
+                decl=p[2]
+            )
+
+        p[0] = self._build_declarations(
+                spec=p[1],
+                decls=[decls]
+            )[0]
 
 
     def p_init_declarator_list_opt(self, p):

@@ -210,7 +210,7 @@ class UCLexer():
 
     def t_STRING_LITERAL(self, t):
         r'".*?"'
-        t.value = str(t.value)
+        t.value = t.value
     
         return t
 
