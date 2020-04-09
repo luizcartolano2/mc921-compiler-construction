@@ -1,27 +1,39 @@
-Program:  (at )
-  FuncDef:  (at )
-    Decl: ID(name='main'
-   ) (at )
-      FuncDecl:  (at )
-        VarDecl: ID(name='main'
-   ) (at )
-          Type: ['int'] (at    @ 3:1)
-    Compound:  (at    @ 3:11)
-      For:  (at    @ 4:5)
-        DeclList:  (at    @ 4:5)
-          Decl: ID(name='i'
-   ) (at )
-            Constant: int, 1 (at    @ 4:18)
-            VarDecl: ID(name='i'
-   ) (at )
-              Type: ['int'] (at    @ 4:10)
-        BinaryOp: < (at    @ 4:21)
-          ID: i (at    @ 4:21)
-          Constant: int, 4 (at    @ 4:25)
-        UnaryOp: ++ (at    @ 4:28)
-          ID: i (at    @ 4:28)
-        Print:  (at    @ 5:9)
-          ArrayRef:  (at    @ 5:15)
-            ID: v (at    @ 5:15)
-            ID: i (at    @ 5:17)
-      Return:  (at    @ 6:5)
+Program: 
+    GlobalDecl: 
+        Decl: ID(name='v'
+   )
+            InitList:    @ 1:12
+                Constant: int, 1   @ 1:12
+                Constant: int, 2   @ 1:15
+                Constant: int, 3   @ 1:18
+                Constant: int, 4   @ 1:21
+            ArrayDecl: 
+                VarDecl: ID(name='v'
+   )
+                    Type: ['int']   @ 1:1
+    FuncDef: 
+        Decl: ID(name='main'
+   )
+            FuncDecl: 
+                VarDecl: ID(name='main'
+   )
+                    Type: ['int']   @ 3:1
+        Compound:    @ 3:11
+            For:    @ 4:5
+                DeclList:    @ 4:5
+                    Decl: ID(name='i'
+   )
+                        Constant: int, 1   @ 4:18
+                        VarDecl: ID(name='i'
+   )
+                            Type: ['int']   @ 4:10
+                Assignment: [1]   @ 4:21
+                    ID: i   @ 4:21
+                    Constant: int, 4   @ 4:26
+                UnaryOp: ++   @ 4:29
+                    ID: i   @ 4:29
+                Print:    @ 5:9
+                    ArrayRef:    @ 5:15
+                        ID: v   @ 5:15
+                        ID: i   @ 5:17
+            Return:    @ 6:5

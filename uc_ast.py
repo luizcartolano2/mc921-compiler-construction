@@ -46,26 +46,19 @@ class Node(object):
 
 
     def show(self, buf=sys.stdout, offset=0, attrnames=False, nodenames=False, showcoord=False, _my_node_name=None):
-        """ 
-            Pretty print the Node and all its attributes and
-            children (recursively) to a buffer.
+        """ Pretty print the Node and all its attributes and children (recursively) to a buffer.
             buf:
                 Open IO buffer into which the Node is printed.
             offset:
                 Initial offset (amount of leading spaces)
             attrnames:
-                True if you want to see the attribute names in
-                name=value pairs. False to only see the values.
+                True if you want to see the attribute names in name=value pairs. False to only see the values.
             nodenames:
-                True if you want to see the actual node names
-                within their parents.
+                True if you want to see the actual node names within their parents.
             showcoord:
-                Do you want the coordinates of each Node to be
-                displayed.
+                Do you want the coordinates of each Node to be displayed.
         """
-
         lead = ' ' * offset
-        
         if nodenames and _my_node_name is not None:
             buf.write(lead + self.__class__.__name__+ ' <' + _my_node_name + '>: ')
         else:
@@ -73,7 +66,7 @@ class Node(object):
 
         if self.attr_names:
             if attrnames:
-                nvlist = [(n, getattr(self,n)) for n in self.attr_names]
+                nvlist = [(n, getattr(self, n)) for n in self.attr_names if getattr(self, n) is not None]
                 attrstr = ', '.join('%s=%s' % nv for nv in nvlist)
             else:
                 vlist = [getattr(self, n) for n in self.attr_names]
@@ -81,17 +74,12 @@ class Node(object):
             buf.write(attrstr)
 
         if showcoord:
-            buf.write(' (at %s)' % self.coord)
+            if self.coord:
+                buf.write('%s' % self.coord)
         buf.write('\n')
 
         for (child_name, child) in self.children():
-            child.show(
-                buf,
-                offset=offset + 2,
-                attrnames=attrnames,
-                nodenames=nodenames,
-                showcoord=showcoord,
-                _my_node_name=child_name)
+            child.show(buf, offset + 4, attrnames, nodenames, showcoord, child_name)
 
 
 class Coord(object):
