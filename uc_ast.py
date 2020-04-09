@@ -59,6 +59,7 @@ class Node(object):
                 Do you want the coordinates of each Node to be displayed.
         """
         lead = ' ' * offset
+
         if nodenames and _my_node_name is not None:
             buf.write(lead + self.__class__.__name__+ ' <' + _my_node_name + '>: ')
         else:
@@ -195,7 +196,7 @@ class ArrayRef(Node):
     def __init__(self, name, subscript, coord=None):
         self.name      = name
         self.subscript = subscript
-        self.coord           = coord
+        self.coord     = coord
 
 
     def children(self):
@@ -640,40 +641,47 @@ class FuncDecl(Node):
 
 
 class FuncDef(Node):
-    __slots__ = ('func_decl', 'func_param_decls', 'func_body', 'coord')
+    __slots__ = ('spec', 'decl', 'param_decls', 'body', 'coord')
 
 
-    def __init__(self, func_decl, func_param_decls, func_body, coord=None):
-        self.func_decl        = func_decl
-        self.func_param_decls = func_param_decls
-        self.func_body        = func_body
-        self.coord            = coord
+    def __init__(self, spec, decl, param_decls, body, coord=None):
+        self.spec        = spec
+        self.decl        = decl
+        self.param_decls = param_decls
+        self.body        = body
+        self.coord       = coord
 
 
     def children(self):
         nodelist = []
 
-        if self.func_decl is not None: 
-            nodelist.append(("func_decl", self.func_decl))
+        if self.spec is not None: 
+            nodelist.append(("spec", self.spec))
 
-        if self.func_body is not None: 
-            nodelist.append(("func_body", self.func_body))
+        if self.decl is not None: 
+            nodelist.append(("decl", self.decl))
 
-        for i, child in enumerate(self.func_param_decls or []):
-            nodelist.append(("func_param_decls[%d]" % i, child))
+        if self.body is not None: 
+            nodelist.append(("body", self.body))
+
+        for i, child in enumerate(self.param_decls or []):
+            nodelist.append(("param_decls[%d]" % i, child))
 
         return tuple(nodelist)
 
 
     def __iter__(self):
 
-        if self.func_decl is not None:
-            yield self.func_decl
+        if self.spec is not None:
+            yield self.spec
 
-        if self.func_body is not None:
-            yield self.func_body
+        if self.decl is not None:
+            yield self.decl
 
-        for child in (self.func_param_decls or []):
+        if self.body is not None:
+            yield self.body
+
+        for child in (self.param_decls or []):
             yield child
 
 
@@ -718,7 +726,7 @@ class ID(Node):
 
 
     def children(self):
-        return tuple([])
+        return ()
 
 
     def __iter__(self):

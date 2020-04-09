@@ -142,9 +142,10 @@ class UCParser():
             decls=[dict(decl=decl, init=None)])[0]
 
         return uc_ast.FuncDef(
-            func_decl=declaration,
-            func_param_decls=param_decls,
-            func_body=body,
+            spec=spec,
+            decl=declaration,
+            param_decls=param_decls,
+            body=body,
             coord=decl.coord)
 
 
@@ -548,7 +549,7 @@ class UCParser():
                                | postfix_expression MINUSMINUS
         '''
         p[0] = uc_ast.UnaryOp(
-                op=p[2], #talvez deva ser 'p'+p[2]
+                op='p'+p[2], #talvez deva ser 'p'+p[2]
                 expr=p[1],
                 coord=p[1].coord
             )

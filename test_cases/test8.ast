@@ -1,39 +1,33 @@
 Program: 
     GlobalDecl: 
-        Decl: ID(name='v'
-   )
+        Decl: ID(name='v'    )
             InitList:    @ 1:12
                 Constant: int, 1   @ 1:12
                 Constant: int, 2   @ 1:15
                 Constant: int, 3   @ 1:18
                 Constant: int, 4   @ 1:21
             ArrayDecl: 
-                VarDecl: ID(name='v'
-   )
+                VarDecl: ID(name='v'    )
                     Type: ['int']   @ 1:1
     FuncDef: 
-        Decl: ID(name='main'
-   )
+        Decl: ID(name='main'    )
             FuncDecl: 
-                VarDecl: ID(name='main'
-   )
-                    Type: ['int']   @ 3:1
-        Compound:    @ 3:11
-            For:    @ 4:5
-                DeclList:    @ 4:5
-                    Decl: ID(name='i'
-   )
-                        Constant: int, 1   @ 4:18
-                        VarDecl: ID(name='i'
-   )
-                            Type: ['int']   @ 4:10
-                Assignment: [1]   @ 4:21
-                    ID: i   @ 4:21
-                    Constant: int, 4   @ 4:26
-                UnaryOp: ++   @ 4:29
-                    ID: i   @ 4:29
-                Print:    @ 5:9
-                    ArrayRef:    @ 5:15
-                        ID: v   @ 5:15
-                        ID: i   @ 5:17
-            Return:    @ 6:5
+                VarDecl: ID(name='main'    )
+                    Type: ['int']   @ 2:1
+        Compound:    @ 2:11
+            For:    @ 3:5
+                DeclList:    @ 3:5
+                    Decl: ID(name='i'    )
+                        Constant: int, 1   @ 3:18
+                        VarDecl: ID(name='i'    )
+                            Type: ['int']   @ 3:10
+                BinaryOp: <=   @ 3:21
+                    ID: i   @ 3:21
+                    Constant: int, 4   @ 3:26
+                UnaryOp: p++   @ 3:29
+                    ID: i   @ 3:29
+                Print:    @ 4:9
+                    ArrayRef:    @ 4:15
+                        ID: v   @ 4:15
+                        ID: i   @ 4:17
+            Return:    @ 5:5
