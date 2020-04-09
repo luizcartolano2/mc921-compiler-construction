@@ -204,30 +204,30 @@ class ArrayRef(Node):
     __slots__ = ('name', 'subscript', 'coord')
 
 
-    def __init__(self, array_name, array_subscript, coord=None):
-        self.array_name      = array_name
-        self.array_subscript = array_subscript
+    def __init__(self, name, subscript, coord=None):
+        self.name      = name
+        self.subscript = subscript
         self.coord           = coord
 
 
     def children(self):
         nodelist = []
 
-        if self.array_name is not None: 
-            nodelist.append(("array_name", self.array_name))
+        if self.name is not None: 
+            nodelist.append(("name", self.name))
 
-        if self.array_subscript is not None: 
-            nodelist.append(("array_subscript", self.array_subscript))
+        if self.subscript is not None: 
+            nodelist.append(("subscript", self.subscript))
 
         return tuple(nodelist)
 
 
     def __iter__(self):
-        if self.array_name is not None:
-            yield self.array_name
+        if self.name is not None:
+            yield self.name
 
-        if self.array_subscript is not None:
-            yield self.array_subscript
+        if self.subscript is not None:
+            yield self.subscript
 
 
     attr_names = ()
@@ -960,7 +960,7 @@ class Return(Node):
 
     def children(self):
         nodelist = []
-        
+
         if self.expression is not None:
             nodelist.append(("expression", self.expression))
 

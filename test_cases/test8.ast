@@ -5,20 +5,23 @@ Program:  (at )
       FuncDecl:  (at )
         VarDecl: ID(name='main'
    ) (at )
-          Type: ['int'] (at    @ 1:1)
-    Compound:  (at    @ 1:12)
-      Decl: ID(name='x'
+          Type: ['int'] (at    @ 3:1)
+    Compound:  (at    @ 3:11)
+      For:  (at    @ 4:5)
+        DeclList:  (at    @ 4:5)
+          Decl: ID(name='i'
    ) (at )
-        VarDecl: ID(name='x'
+            Constant: int, 1 (at    @ 4:18)
+            VarDecl: ID(name='i'
    ) (at )
-          Type: ['int'] (at    @ 2:2)
-      Decl: ID(name='y'
-   ) (at )
-        VarDecl: ID(name='y'
-   ) (at )
-          Type: ['int'] (at    @ 2:2)
-      Decl: ID(name='z'
-   ) (at )
-        VarDecl: ID(name='z'
-   ) (at )
-          Type: ['int'] (at    @ 2:2)
+              Type: ['int'] (at    @ 4:10)
+        BinaryOp: < (at    @ 4:21)
+          ID: i (at    @ 4:21)
+          Constant: int, 4 (at    @ 4:25)
+        UnaryOp: ++ (at    @ 4:28)
+          ID: i (at    @ 4:28)
+        Print:  (at    @ 5:9)
+          ArrayRef:  (at    @ 5:15)
+            ID: v (at    @ 5:15)
+            ID: i (at    @ 5:17)
+      Return:  (at    @ 6:5)

@@ -179,19 +179,19 @@ class UCParser():
 
     def p_global_declaration_1(self, p):
         '''
-            global_declaration : function_definition
-        '''
-        p[0] = p[1]
-
-
-    def p_global_declaration_2(self, p):
-        '''
             global_declaration : declaration
         '''
         p[0] = uc_ast.GlobalDecl(
                 decls=p[1], 
                 coord=self._token_coord(p,1)
             )
+
+
+    def p_global_declaration_2(self, p):
+        '''
+            global_declaration : function_definition
+        '''
+        p[0] = p[1]
 
 
     def p_function_definition_1(self, p):
@@ -524,7 +524,7 @@ class UCParser():
         '''
             postfix_expression : postfix_expression LBRACKET expression RBRACKET
         '''
-        p[0] = ArrayRef(
+        p[0] = uc_ast.ArrayRef(
                 name=p[1],
                 subscript=p[3],
                 coord=p[1].coord
@@ -709,7 +709,7 @@ class UCParser():
                            | parameter_list COMMA parameter_declaration
         '''
         if len(p) == 2:
-            p[0] = ParamList(
+            p[0] = uc_ast.ParamList(
                     params=[p[1]],
                     coord=p[1].coord
                 )
@@ -875,6 +875,7 @@ class UCParser():
     def p_iteration_statement_2(self, p):
         '''
             iteration_statement : FOR LPAREN expression_opt SEMI expression_opt SEMI expression_opt RPAREN statement
+
         '''
         p[0] = uc_ast.For(
                 for_init=p[3],
