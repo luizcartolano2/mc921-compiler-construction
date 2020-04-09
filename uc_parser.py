@@ -115,6 +115,7 @@ class UCParser():
         """ 
             Builds a list of declarations all sharing the given specifiers.
         """
+        # import pdb; pdb.set_trace()
         declarations = []
 
         for decl in decls:
@@ -549,7 +550,7 @@ class UCParser():
                                | postfix_expression MINUSMINUS
         '''
         p[0] = uc_ast.UnaryOp(
-                op='p'+p[2], #talvez deva ser 'p'+p[2]
+                op='p'+p[2],
                 expr=p[1],
                 coord=p[1].coord
             )

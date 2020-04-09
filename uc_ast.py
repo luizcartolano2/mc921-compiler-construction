@@ -434,11 +434,11 @@ class Decl(Node):
     def children(self):
         nodelist = []
 
-        if self.init is not None: 
-            nodelist.append(("init", self.init))
-
         if self.type is not None: 
             nodelist.append(("type", self.type))
+
+        if self.init is not None: 
+            nodelist.append(("init", self.init))
 
         return tuple(nodelist)
 
