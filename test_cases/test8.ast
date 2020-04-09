@@ -7,5 +7,18 @@ Program:  (at )
    ) (at )
           Type: ['int'] (at    @ 1:1)
     Compound:  (at    @ 1:12)
-      Print:  (at    @ 2:2)
-        Constant: int, 1 (at    @ 2:8)
+      Decl: ID(name='x'
+   ) (at )
+        VarDecl: ID(name='x'
+   ) (at )
+          Type: ['int'] (at    @ 2:2)
+      Decl: ID(name='y'
+   ) (at )
+        VarDecl: ID(name='y'
+   ) (at )
+          Type: ['int'] (at    @ 2:2)
+      Decl: ID(name='z'
+   ) (at )
+        VarDecl: ID(name='z'
+   ) (at )
+          Type: ['int'] (at    @ 2:2)

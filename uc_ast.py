@@ -183,7 +183,7 @@ class ArrayDecl(Node):
         if self.type is not None: 
             nodelist.append(("type", self.type))
 
-        if self.dim is not None: 
+        if self.dimension is not None: 
             nodelist.append(("dimension", self.dimension))
 
         return tuple(nodelist)
@@ -959,6 +959,8 @@ class Return(Node):
 
 
     def children(self):
+        nodelist = []
+        
         if self.expression is not None:
             nodelist.append(("expression", self.expression))
 
