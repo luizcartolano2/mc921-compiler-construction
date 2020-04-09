@@ -120,26 +120,36 @@ class UCLexer():
     #
     # Rules
     #
-    t_EQ          = r'=='
-    t_PLUSPLUS    = r'\+\+'
-    t_MINUSMINUS  = r'\-\-'
-    T_GE          = r'\>\=' 
-    T_LE          = r'\<\='
-    T_NE          = r'\!\='
-    T_PLUSEQUAL   = r'\+\='
-    T_MINUSEQUAL  = r'\-\='
-    T_TIMESEQUAL  = r'\*\='
-    T_DIVIDEEQUAL = r'\/\='
-    T_MODEQUAL    = r'\%\='
-    T_AND         = r'\&\&'
-    T_OR          = r'\|\|'
     
+    # Operators
     t_PLUS        = r'\+'
-    t_CHAR_CONST  = r"""'.'"""
     t_MINUS       = r'-'
     t_TIMES       = r'\*'
     t_DIVIDE      = r'/'
+    t_MOD         = r'%'
+    t_OR          = r'\|\|'
+    t_AND         = r'&&'
+    t_NOT         = r'!'
+    t_LT          = r'<'
+    t_GT          = r'>'
+    t_LE          = r'<='
+    t_GE          = r'>='
+    t_EQ          = r'=='
+    t_NE          = r'!='
+
+    # Assignment operators
     t_EQUALS      = r'='
+    T_TIMESEQUAL  = r'\*='
+    T_DIVIDEEQUAL = r'/='
+    T_MODEQUAL    = r'%='
+    T_PLUSEQUAL   = r'\+='
+    T_MINUSEQUAL  = r'\-='
+    
+    # Increment/decrement
+    t_PLUSPLUS          = r'\+\+'
+    t_MINUSMINUS        = r'--'
+    
+    # Delimeters
     t_LPAREN      = r'\('
     t_RPAREN      = r'\)'
     t_LBRACE      = r'\{'
@@ -149,12 +159,10 @@ class UCLexer():
     t_SEMI        = r';'
     t_COMMA       = r'\,'
     t_ADDRESS     = r'\&'
-    t_NOT         = r'\!'
-    t_GT          = r'\>'
-    t_LT          = r'\<'
-    t_MOD         = r'\%'
+    
     # A string containing ignored characters (spaces and tabs)
     t_ignore      = ' \t'
+    t_CHAR_CONST  = r"""'.'"""
 
     
     # Newlines
