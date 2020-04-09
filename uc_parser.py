@@ -607,7 +607,7 @@ class UCParser():
 
     def p_primary_expression_3(self, p):
         '''
-            primary_expression : STRING_LITERAL
+            primary_expression : CHAR_CONST
         '''
         p[0] = p[1]
 
@@ -632,10 +632,10 @@ class UCParser():
 
     def p_constant_2(self, p):
         '''
-            constant : CHAR_CONST
+            constant : STRING_LITERAL
         '''
         p[0] = uc_ast.Constant(
-                type='char',
+                type='string',
                 value=p[1],
                 coord=self._token_coord(p,1)
             )
@@ -835,15 +835,15 @@ class UCParser():
             )
 
 
-    def p_statement_list(self, p):
-        '''
-            statement_list : statement_list statement
-                           | statement
-        '''
-        if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = p[1] + p[2]
+    # def p_statement_list(self, p):
+    #     '''
+    #         statement_list : statement_list statement
+    #                        | statement
+    #     '''
+    #     if len(p) == 2:
+    #         p[0] = p[1]
+    #     else:
+    #         p[0] = p[1] + p[2]
 
 
     def p_expression_statement(self, p):
