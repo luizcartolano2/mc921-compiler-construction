@@ -139,26 +139,26 @@ class UCLexer():
 
     # Assignment operators
     t_EQUALS      = r'='
-    T_TIMESEQUAL  = r'\*='
-    T_DIVIDEEQUAL = r'/='
-    T_MODEQUAL    = r'%='
-    T_PLUSEQUAL   = r'\+='
-    T_MINUSEQUAL  = r'\-='
+    t_TIMESEQUAL  = r'\*='
+    t_DIVIDEEQUAL = r'/='
+    t_MODEQUAL    = r'%='
+    t_PLUSEQUAL   = r'\+='
+    t_MINUSEQUAL  = r'-='
     
     # Increment/decrement
-    t_PLUSPLUS          = r'\+\+'
-    t_MINUSMINUS        = r'--'
+    t_PLUSPLUS    = r'\+\+'
+    t_MINUSMINUS  = r'--'
     
     # Delimeters
     t_LPAREN      = r'\('
     t_RPAREN      = r'\)'
-    t_LBRACE      = r'\{'
-    t_RBRACE      = r'\}'
+    t_LBRACE      = r'{'
+    t_RBRACE      = r'}'
     t_LBRACKET    = r'\['
     t_RBRACKET    = r'\]'
     t_SEMI        = r';'
-    t_COMMA       = r'\,'
-    t_ADDRESS     = r'\&'
+    t_COMMA       = r','
+    t_ADDRESS     = r'&'
     
     # A string containing ignored characters (spaces and tabs)
     t_ignore      = ' \t'
