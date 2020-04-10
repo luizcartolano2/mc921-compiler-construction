@@ -252,7 +252,7 @@ class Assignment(Node):
 
 
     def __init__(self, op, left_value, right_value, coord=None):
-        self.op      = op
+        self.op             = op
         self.left_value     = left_value
         self.right_value    = right_value
         self.coord          = coord

@@ -334,7 +334,7 @@ class UCParser():
         '''
             declarator : pointer direct_declarator
         '''
-        p[0] = self._type_modify_decl(p[2],p[1])
+        p[0] = self._type_modify_decl(p[2], p[1])
 
 
     def p_declaration_list_opt(self,p):
@@ -356,14 +356,14 @@ class UCParser():
                 coord=self._token_coord(p,1)
             )
 
-        if len(p) > 3:
-            tail_type = p[3]
+        if len(p) > 2:
+            tail_type = p[2]
             while tail_type.type is not None:
                 tail_type = tail_type.type
 
             tail_type.type = nest_type
 
-            p[0] = p[3]
+            p[0] = p[2]
         else:
             p[0] = nest_type
 
@@ -706,7 +706,7 @@ class UCParser():
                                 | PLUSEQUAL
                                 | MINUSEQUAL
         '''
-        p[0] = [1]
+        p[0] = p[1]
 
 
     def p_unary_operator(self, p):
@@ -806,7 +806,10 @@ class UCParser():
             block_item : declaration
                        | statement
         '''
-        p[0] = p[1] if isinstance(p[1], list) else [p[1]]
+        if isinstance(p[1], list):
+            p[0] = p[1]
+        else:
+            p[0] = [p[1]]
 
 
     def p_block_item_list(self, p):
@@ -836,17 +839,6 @@ class UCParser():
                 block_items=p[2],
                 coord=self._token_coord(p,1,set_col=True)
             )
-
-
-    # def p_statement_list(self, p):
-    #     '''
-    #         statement_list : statement_list statement
-    #                        | statement
-    #     '''
-    #     if len(p) == 2:
-    #         p[0] = p[1]
-    #     else:
-    #         p[0] = p[1] + p[2]
 
 
     def p_expression_statement(self, p):
