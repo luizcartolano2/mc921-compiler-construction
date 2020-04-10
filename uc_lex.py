@@ -1,12 +1,60 @@
+#################################################
+# uc_lexer.py                                   #
+#                                               #
+# uCLexer: lexer for the uC language            #
+#                                               #
+# Authors: Luiz Cartolano && Erico Faustino     #
+#################################################
+
+
+# import ply module
 import ply.lex as lex
+# import sys module
 import sys
 
 
 class UCLexer():
-    """ A lexer for the uC language. After building it, set the
+    """
+        A lexer for the uC language. After building it, set the
         input text with input(), and call token() to get new
         tokens.
-    """
+
+        ...
+
+        Attributes
+        ----------
+            error_func : 
+                Reference for an error function
+
+        Methods
+        -------
+            build(self, **kwargs)
+                Builds the lexer from the specification.
+
+            reset_lineno(self)
+                Resets the internal line number counter of the lexer.
+            
+            input(self, text)
+                Method to subscribe the input method
+            
+            token(self)
+                Method to save the last token
+            
+            find_tok_column(self, token)
+                Find the column of the token in its line.
+            
+            _error(self, msg, token)
+                Internal auxiliary methods to errors.
+
+            _make_tok_location(self, token)
+                Gets the token location on source code.
+
+            t_*(self, t)
+                token rules for regex
+
+
+    """    
+    
     def __init__(self, error_func):
         """ Create a new Lexer.
             An error function. Will be called with an error
@@ -21,7 +69,8 @@ class UCLexer():
 
 
     def build(self, **kwargs):
-        """ Builds the lexer from the specification. Must be
+        """ 
+            Builds the lexer from the specification. Must be
             called after the lexer object is created.
 
             This method exists separately, because the PLY
@@ -31,39 +80,54 @@ class UCLexer():
 
 
     def reset_lineno(self):
-        """ Resets the internal line number counter of the lexer.
+        """ 
+            Resets the internal line number counter of the lexer.
         """
         self.lexer.lineno = 1
 
 
     def input(self, text):
+        """
+            Method to subscribe the input method
+        """
         self.lexer.input(text)
 
 
     def token(self):
+        """
+            Method to save the last token
+        """
         self.last_token = self.lexer.token()
         return self.last_token
 
 
     def find_tok_column(self, token):
-        """ Find the column of the token in its line.
+        """ 
+            Find the column of the token in its line.
         """
         last_cr = self.lexer.lexdata.rfind('\n', 0, token.lexpos)
         return token.lexpos - last_cr
 
 
-    # Internal auxiliary methods
     def _error(self, msg, token):
+        """
+            Internal auxiliary methods to errors.
+        """
         location = self._make_tok_location(token)
         self.error_func(msg, location[0], location[1])
         self.lexer.skip(1)
 
 
     def _make_tok_location(self, token):
+        """
+            Gets the token location on source code.
+        """
         return (token.lineno, self.find_tok_column(token))
 
 
-    # Reserved keywords
+    ##
+    ##   Reserved keywords
+    ##
     keywords = (
         'ASSERT', 'BREAK', 'CHAR', 'ELSE', 'FLOAT', 'FOR', 'IF', 'INT', 'PRINT', 'READ', 'RETURN', 'VOID', 'WHILE',
     )
@@ -73,11 +137,10 @@ class UCLexer():
         keyword_map[keyword.lower()] = keyword
 
 
-    #
-    # All the tokens recognized by the lexer
-    #
+    ##
+    ##   All the tokens recognized by the lexer
+    ##
     tokens = keywords + (
-        # Identifiers
         'PLUS',
         'MINUS',
         'TIMES',
@@ -118,7 +181,7 @@ class UCLexer():
 
 
     #
-    # Rules
+    #    Rules
     #
     
     # Operators
@@ -165,18 +228,26 @@ class UCLexer():
     t_CHAR_CONST  = r'''"."'''
 
     
-    # Newlines
+    ##
+    ##  Get Newlines
+    ##
     def t_NEWLINE(self, t):
         r'\n+'
         t.lexer.lineno += t.value.count("\n")
 
 
+    ##
+    ##  Get identifier
+    ##
     def t_ID(self, t):
         r'[a-zA-Z_][0-9a-zA-Z_]*'
         t.type = self.keyword_map.get(t.value, "ID")
         return t
 
 
+    ##
+    ##  Comment with /**/ and error on comments
+    ##
     def t_COMMENT(self, t):
         r'/\*(.|\n)*?\*/'
         pass
@@ -188,12 +259,17 @@ class UCLexer():
         self._error(msg, t)
 
 
-    # define a comment //
+    ##
+    ##  Comment with //
+    ##
     def t_COMMENT_2(self, t):
         r'//.*'
         pass
 
 
+    ##
+    ##  Float constant
+    ##
     def t_FLOAT_CONST(self, t):
         r'([0-9]*\.[0-9]+)|([0-9]+\.)'
         t.value = float(t.value)
@@ -201,6 +277,9 @@ class UCLexer():
         return t
 
 
+    ##
+    ##  Int constant
+    ##
     def t_INT_CONST(self, t):
         r'0|[1-9][0-9]*'
         t.value = int(t.value)
@@ -208,6 +287,9 @@ class UCLexer():
         return t
 
 
+    ##
+    ##  String literal and error for unterminated string
+    ##
     def t_STRING_LITERAL(self, t):
         r'".*?"'
         t.value = t.value
@@ -222,23 +304,24 @@ class UCLexer():
         pass
 
 
+    ##
+    ##  Error function
+    ##
     def t_error(self, t):
         msg = "Illegal character %s" % repr(t.value[0])
         self._error(msg, t)
 
-    # Scanner (used only for test)
-    def scan(self, data):
-        # output = ""
 
+    ##
+    ##  An scan function for the test purposes
+    ##
+    def scan(self, data):
         self.lexer.input(data)
         while True:
             tok = self.lexer.token()
             if not tok:
                 break
             print(tok)
-            # output += str(tok) + '\n'
-
-        # return output
 
 
 if __name__ == '__main__':
