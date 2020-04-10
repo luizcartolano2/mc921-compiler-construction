@@ -1,3 +1,14 @@
+##################################################
+# uc_ast.py                                      #
+#                                                #
+# AST Node classes.                              #
+#                                                #
+# Code for the AST Node Classes for the uC BNF.  #
+#                                                #
+# Authors: Luiz Cartolano && Erico Faustino      #
+##################################################
+
+
 import sys
 
 
@@ -154,6 +165,26 @@ class NodeVisitor(object):
 
 
 class ArrayDecl(Node):
+    """
+        A class used to represent an array declaration
+
+        ...
+
+        Attributes
+        ----------
+            type : 
+                the type (int/float/...) of the array
+            dimension : 
+                the number of elements in the array
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """
+
     __slots__ = ('type', 'dimension', 'coord')
 
 
@@ -187,6 +218,26 @@ class ArrayDecl(Node):
 
 
 class ArrayRef(Node):
+    """
+        A class used to represent an array reference
+
+        ...
+
+        Attributes
+        ----------
+            name : 
+                the name of the array
+            subscript : 
+                the subscript reference for the array
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """
+
     __slots__ = ('name', 'subscript', 'coord')
 
 
@@ -220,6 +271,24 @@ class ArrayRef(Node):
 
 
 class Assert(Node):
+    """
+        A class used to represent an Assert operation
+
+        ...
+
+        Attributes
+        ----------
+            expr : 
+                the expression associated to the assert statement
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """
+
     __slots__ = ('expr', 'coord')
 
 
@@ -248,6 +317,28 @@ class Assert(Node):
 
 
 class Assignment(Node):
+    """
+        A class used to represent an assignment expression
+
+        ...
+
+        Attributes
+        ----------
+            op : 
+                the assignment operator
+            left_value : 
+                the left value of the assignment
+            right_value : 
+                the right value of the assignment
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """
+
     __slots__ = ('op', 'left_value', 'right_value', 'coord')
 
 
@@ -282,6 +373,28 @@ class Assignment(Node):
 
 
 class BinaryOp(Node):
+    """
+        A class used to represent a binary expression
+
+        ...
+
+        Attributes
+        ----------
+            op : 
+                the binary operator
+            left_value : 
+                the left value of the expression
+            right_value : 
+                the right value of the expression
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """
+
     __slots__ = ('op', 'left_value', 'right_value', 'coord')
 
 
@@ -316,6 +429,21 @@ class BinaryOp(Node):
 
 
 class Break(Node):
+    """
+        A class used to represent a break expression
+
+        ...
+
+        Attributes
+        ----------
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """    
     __slots__ = ('coord')
 
 
@@ -336,6 +464,26 @@ class Break(Node):
 
 
 class Cast(Node):
+    """
+        A class used to represent a binary expression
+
+        ...
+
+        Attributes
+        ----------
+            to_type : 
+                the type expression will have
+            expression : 
+                the expression to be casted
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """
+
     __slots__ = ('to_type', 'expression', 'coord')
 
 
@@ -369,6 +517,24 @@ class Cast(Node):
 
 
 class Compound(Node):
+    """
+        A class used to represent a compound expression
+
+        ...
+
+        Attributes
+        ----------
+            block_items : 
+                a block of assignments/expressions that make part of a compound object
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """
+
     __slots__ = ('block_items', 'coord')
 
 
@@ -395,6 +561,26 @@ class Compound(Node):
 
 
 class Constant(Node):
+    """
+        A class used to represent a constant
+
+        ...
+
+        Attributes
+        ----------
+            type : 
+                the constant type (int/float/string)
+            valu : 
+                the constant value
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """
+
     __slots__ = ('type', 'value', 'coord')
 
 
@@ -418,6 +604,28 @@ class Constant(Node):
 
 
 class Decl(Node):
+    """
+        A class used to represent a declaration
+
+        ...
+
+        Attributes
+        ----------
+            name : 
+                the name of the declaration
+            type : 
+                the type of the declaration
+            init : 
+                the "body" of the declaration
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """
+
     __slots__ = ('name', 'type', 'init', 'coord')
 
 
@@ -452,6 +660,23 @@ class Decl(Node):
 
 
 class DeclList(Node):
+    """
+        A class used to represent a list of declarations
+
+        ...
+
+        Attributes
+        ----------
+            decls : 
+                a list of declaration (Decl) objects
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """    
     __slots__ = ('decls', 'coord')
 
 
@@ -478,6 +703,21 @@ class DeclList(Node):
 
 
 class EmptyStatement(Node):
+    """
+        A class used to represent an empty statement
+
+        ...
+
+        Attributes
+        ----------
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """    
     __slots__ = ('coord')
 
 
@@ -498,6 +738,23 @@ class EmptyStatement(Node):
 
 
 class ExprList(Node):
+    """
+        A class used to represent a list of expressions
+
+        ...
+
+        Attributes
+        ----------
+            expr : 
+                an expression object
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """    
     __slots__ = ('exprs', 'coord')
 
 
@@ -524,6 +781,29 @@ class ExprList(Node):
 
 
 class For(Node):
+    """
+        A class used to represent a For statement
+
+        ...
+
+        Attributes
+        ----------
+            for_init : 
+                the loop initial value (eg. i = 0)
+            for_cond : 
+                the loop condition (eg. i < 4)
+            for_next :
+                what happens with the iterator value (eg. i++)
+            for_statement : 
+                the code inside the loop 
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """    
     __slots__ = ('for_init', 'for_cond', 'for_next', 'for_statement', 'coord')
 
 
@@ -571,6 +851,26 @@ class For(Node):
 
 
 class FuncCall(Node):
+    """
+        A class used to represent a function call
+
+        ...
+
+        Attributes
+        ----------
+            name : 
+                the function name
+            args : 
+                the arguments of the function
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """    
+
     __slots__ = ('name', 'args', 'coord')
 
 
@@ -604,6 +904,26 @@ class FuncCall(Node):
 
 
 class FuncDecl(Node):
+    """
+        A class used to represent a function declaration
+
+        ...
+
+        Attributes
+        ----------
+            args : 
+                the arguments of the function
+            type : 
+                the type of the function (int/float/void)
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """
+
     __slots__ = ('args', 'type', 'coord')
 
 
@@ -638,6 +958,30 @@ class FuncDecl(Node):
 
 
 class FuncDef(Node):
+    """
+        A class used to represent a function definition
+
+        ...
+
+        Attributes
+        ----------
+            spec : 
+                the specifications of the function
+            decl : 
+                the function declaration
+            param_decls : 
+                the declaration of the parameters of the function
+            body :
+                the body of the function
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """
+
     __slots__ = ('spec', 'decl', 'param_decls', 'body', 'coord')
 
 
@@ -686,6 +1030,24 @@ class FuncDef(Node):
 
 
 class GlobalDecl(Node):
+    """
+        A class used to represent a global declaration
+
+        ...
+
+        Attributes
+        ----------
+            decls : 
+                a list of declarations
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """  
+
     __slots__ = ('decls', 'coord')
 
 
@@ -714,6 +1076,24 @@ class GlobalDecl(Node):
 
 
 class ID(Node):
+    """
+        A class used to represent an identifier
+
+        ...
+
+        Attributes
+        ----------
+            name : 
+                the name associated with the id (eg. var_name)
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """    
+
     __slots__ = ('name', 'coord')
 
 
@@ -735,6 +1115,28 @@ class ID(Node):
 
 
 class If(Node):
+    """
+        A class used to represent an If expression
+
+        ...
+
+        Attributes
+        ----------
+            if_cond : 
+                the conditional statement (eg. x < 2)
+            if_true : 
+                what happens if the condition is true
+            if_false : 
+                what happens if the condition is false
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """
+
     __slots__ = ('if_cond', 'if_true', 'if_false', 'coord')
 
 
@@ -776,6 +1178,24 @@ class If(Node):
 
 
 class InitList(Node):
+    """
+        A class used to represent a list.
+
+        ...
+
+        Attributes
+        ----------
+            expressions : 
+                the list of expressions
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """
+
     __slots__ = ('expressions', 'coord')
 
 
@@ -804,6 +1224,24 @@ class InitList(Node):
 
 
 class ParamList(Node):
+    """
+        A class used to represent a list of parameters
+
+        ...
+
+        Attributes
+        ----------
+            params : 
+                a list of parameters
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """
+
     __slots__ = ('params', 'coord')
 
 
@@ -831,6 +1269,24 @@ class ParamList(Node):
 
 
 class Print(Node):
+    """
+        A class used to represent a print expression
+
+        ...
+
+        Attributes
+        ----------
+            expr : 
+                the expression to be printed
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """
+
     __slots__ = ('expr', 'coord')
 
 
@@ -859,6 +1315,24 @@ class Print(Node):
 
 
 class Program(Node):
+    """
+        A class used to represent a program in the uC language
+
+        ...
+
+        Attributes
+        ----------
+            gdecls : 
+                a list of global declarations
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """    
+
     __slots__ = ('gdecls', 'coord')
 
 
@@ -886,6 +1360,26 @@ class Program(Node):
 
 
 class PtrDecl(Node):
+    """
+        A class used to represent the declaration of a pointer
+
+        ...
+
+        Attributes
+        ----------
+            ptr_quals : 
+                informations about the pointer
+            ptr_type : 
+                the type of the pointer
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """    
+
     __slots__ = ('ptr_quals', 'ptr_type', 'coord')
 
 
@@ -915,6 +1409,24 @@ class PtrDecl(Node):
 
 
 class Read(Node):
+    """
+        A class used to represent a read statement
+
+        ...
+
+        Attributes
+        ----------
+            names : 
+                the names to be read
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """    
+
     __slots__ = ('names', 'coord')
 
 
@@ -943,6 +1455,24 @@ class Read(Node):
 
 
 class Return(Node):
+    """
+        A class used to represent a return expression
+
+        ...
+
+        Attributes
+        ----------
+            expression : 
+                the expression to be returned
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """
+
     __slots__ = ('expression', 'coord')
 
 
@@ -969,6 +1499,23 @@ class Return(Node):
 
 
 class Type(Node):
+    """
+        A class used to represent a type
+
+        ...
+
+        Attributes
+        ----------
+            names : 
+                the type name (eg. int)
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """    
     __slots__ = ('names', 'coord')
 
 
@@ -992,6 +1539,26 @@ class Type(Node):
 
 
 class VarDecl(Node):
+    """
+        A class used to represent a variable declaration
+
+        ...
+
+        Attributes
+        ----------
+            declname : 
+                the name of the declaration
+            type : 
+                the type of the declaration
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """
+
     __slots__ = ('declname', 'type', 'coord')
 
 
@@ -1020,6 +1587,26 @@ class VarDecl(Node):
 
 
 class UnaryOp(Node):
+    """
+        A class used to represent a unary operation
+
+        ...
+
+        Attributes
+        ----------
+            op : 
+                the operator
+            expr : 
+                the expression
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """
+
     __slots__  = ('op', 'expr', 'coord')
 
 
@@ -1047,6 +1634,26 @@ class UnaryOp(Node):
 
 
 class While(Node):
+    """
+        A class used to represent a While
+
+        ...
+
+        Attributes
+        ----------
+            while_cond : 
+                the loop condition (eg. i < 3)
+            while_stmt : 
+                the body of the loop
+            coord : 
+                the line/column position of the object
+
+        Methods
+        -------
+            children(self)
+                A sequence of all children that are Nodes
+    """
+
     __slots__ = ('while_cond', 'while_stmt', 'coord')
 
 
