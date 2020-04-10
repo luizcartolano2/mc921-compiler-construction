@@ -550,9 +550,9 @@ class UCParser():
             postfix_expression : postfix_expression LPAREN argument_expression_opt RPAREN
         '''
         p[0] = uc_ast.FuncCall(
-                func_name=p[1],
-                func_args=p[3] if len(p) == 5 else None,
-                coord=p[1].coord
+                    name=p[1],
+                    args=p[3] if len(p) > 4 else None,
+                    coord=p[1].coord
             )
 
 
@@ -574,11 +574,14 @@ class UCParser():
                                 | argument_expression COMMA assignment_expression
         '''
         if len(p) == 2:
-            p[0] = uc_ast.ExprList(
-                    exprs=[p[1]],
-                    coord=p[1].coord
-                )
+            p[0] = p[1]
         else:
+            if not isinstance(p[1], uc_ast.ExprList):
+                p[1] = uc_ast.ExprList(
+                        exprs=[p[1]],
+                        coord=p[1].coord
+                    )
+
             p[1].exprs.append(p[3])
             p[0] = p[1]
 
