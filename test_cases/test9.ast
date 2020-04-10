@@ -1,23 +1,34 @@
 Program: 
     GlobalDecl: 
-        Decl: ID(name='mc'  )
+        Decl: ID(name='v'  )
             ArrayDecl: 
                 VarDecl: 
-                    Type: ['char']   @ 1:1
-            Constant: string, "Susy"   @ 1:13
+                    Type: ['int']   @ 1:1
+            InitList:    @ 1:12
+                Constant: int, 1   @ 1:12
+                Constant: int, 2   @ 1:15
+                Constant: int, 3   @ 1:18
+                Constant: int, 4   @ 1:21
     FuncDef: 
-        Type: ['int']   @ 3:1
+        Type: ['int']   @ 2:1
         Decl: ID(name='main'  )
             FuncDecl: 
                 VarDecl: 
-                    Type: ['int']   @ 3:1
-        Compound:    @ 3:11
-            Print:    @ 4:5
-                Constant: string, "Hello World!"   @ 4:11
-            Print:    @ 5:5
-                ExprList:    @ 5:11
-                    Constant: string, "Hello"   @ 5:11
-                    ID: mc   @ 5:20
-                    Constant: string, ". Welcome to MC921"   @ 5:24
-            Return:    @ 6:5
-
+                    Type: ['int']   @ 2:1
+        Compound:    @ 2:1
+            For:    @ 3:5
+                DeclList:    @ 3:5
+                    Decl: ID(name='i'  )
+                        VarDecl: 
+                            Type: ['int']   @ 3:10
+                        Constant: int, 1   @ 3:18
+                BinaryOp: <=   @ 3:21
+                    ID: i   @ 3:21
+                    Constant: int, 4   @ 3:26
+                UnaryOp: p++   @ 3:29
+                    ID: i   @ 3:29
+                Print:    @ 4:9
+                    ArrayRef:    @ 4:15
+                        ID: v   @ 4:15
+                        ID: i   @ 4:17
+            Return:    @ 5:5

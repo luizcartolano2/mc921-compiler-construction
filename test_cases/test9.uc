@@ -1,7 +1,6 @@
-char mc[] = "Susy";
-
+int v[] = {1, 2, 3, 4};
 int main(){
-    print("Hello World!");
-    print("Hello", mc, ". Welcome to MC921");
+    for (int i = 1; i <= 4; i++)
+        print(v[i]);
     return;
 }

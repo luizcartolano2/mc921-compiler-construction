@@ -27,14 +27,14 @@ class UCParser():
         self.parser = yacc(module=self,)
 
 
-    def _token_coord(self, p, token_idx):
+    def _token_coord(self, p, token_idx, set_col=False):
         last_cr = p.lexer.lexer.lexdata.rfind('\n', 0, p.lexpos(token_idx))
         
         if last_cr < 0:
             last_cr = -1
         column = (p.lexpos(token_idx) - (last_cr))
         
-        return uc_ast.Coord(p.lineno(token_idx), column)
+        return uc_ast.Coord(p.lineno(token_idx), column if (set_col==False) else 1)
 
 
     def _type_modify_decl(self, decl, modifier):
@@ -831,7 +831,7 @@ class UCParser():
         '''
         p[0] = uc_ast.Compound(
                 block_items=p[2],
-                coord=self._token_coord(p,1)
+                coord=self._token_coord(p,1,set_col=True)
             )
 
 
