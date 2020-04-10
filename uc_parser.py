@@ -857,7 +857,7 @@ class UCParser():
         '''
             selection_statement : IF LPAREN expression RPAREN statement
         '''
-        p[0] = uc.ast_If(
+        p[0] = uc_ast.If(
                     if_cond=p[3],
                     if_true=p[5],
                     if_false=None,
