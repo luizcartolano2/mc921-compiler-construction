@@ -1380,12 +1380,12 @@ class PtrDecl(Node):
                 A sequence of all children that are Nodes
     """    
 
-    __slots__ = ('ptr_quals', 'ptr_type', 'coord')
+    __slots__ = ('ptr_quals', 'type', 'coord')
 
 
-    def __init__(self, ptr_quals, ptr_type, coord=None):
+    def __init__(self, ptr_quals, type, coord=None):
         self.ptr_quals = ptr_quals
-        self.ptr_type  = ptr_type
+        self.type      = type
         self.coord     = coord
 
 
@@ -1393,16 +1393,16 @@ class PtrDecl(Node):
         
         nodelist = []
 
-        if self.ptr_type is not None:
-            nodelist.append(("ptr_type", self.ptr_type))
+        if self.type is not None:
+            nodelist.append(("type", self.type))
 
         return tuple(nodelist)
 
 
     def __iter__(self):
         
-        if self.ptr_type is not None:
-            yield self.ptr_type
+        if self.type is not None:
+            yield self.type
 
 
     attr_names = ('ptr_quals',)

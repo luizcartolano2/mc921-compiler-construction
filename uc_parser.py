@@ -429,7 +429,7 @@ class UCParser():
                     | TIMES pointer
         '''
         nest_type = uc_ast.PtrDecl(
-                        ptr_quals=p[2] or [],
+                        ptr_quals= p[1] or [],
                         type=None,
                         coord=self._token_coord(p,1)
                     )
