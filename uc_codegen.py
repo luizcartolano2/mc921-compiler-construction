@@ -9,7 +9,7 @@
 """
 import uc_sema
 from uc_ast import *
-
+from uc_type import *
 
 class GenerateCode(NodeVisitor):
     """
