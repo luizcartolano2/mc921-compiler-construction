@@ -1,8 +1,6 @@
-/* comment */
-int j = 3;
-int main () {
-  int i = j;
-  int k = 3;
-  int p = 2 * j;
-  assert p == 2 * i;
+int v[] = {1, 2, 3, 4};
+int main(){
+    for (int i = 1; i <= 4; i++)
+        print(v[j]);
+    return;
 }

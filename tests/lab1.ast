@@ -1,8 +1,0 @@
-Program: 
-    GlobalDecl: 
-        Decl: ID(name='v'  )
-            ArrayDecl: 
-                PtrDecl: *   @ 1:4
-                    VarDecl: 
-                        Type: ['int']   @ 1:1
-                Constant: int, 3   @ 1:8
