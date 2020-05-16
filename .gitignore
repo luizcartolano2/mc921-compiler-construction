@@ -1,6 +1,10 @@
 # MAC DS_Store
 .DS_Store
 **/.DS_Store
+.idea/
+*.ast
+*.ir
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

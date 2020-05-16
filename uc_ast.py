@@ -19,12 +19,12 @@ def _repr(obj):
     if isinstance(obj, list):
         return '[' + (',\n '.join((_repr(e).replace('\n', '\n ') for e in obj))) + '\n]'
     else:
-        return repr(obj) 
+        return repr(obj)
 
 
 class Node(object):
     __slots__ = ()
-    """ 
+    """
         Abstract base class for AST nodes.
     """
     def __repr__(self):
@@ -33,21 +33,28 @@ class Node(object):
         result = self.__class__.__name__ + '('
         indent = ''
         separator = ''
-        
-        for name in self.__slots__[:-1]:
+
+        if self.__class__ == ID:
             result += separator
             result += indent
-            result += name + '=' + (_repr(getattr(self, name)).replace('\n', '\n  ' + (' ' * (len(name) + len(self.__class__.__name__)))))
+            result += 'name' + (_repr(getattr(self, 'name')).replace('\n', '\n  ' + (' ' * (1 + len(self.__class__.__name__)))))
             separator = ','
             indent = ' ' * len(self.__class__.__name__)
-        
+        else:
+            for name in self.__slots__[:-1]:
+                result += separator
+                result += indent
+                result += name + '=' + (_repr(getattr(self, name)).replace('\n', '\n  ' + (' ' * (len(name) + len(self.__class__.__name__)))))
+                separator = ','
+                indent = ' ' * len(self.__class__.__name__)
+
         result += indent + ')'
-        
+
         return result
 
 
     def children(self):
-        """ 
+        """
             A sequence of all children that are Nodes
         """
         pass
@@ -92,7 +99,7 @@ class Node(object):
 
 
 class Coord(object):
-    """ 
+    """
         Coordinates of a syntactic element. Consists of:
             - Line number
             - (optional) column number, for the Lexer
@@ -112,7 +119,7 @@ class Coord(object):
 
 
 class NodeVisitor(object):
-    """ 
+    """
         A base NodeVisitor class for visiting c_ast nodes.
         Subclass it and define your own visit_XXX methods, where
         XXX is the class name you want to visit with these
@@ -172,11 +179,11 @@ class ArrayDecl(Node):
 
         Attributes
         ----------
-            type : 
+            type :
                 the type (int/float/...) of the array
-            dimension : 
+            dimension :
                 the number of elements in the array
-            coord : 
+            coord :
                 the line/column position of the object
 
         Methods
@@ -197,10 +204,10 @@ class ArrayDecl(Node):
     def children(self):
         nodelist = []
 
-        if self.type is not None: 
+        if self.type is not None:
             nodelist.append(("type", self.type))
 
-        if self.dimension is not None: 
+        if self.dimension is not None:
             nodelist.append(("dimension", self.dimension))
 
         return tuple(nodelist)
@@ -237,14 +244,15 @@ class ArrayRef(Node):
             children(self)
                 A sequence of all children that are Nodes
     """
+    __slots__ = ('name', 'subscript', 'coord', 'type', 'location')
 
-    __slots__ = ('name', 'subscript', 'coord')
 
-
-    def __init__(self, name, subscript, coord=None):
+    def __init__(self, name, subscript, coord=None, type=None, location=None):
         self.name      = name
         self.subscript = subscript
         self.coord     = coord
+        self.type      = type
+        self.location  = location
 
 
     def children(self):
@@ -394,15 +402,16 @@ class BinaryOp(Node):
             children(self)
                 A sequence of all children that are Nodes
     """
+    __slots__ = ('op', 'left_value', 'right_value', 'coord', 'type', 'location')
 
-    __slots__ = ('op', 'left_value', 'right_value', 'coord')
 
-
-    def __init__(self, op, left_value, right_value, coord=None):
-        self.op      = op
+    def __init__(self, op, left_value, right_value, coord=None, type=None, location=None):
+        self.op             = op
         self.left_value     = left_value
         self.right_value    = right_value
         self.coord          = coord
+        self.type           = type
+        self.location       = location
 
 
     def children(self):
@@ -444,11 +453,12 @@ class Break(Node):
             children(self)
                 A sequence of all children that are Nodes
     """    
-    __slots__ = ('coord')
+    __slots__ = ('coord', 'bind')
 
 
-    def __init__(self, coord=None):
+    def __init__(self, coord=None, bind=None):
         self.coord = coord
+        self.bind  = bind
 
 
     def children(self):
@@ -484,13 +494,17 @@ class Cast(Node):
                 A sequence of all children that are Nodes
     """
 
-    __slots__ = ('to_type', 'expression', 'coord')
+    # TODO add type e gen_location
+
+    __slots__ = ('to_type', 'expression', 'coord', 'type', 'location')
 
 
-    def __init__(self, to_type, expression, coord=None):
+    def __init__(self, to_type, expression, coord=None, type=None, location=None):
         self.to_type    = to_type
         self.expression = expression
         self.coord      = coord
+        self.type       = type
+        self.location   = location
 
 
     def children(self):
@@ -581,13 +595,17 @@ class Constant(Node):
                 A sequence of all children that are Nodes
     """
 
-    __slots__ = ('type', 'value', 'coord')
+    # TODO: tem --> rawtype/gen_location
+
+    __slots__ = ('type', 'value', 'coord', 'rawtype', 'location')
 
 
-    def __init__(self, type, value, coord=None):
-        self.type  = type
-        self.value = value
-        self.coord = coord
+    def __init__(self, type, value, coord=None, rawtype=None, location=None):
+        self.type     = type
+        self.value    = value
+        self.coord    = coord
+        self.rawtype  = rawtype
+        self.location = location
 
 
     def children(self):
@@ -804,15 +822,19 @@ class For(Node):
             children(self)
                 A sequence of all children that are Nodes
     """    
-    __slots__ = ('for_init', 'for_cond', 'for_next', 'for_statement', 'coord')
+
+    # todo: add exit_label
+
+    __slots__ = ('for_init', 'for_cond', 'for_next', 'for_statement', 'coord', 'for_exit')
 
 
-    def __init__(self, for_init, for_cond, for_next, for_statement, coord=None):
+    def __init__(self, for_init, for_cond, for_next, for_statement, coord=None, for_exit=None):
         self.for_init      = for_init
         self.for_cond      = for_cond
         self.for_next      = for_next
         self.for_statement = for_statement
         self.coord         = coord
+        self.for_exit      = for_exit
 
 
     def children(self):
@@ -871,13 +893,15 @@ class FuncCall(Node):
                 A sequence of all children that are Nodes
     """    
 
-    __slots__ = ('name', 'args', 'coord')
+    __slots__ = ('name', 'args', 'coord', 'type', 'location')
 
 
-    def __init__(self, name, args, coord=None):
+    def __init__(self, name, args, coord=None, type=None, location=None):
         self.name  = name
         self.args  = args
         self.coord = coord
+        self.type  = type
+        self.location = location
 
 
     def children(self):
@@ -924,13 +948,16 @@ class FuncDecl(Node):
                 A sequence of all children that are Nodes
     """
 
-    __slots__ = ('args', 'type', 'coord')
+    # add gen_location
+
+    __slots__ = ('args', 'type', 'coord', 'location')
 
 
-    def __init__(self, args, type, coord=None):
-        self.args  = args
-        self.type  = type
-        self.coord = coord
+    def __init__(self, args, type, coord=None, location=None):
+        self.args     = args
+        self.type     = type
+        self.coord    = coord
+        self.location = location
 
 
     def children(self):
@@ -982,15 +1009,18 @@ class FuncDef(Node):
                 A sequence of all children that are Nodes
     """
 
-    __slots__ = ('spec', 'decl', 'param_decls', 'body', 'coord')
+    # add decls
+
+    __slots__ = ('spec', 'decl', 'param_decls', 'body', 'coord', 'decls')
 
 
-    def __init__(self, spec, decl, param_decls, body, coord=None):
+    def __init__(self, spec, decl, param_decls, body, coord=None, decls=None):
         self.spec        = spec
         self.decl        = decl
         self.param_decls = param_decls
         self.body        = body
         self.coord       = coord
+        self.decls       = decls
 
 
     def children(self):
@@ -1094,12 +1124,19 @@ class ID(Node):
                 A sequence of all children that are Nodes
     """    
 
-    __slots__ = ('name', 'coord')
+    # TODO: add type/scope/kind/bind/gen_location
+
+    __slots__ = ('name', 'coord', 'type', 'scope', 'kind', 'bind', 'location')
 
 
-    def __init__(self, name, coord=None):
-        self.name  = name
-        self.coord = coord
+    def __init__(self, name, coord=None, type=None, scope=None, kind=None, bind=None, location=None):
+        self.name     = name
+        self.coord    = coord
+        self.type     = type
+        self.scope    = scope
+        self.kind     = kind
+        self.bind     = bind
+        self.location = location
 
 
     def children(self):
@@ -1185,9 +1222,9 @@ class InitList(Node):
 
         Attributes
         ----------
-            expressions : 
+            expressions :
                 the list of expressions
-            coord : 
+            coord :
                 the line/column position of the object
 
         Methods
@@ -1196,12 +1233,13 @@ class InitList(Node):
                 A sequence of all children that are Nodes
     """
 
-    __slots__ = ('expressions', 'coord')
+    __slots__ = ('expressions', 'coord', 'list_values')
 
 
-    def __init__(self, expressions, coord=None):
+    def __init__(self, expressions, coord=None, list_values=[]):
         self.expressions = expressions
         self.coord       = coord
+        self.list_values = list_values
 
 
     def children(self):
@@ -1231,9 +1269,9 @@ class ParamList(Node):
 
         Attributes
         ----------
-            params : 
+            params :
                 a list of parameters
-            coord : 
+            coord :
                 the line/column position of the object
 
         Methods
@@ -1276,9 +1314,9 @@ class Print(Node):
 
         Attributes
         ----------
-            expr : 
+            expr :
                 the expression to be printed
-            coord : 
+            coord :
                 the line/column position of the object
 
         Methods
@@ -1296,7 +1334,7 @@ class Print(Node):
 
 
     def children(self):
-        
+
         nodelist = []
 
         if self.expr is not None:
@@ -1322,23 +1360,25 @@ class Program(Node):
 
         Attributes
         ----------
-            gdecls : 
+            gdecls :
                 a list of global declarations
-            coord : 
+            coord :
                 the line/column position of the object
 
         Methods
         -------
             children(self)
                 A sequence of all children that are Nodes
-    """    
+    """
 
-    __slots__ = ('gdecls', 'coord')
+    __slots__ = ('gdecls', 'coord', 'symble_table', 'environment')
 
 
-    def __init__(self, gdecls, coord=None):
-        self.gdecls = gdecls
-        self.coord  = coord
+    def __init__(self, gdecls, coord=None, symble_table=None, environment=None):
+        self.gdecls       = gdecls
+        self.coord        = coord
+        self.symble_table = symble_table
+        self.environment  = environment
 
 
     def children(self):
@@ -1367,18 +1407,18 @@ class PtrDecl(Node):
 
         Attributes
         ----------
-            ptr_quals : 
+            ptr_quals :
                 informations about the pointer
-            ptr_type : 
+            ptr_type :
                 the type of the pointer
-            coord : 
+            coord :
                 the line/column position of the object
 
         Methods
         -------
             children(self)
                 A sequence of all children that are Nodes
-    """    
+    """
 
     __slots__ = ('ptr_quals', 'type', 'coord')
 
@@ -1390,7 +1430,7 @@ class PtrDecl(Node):
 
 
     def children(self):
-        
+
         nodelist = []
 
         if self.type is not None:
@@ -1400,7 +1440,7 @@ class PtrDecl(Node):
 
 
     def __iter__(self):
-        
+
         if self.type is not None:
             yield self.type
 
@@ -1416,16 +1456,16 @@ class Read(Node):
 
         Attributes
         ----------
-            names : 
+            names :
                 the names to be read
-            coord : 
+            coord :
                 the line/column position of the object
 
         Methods
         -------
             children(self)
                 A sequence of all children that are Nodes
-    """    
+    """
 
     __slots__ = ('names', 'coord')
 
@@ -1462,9 +1502,9 @@ class Return(Node):
 
         Attributes
         ----------
-            expression : 
+            expression :
                 the expression to be returned
-            coord : 
+            coord :
                 the line/column position of the object
 
         Methods
@@ -1546,11 +1586,11 @@ class VarDecl(Node):
 
         Attributes
         ----------
-            declname : 
+            declname :
                 the name of the declaration
-            type : 
+            type :
                 the type of the declaration
-            coord : 
+            coord :
                 the line/column position of the object
 
         Methods
@@ -1594,11 +1634,11 @@ class UnaryOp(Node):
 
         Attributes
         ----------
-            op : 
+            op :
                 the operator
-            expr : 
+            expr :
                 the expression
-            coord : 
+            coord :
                 the line/column position of the object
 
         Methods
@@ -1607,13 +1647,15 @@ class UnaryOp(Node):
                 A sequence of all children that are Nodes
     """
 
-    __slots__  = ('op', 'expr', 'coord')
+    __slots__ = ('op', 'expr', 'coord', 'type', 'location')
 
 
-    def __init__(self, op, expr, coord=None):
-        self.op    = op
-        self.expr  = expr
-        self.coord = coord
+    def __init__(self, op, expr, coord=None, type=None, location=None):
+        self.op       = op
+        self.expr     = expr
+        self.coord    = coord
+        self.type     = type
+        self.location = location
 
 
     def children(self):
@@ -1641,11 +1683,11 @@ class While(Node):
 
         Attributes
         ----------
-            while_cond : 
+            while_cond :
                 the loop condition (eg. i < 3)
-            while_stmt : 
+            while_stmt :
                 the body of the loop
-            coord : 
+            coord :
                 the line/column position of the object
 
         Methods
@@ -1654,13 +1696,14 @@ class While(Node):
                 A sequence of all children that are Nodes
     """
 
-    __slots__ = ('while_cond', 'while_stmt', 'coord')
+    __slots__ = ('while_cond', 'while_stmt', 'coord', 'while_exit')
 
 
-    def __init__(self, while_cond, while_stmt, coord=None):
+    def __init__(self, while_cond, while_stmt, coord=None, while_exit=None):
         self.while_cond = while_cond
         self.while_stmt = while_stmt
         self.coord      = coord
+        self.while_exit = while_exit
 
 
     def children(self):
