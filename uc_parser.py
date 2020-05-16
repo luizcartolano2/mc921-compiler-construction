@@ -32,19 +32,19 @@ class UCParser():
         -------
             _token_coord(self, p, token_idx, set_col)
                 A function to build a Coord object.
-            
+
             _type_modify_decl(self, decl, modifier)
                 Tacks a type modifier on a declarator, and returns the modified declarator.
-            
+
             _fix_decl_name_type(self, decl, typename)
                 Fixes a declaration. Modifies decl.
-            
+
             _build_declarations(self, spec, decls)
                 Builds a list of declarations all sharing the given specifiers.
-            
+
             _build_function_definition(self, spec, decl, param_decls, body)
                 Builds a function definition.
-            
+
             parse(self, text, filename='', debug=False)
                 Parses C code and returns an AST.
 
@@ -68,16 +68,16 @@ class UCParser():
             A function to build a Coord object.
         """
         last_cr = p.lexer.lexer.lexdata.rfind('\n', 0, p.lexpos(token_idx))
-        
+
         if last_cr < 0:
             last_cr = -1
         column = (p.lexpos(token_idx) - (last_cr))
-        
-        return uc_ast.Coord(p.lineno(token_idx), column if (set_col==False) else 1)
+
+        return uc_ast.Coord(p.lineno(token_idx), column)
 
 
     def _type_modify_decl(self, decl, modifier):
-        """ 
+        """
             Tacks a type modifier on a declarator, and returns
             the modified declarator.
             Note: the declarator and modifier may be modified
@@ -92,9 +92,9 @@ class UCParser():
         # If the decl is a basic type, just tack the modifier onto it
         if isinstance(decl, uc_ast.VarDecl):
             modifier_tail.type = decl
-            
+
             return modifier
-        
+
         else:
             # Otherwise, the decl is a list of modifiers. Reach
             # its tail and splice the modifier onto the tail,
@@ -106,12 +106,12 @@ class UCParser():
 
             modifier_tail.type = decl_tail.type
             decl_tail.type = modifier_head
-            
+
             return decl
 
-  
+
     def _fix_decl_name_type(self, decl, typename):
-        """ 
+        """
             Fixes a declaration. Modifies decl.
         """
         # Reach the underlying basic type
@@ -121,9 +121,6 @@ class UCParser():
 
         decl.name = type.declname
 
-        # AQUI E MIGUE PODE DAR PAU DEPOIS
-        type.declname = ''
-        
         # The typename is a list of types. If any type in this
         # list isn't an Type, it must be the only
         # type in the list.
@@ -142,12 +139,12 @@ class UCParser():
             # Functions default to returning int
             if not isinstance(decl.type, uc_ast.FuncDecl):
                 self._parse_error("Missing type in declaration", decl.coord)
-            
+
             type.type = uc_ast.Type(
-                            ['int'], 
+                            ['int'],
                             coord=decl.coord
                         )
-        
+
         else:
             # At this point, we know that typename is a list of Type
             # nodes. Concatenate all the names into a single list.
@@ -155,12 +152,12 @@ class UCParser():
                             [typename.names[0]],
                             coord=typename.coord
                         )
-        
+
         return decl
 
 
     def _build_declarations(self, spec, decls):
-        """ 
+        """
             Builds a list of declarations all sharing the given specifiers.
         """
         declarations = []
@@ -1078,7 +1075,7 @@ class UCParser():
             print_statement : PRINT LPAREN expression_opt RPAREN SEMI
         '''
         p[0] = uc_ast.Print(
-                        expr=p[3],
+                        expr=p[3] if len(p) == 6 else None,
                         coord=self._token_coord(p,1)
                     )
 
@@ -1112,7 +1109,7 @@ class UCParser():
         '''
         p[0] = None
 
-    
+
     ##
     ## Precedence and associativity of operators
     ##
@@ -1124,10 +1121,3 @@ class UCParser():
         ('left', 'PLUS', 'MINUS', 'PLUSPLUS', 'MINUSMINUS'),
         ('left', 'TIMES', 'DIVIDE', 'MOD'),
     )
-
-
-if __name__ == '__main__':
-    def print_error(msg, x, y):
-        print("Lexical error: %s at %d:%d" % (msg, x, y))
-
-    parser = UCParser(print_error).build()

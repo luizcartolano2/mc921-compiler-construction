@@ -6,11 +6,10 @@
 # Authors: Luiz Cartolano && Erico Faustino     #
 #################################################
 
-
-# import ply module
-import ply.lex as lex
 # import sys module
 import sys
+# import ply module
+import ply.lex as lex
 
 
 class UCLexer():
@@ -23,7 +22,7 @@ class UCLexer():
 
         Attributes
         ----------
-            error_func : 
+            error_func :
                 Reference for an error function
 
         Methods
@@ -33,16 +32,16 @@ class UCLexer():
 
             reset_lineno(self)
                 Resets the internal line number counter of the lexer.
-            
+
             input(self, text)
                 Method to subscribe the input method
-            
+
             token(self)
                 Method to save the last token
-            
+
             find_tok_column(self, token)
                 Find the column of the token in its line.
-            
+
             _error(self, msg, token)
                 Internal auxiliary methods to errors.
 
@@ -53,8 +52,8 @@ class UCLexer():
                 token rules for regex
 
 
-    """    
-    
+    """
+
     def __init__(self, error_func):
         """ Create a new Lexer.
             An error function. Will be called with an error
@@ -69,7 +68,7 @@ class UCLexer():
 
 
     def build(self, **kwargs):
-        """ 
+        """
             Builds the lexer from the specification. Must be
             called after the lexer object is created.
 
@@ -80,7 +79,7 @@ class UCLexer():
 
 
     def reset_lineno(self):
-        """ 
+        """
             Resets the internal line number counter of the lexer.
         """
         self.lexer.lineno = 1
@@ -102,7 +101,7 @@ class UCLexer():
 
 
     def find_tok_column(self, token):
-        """ 
+        """
             Find the column of the token in its line.
         """
         last_cr = self.lexer.lexdata.rfind('\n', 0, token.lexpos)
@@ -129,7 +128,8 @@ class UCLexer():
     ##   Reserved keywords
     ##
     keywords = (
-        'ASSERT', 'BREAK', 'CHAR', 'ELSE', 'FLOAT', 'FOR', 'IF', 'INT', 'PRINT', 'READ', 'RETURN', 'VOID', 'WHILE',
+        'ASSERT', 'BREAK', 'CHAR', 'ELSE', 'FLOAT', 'FOR', 'IF', 'INT', 'PRINT', 'READ', 'RETURN',
+        'VOID', 'WHILE',
     )
 
     keyword_map = {}
@@ -177,13 +177,13 @@ class UCLexer():
         'MODEQUAL',
         'AND',
         'OR',
-    )        
+    )
 
 
     #
     #    Rules
     #
-    
+
     # Operators
     t_PLUS        = r'\+'
     t_MINUS       = r'-'
@@ -207,11 +207,11 @@ class UCLexer():
     t_MODEQUAL    = r'%='
     t_PLUSEQUAL   = r'\+='
     t_MINUSEQUAL  = r'-='
-    
+
     # Increment/decrement
     t_PLUSPLUS    = r'\+\+'
     t_MINUSMINUS  = r'--'
-    
+
     # Delimeters
     t_LPAREN      = r'\('
     t_RPAREN      = r'\)'
@@ -222,12 +222,12 @@ class UCLexer():
     t_SEMI        = r';'
     t_COMMA       = r','
     t_ADDRESS     = r'&'
-    
+
     # A string containing ignored characters (spaces and tabs)
     t_ignore      = ' \t'
     t_CHAR_CONST  = r'''"."'''
 
-    
+
     ##
     ##  Get Newlines
     ##
