@@ -9,6 +9,6 @@ int main() {
         reverse = reverse + t % 10;
         t = t / 10;
     }
-    assert (n == reverse);
+    assert n == reverse;
     return 0;
 }

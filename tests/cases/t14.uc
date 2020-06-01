@@ -7,6 +7,6 @@ int fat(int n) {
 
 int main() {
     int x = 7;
-    assert (fat(x) == 5040);
+    assert fat(x) == 5040;
     return 0;
 }
