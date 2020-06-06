@@ -1,4 +1,5 @@
 /* Compute GCD of two integers */
+
 int gcd (int x, int y) {
     int g = y;
     while (x > 0) {

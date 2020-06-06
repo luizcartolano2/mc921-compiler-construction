@@ -13,6 +13,6 @@ int main(){
     i = g(t);
     j = g(z);
     k = g(t+z);
-    assert (i == 16 && j == 68 && k == 292);
+    assert i == 16 && j == 68 && k == 292;
     return 0;
 }

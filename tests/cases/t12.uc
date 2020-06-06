@@ -7,6 +7,6 @@ int foo(int a, int b) {
 int main() {
     int c = 2, d = 3;
     int e = foo(c, d);
-    assert (e == 50);
-    return e;
+    assert e == 50;
+    return 0;
 }

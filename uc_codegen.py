@@ -1296,7 +1296,7 @@ class GenerateCode(NodeVisitor):
             elif self.__func_alloc_phase == 'arg_init':
                 # deal with arg initialization
                 # first we get the last arg that was put on queue
-                arg = self.queue.pop(0)
+                arg = self.queue.pop()
 
                 # create the instruction to the local declaration
                 self.code.append((f'store_{typename}', arg, location))
@@ -1380,7 +1380,6 @@ class GenerateCode(NodeVisitor):
         # allocate two new registers
         aux = self.__new_temp()
         node.location = self.__new_temp()
-
         # check the remaining operators
         if node.op == '-':
             # if the unary oper is an '-', like in '-x' or '-5'
