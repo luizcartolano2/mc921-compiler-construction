@@ -8,6 +8,7 @@
 # Authors: Luiz Cartolano && Erico Faustino      #
 ##################################################
 
+
 def format_instruction(t):
     op = t[0]
     if len(t) > 1:
@@ -32,9 +33,11 @@ def format_instruction(t):
     else:
         return f"{op}"
 
+
 class Label(object):
-    if __init__(self):
+    def __init__(self):
         self.lbl = {}
+
 
     def make_label(self, label):
         if label not in self.lbl:
@@ -48,6 +51,7 @@ class Label(object):
     def clear_label(self):
         self.lbl = {}
 
+
 class ReachDefinitions(object):
     def __init__(self):
         self.gen = set()
@@ -55,12 +59,14 @@ class ReachDefinitions(object):
         self.ins = set()
         self.out = set()
 
+
 class LiveVariable(object):
     def __init__(self):
         self.use = set()
         self.defs = set()
         self.ins = set()
         self.out = set()
+
 
 class Block(object):
     def __init__(self, label):
@@ -74,16 +80,20 @@ class Block(object):
     def __iter__(self):
         return iter(self.instructions)
 
+
     def append(self, instr):
         self.instructions.append(instr)
 
+
     def generate_jump(self):
         return self.instructions[-1][0] != 'jump'
+
 
 class BasicBlock(Block):
     def __init__(self, label):
         super(BasicBlock, self).__init__(label)
         self.branch = None
+
 
 class ConditionBlock(Block):
     def __init__(self, label):
@@ -91,7 +101,8 @@ class ConditionBlock(Block):
         super.taken = None
         self.fall_through = None
 
-class BlockVisitor(object):
+
+class BlockVisitor():
     def visit(self, block):
         while isinstance(block, Block):
             name = "visit_%s" % type(block).__name__
@@ -99,51 +110,58 @@ class BlockVisitor(object):
                 getattr(self, name)(block)
             block = block.next_block
 
+
 class EmitBlocks(BlockVisitor):
     def __init__(self):
         self.code = []
 
+
     def visit_BasicBlock(self, block):
         for inst in block.instructions:
             self.code.append(inst)
+
 
     def visit_ConditionBlock(self, block):
         for inst in block.instructions:
             self.code.append(inst)
 
-class CFG(object):
-    def __init__(self, fname):
-        self.fname = fname
-        self.g = Digraph('g', filename=fname + '.gv', node_attr={}) #todo essa foi uma linha que cortou :/
-
-    def visit_BasicBlock(self, block):
-        _name = block.label
-        if _name:
-            _label = '{' + _name + ":\l\t" #todo what?
-            for _inst in block.instructions[1:]:
-                _label += format_instruction(_inst) + "\l\t"
-            _label += '}'
-            self.g.node(_name, _label=_label)
-            if block.branch:
-                self.g.node(_name, block.branch.label)
-        else:
-            self.g.node(self.fname, label=None, _attributes ={}) #todo cortou
-            self.g.node(self.fname, block.next_block.label)
-
-    def visit_ConditionBlock(self, block):
-        _name = block.label
-        _label = '{' + _name + ":\l\t"
-        for _inst in block.instructions[1:]:
-            _label += format_instruction(_inst) + "\l\t"
-        _label += "|{<f0>T|<f1>f}}"
-        self.g.node(_name, _label=_label)
-        self.g.edge(_name + ':f0', block.taken.label)
-        self.g.edge(_name + ':f1', block.fall_through.label)
-
-    def view(self, block):
-        while isinstance(block, Block):
-            name = "visit_%s" %type(block).__name__
-            if hasattr(self, name):
-                getattr(self, name)(block)
-            block = block.next_block
-        self.g.view()
+#
+# class CFG(object):
+#     def __init__(self, fname):
+#         self.fname = fname
+#         self.g = Digraph('g', filename=fname + '.gv', node_attr={})
+#
+#
+#     def visit_BasicBlock(self, block):
+#         _name = block.label
+#         if _name:
+#             _label = '{' + _name + ":\l\t" #todo what?
+#             for _inst in block.instructions[1:]:
+#                 _label += format_instruction(_inst) + "\l\t"
+#             _label += '}'
+#             self.g.node(_name, _label=_label)
+#             if block.branch:
+#                 self.g.node(_name, block.branch.label)
+#         else:
+#             self.g.node(self.fname, label=None, _attributes ={})
+#             self.g.node(self.fname, block.next_block.label)
+#
+#
+#     def visit_ConditionBlock(self, block):
+#         _name = block.label
+#         _label = '{' + _name + ":\l\t"
+#         for _inst in block.instructions[1:]:
+#             _label += format_instruction(_inst) + "\l\t"
+#         _label += "|{<f0>T|<f1>f}}"
+#         self.g.node(_name, _label=_label)
+#         self.g.edge(_name + ':f0', block.taken.label)
+#         self.g.edge(_name + ':f1', block.fall_through.label)
+#
+#
+#     def view(self, block):
+#         while isinstance(block, Block):
+#             name = "visit_%s" %type(block).__name__
+#             if hasattr(self, name):
+#                 getattr(self, name)(block)
+#             block = block.next_block
+#         self.g.view()

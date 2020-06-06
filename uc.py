@@ -14,7 +14,7 @@ from uc_parser import UCParser
 from uc_sema import Visitor
 from uc_codegen import GenerateCode
 from uc_interpreter import Interpreter
-
+from uc_blocks_2 import ControlBlocks
 """
 One of the most important (and difficult) parts of writing a compiler
 is reliable reporting of error messages back to the user.  This file
@@ -144,12 +144,22 @@ class Compiler:
         self.gen = GenerateCode()
         self.gen.visit(self.ast)
         self.gencode = self.gen.code
+        # _str = ''
+        # if not susy and ir_file is not None:
+        #     for _code in self.gencode:
+        #         _str += f"{_code}\n"
+        #     ir_file.write(_str)
+
+
+    def _control_blocks(self, susy, ir_file):
+        self.create_blocks = ControlBlocks(ir_list=self.gencode)
+        self.create_blocks.create_basic_blocks()
+
         _str = ''
         if not susy and ir_file is not None:
             for _code in self.gencode:
                 _str += f"{_code}\n"
             ir_file.write(_str)
-
 
     def _do_compile(self, susy, ast_file, ir_file, debug):
         """ Compiles the code to the given file object. """
@@ -158,6 +168,8 @@ class Compiler:
             self._sema(susy, ast_file)
         if not errors_reported():
             self._gencode(susy, ir_file)
+        if not errors_reported():
+            self._control_blocks(susy, ir_file)
 
 
     def compile(self, code, susy, ast_file, ir_file, run_ir, debug):
@@ -244,4 +256,3 @@ def run_compiler():
 
 if __name__ == '__main__':
     run_compiler()
-    
