@@ -94,7 +94,7 @@ class GenerateCode(NodeVisitor):
         }
 
 
-    def __new_temp(self):
+    def __new_temp(self, temp_name=None):
         """
             A method used to allocate local spaces
             on the interpreter.
@@ -110,9 +110,12 @@ class GenerateCode(NodeVisitor):
         if self.__fname not in self.__versions:
             self.__versions[self.__fname] = 0
 
-        # create register name and add one to counter
-        name = "%" + "%d" % (self.__versions[self.__fname])
-        self.__versions[self.__fname] += 1
+        if temp_name is not None:
+            name = f"%{temp_name}"
+        else:
+            # create register name and add one to counter
+            name = "%" + "%d" % (self.__versions[self.__fname])
+            self.__versions[self.__fname] += 1
 
         # return the name
         return name
@@ -151,6 +154,7 @@ class GenerateCode(NodeVisitor):
         """
         # get new register to load the
         # variable
+        # import pdb; pdb.set_trace()
         varname = self.__new_temp()
 
         # get the type for load
@@ -1285,7 +1289,7 @@ class GenerateCode(NodeVisitor):
             if self.__func_alloc_phase in ['arg_decl', 'var_decl']:
                 # if declaring an arg or var
                 # first we create the register spot
-                varname = self.__new_temp()
+                varname = self.__new_temp(temp_name=node.declname.name)
 
                 # create the instruction to the local declaration
                 self.code.append((f'alloc_{typename}', varname))
