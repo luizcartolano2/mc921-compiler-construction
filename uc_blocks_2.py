@@ -8,6 +8,7 @@ class ControlBlocks():
         self.basic_blocks = dict()
         self.globals = []
         self.pre_blocks = dict()
+        self.cfg_list = []
 
 
     def split_globals(self):
@@ -170,7 +171,7 @@ class ControlBlocks():
 
         return all_blocks
 
-    
+
     def create_basic_blocks(self):
         self.split_functions()
         self.create_pre_blocks()
@@ -184,6 +185,7 @@ class ControlBlocks():
             all_blocks = self.create_block_list(func)
             cfg = CFG(func)
             cfg.view(self.functions[func]['%entry'], all_blocks)
+            self.cfg_list.append(cfg)
 
         # debug purpose
         self.print_pre_blocks()
