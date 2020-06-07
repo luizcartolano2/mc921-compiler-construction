@@ -1,4 +1,4 @@
-from uc_block import Block, ConditionBlock
+from uc_block import Block, ConditionBlock, CFG
 
 
 class ControlBlocks():
@@ -92,9 +92,38 @@ class ControlBlocks():
         for counter, label in enumerate(block_labels_names):
             current_block = func_blocks[label]
             if isinstance(current_block, ConditionBlock):
-                print(f"Conditional Block: {current_block}")
+                # check if exist any jump block
+                # in the middle of the code
+                jump_labels, jump_blocks =\
+                    self.get_jump_labels(current_block.instructions, func_blocks)
+
+                if len(jump_blocks) != 0:
+                    current_block.successors.append(jump_blocks)
+                    # add next block predecessors
+                    for next_block in jump_blocks:
+                        next_block.predecessors.append(current_block)
+
+                # deal with the true condition
+                true_block = func_blocks[current_block.instructions[-1][-2]]
+                current_block.next_block = true_block
+                
+                # add current block successor
+                current_block.successors.append(true_block)
+                current_block.taken = true_block
+                # add next block predecessor
+                true_block.predecessors.append(current_block)
+
+                # deal with the false condition
+                false_label = func_blocks[current_block.instructions[-1][-1]]
+                # add current block successor
+                current_block.successors.append(false_label)
+                current_block.fall_through = false_label
+                # add next block predecessor
+                false_label.predecessors.append(current_block)
+
+                # add next block
+                current_block.next_block = false_label
             else:
-                print(f"Normal Block: {current_block}")
                 if current_block.instructions[-1][0] == 'jump':
                     # block has a jump so next
                     # block is going to be the jump
@@ -126,7 +155,11 @@ class ControlBlocks():
                     if counter + 1 < len(block_labels_names):
                         # get next block
                         next_block = func_blocks[block_labels_names[counter + 1]]
-                        print(next_block.label)
+                        # add successors
+                        current_block.successors.append(next_block)
+                        current_block.next_block = next_block
+                        # add predecessor to next block
+                        next_block.predecessors.append(current_block)
 
 
     def create_basic_blocks(self):
@@ -139,6 +172,9 @@ class ControlBlocks():
         # predecessors/sucessors/others
         for func in self.functions:
             self.create_links(func)
+            cfg = CFG(func)
+            cfg.view(self.functions[func]['%entry'])
+            import pdb; pdb.set_trace()
 
         self.print_pre_blocks()
 

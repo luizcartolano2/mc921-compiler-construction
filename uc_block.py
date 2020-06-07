@@ -98,7 +98,9 @@ class Block(object):
 class ConditionBlock(Block):
     def __init__(self, label):
         super(ConditionBlock, self).__init__(label)
+        # true cond
         self.taken = None
+        # false cond
         self.fall_through = None
 
 
@@ -143,8 +145,8 @@ class CFG(object):
                 _label += format_instruction(_inst) + "\l\t"
             _label += "}"
             self.g.node(_name, label=_label)
-            if block.branch:
-                self.g.edge(_name, block.branch.label)
+            if block.next_block:
+                self.g.edge(_name, block.next_block.label)
         else:
             # Function definition. An empty block that connect to the Entry Block
             self.g.node(self.fname, label=None, _attributes={'shape': 'ellipse'})
@@ -166,10 +168,13 @@ class CFG(object):
 
     def view(self, block):
         while isinstance(block, Block):
-            name = "visit_%s" % type(block).__name__
+            if isinstance(block, ConditionBlock):
+                name = "visit_ConditionBlock"
+            else:
+                name = "visit_%s" % type(block).__name__
             if hasattr(self, name):
                 getattr(self, name)(block)
             block = block.next_block
         # You can use the next stmt to see the dot file
-        # print(self.g.source)
+        print(self.g.source)
         self.g.view()
