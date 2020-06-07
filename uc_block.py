@@ -71,9 +71,10 @@ class LiveVariable(object):
 class Block(object):
     def __init__(self, label):
         self.predecessors = []
+        self.sucessors = []
         self.next_block = None
         self.label = label
-        self.instructions = [(self.label[1:] + ':',)] if self.label else []
+        self.instructions = [(self.label[1:],)] if self.label != '%entry' else []
         self.rd = ReachDefinitions()
         self.lv = LiveVariable()
 
@@ -89,16 +90,14 @@ class Block(object):
         return self.instructions[-1][0] != 'jump'
 
 
-class BasicBlock(Block):
-    def __init__(self, label):
-        super(BasicBlock, self).__init__(label)
-        self.branch = None
+    def take_cbranch(self):
+        return self.instructions[-1][-0] == 'cbranch'
 
 
 class ConditionBlock(Block):
     def __init__(self, label):
         super(ConditionBlock, self).__init__(label)
-        super.taken = None
+        self.taken = None
         self.fall_through = None
 
 
