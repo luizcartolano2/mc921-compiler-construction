@@ -7,6 +7,7 @@
 #                                                #
 # Authors: Luiz Cartolano && Erico Faustino      #
 ##################################################
+from graphviz import Digraph
 
 
 def format_instruction(t):
@@ -71,7 +72,7 @@ class LiveVariable(object):
 class Block(object):
     def __init__(self, label):
         self.predecessors = []
-        self.sucessors = []
+        self.successors = []
         self.next_block = None
         self.label = label
         self.instructions = [(self.label[1:],)] if self.label != '%entry' else []
@@ -124,43 +125,51 @@ class EmitBlocks(BlockVisitor):
         for inst in block.instructions:
             self.code.append(inst)
 
-#
-# class CFG(object):
-#     def __init__(self, fname):
-#         self.fname = fname
-#         self.g = Digraph('g', filename=fname + '.gv', node_attr={})
-#
-#
-#     def visit_BasicBlock(self, block):
-#         _name = block.label
-#         if _name:
-#             _label = '{' + _name + ":\l\t" #todo what?
-#             for _inst in block.instructions[1:]:
-#                 _label += format_instruction(_inst) + "\l\t"
-#             _label += '}'
-#             self.g.node(_name, _label=_label)
-#             if block.branch:
-#                 self.g.node(_name, block.branch.label)
-#         else:
-#             self.g.node(self.fname, label=None, _attributes ={})
-#             self.g.node(self.fname, block.next_block.label)
-#
-#
-#     def visit_ConditionBlock(self, block):
-#         _name = block.label
-#         _label = '{' + _name + ":\l\t"
-#         for _inst in block.instructions[1:]:
-#             _label += format_instruction(_inst) + "\l\t"
-#         _label += "|{<f0>T|<f1>f}}"
-#         self.g.node(_name, _label=_label)
-#         self.g.edge(_name + ':f0', block.taken.label)
-#         self.g.edge(_name + ':f1', block.fall_through.label)
-#
-#
-#     def view(self, block):
-#         while isinstance(block, Block):
-#             name = "visit_%s" %type(block).__name__
-#             if hasattr(self, name):
-#                 getattr(self, name)(block)
-#             block = block.next_block
-#         self.g.view()
+
+class CFG(object):
+
+    def __init__(self, fname):
+        self.fname = fname
+        self.g = Digraph('g', filename=fname + '.gv', node_attr={'shape': 'record'})
+
+
+    def visit_Block(self, block):
+        # Get the label as node name
+        _name = block.label
+        if _name:
+            # get the formatted instructions as node label
+            _label = "{" + _name + ":\l\t"
+            for _inst in block.instructions[1:]:
+                _label += format_instruction(_inst) + "\l\t"
+            _label += "}"
+            self.g.node(_name, label=_label)
+            if block.branch:
+                self.g.edge(_name, block.branch.label)
+        else:
+            # Function definition. An empty block that connect to the Entry Block
+            self.g.node(self.fname, label=None, _attributes={'shape': 'ellipse'})
+            self.g.edge(self.fname, block.next_block.label)
+
+
+    def visit_ConditionBlock(self, block):
+        # Get the label as node name
+        _name = block.label
+        # get the formatted instructions as node label
+        _label = "{" + _name + ":\l\t"
+        for _inst in block.instructions[1:]:
+            _label += format_instruction(_inst) + "\l\t"
+        _label +="|{<f0>T|<f1>F}}"
+        self.g.node(_name, label=_label)
+        self.g.edge(_name + ":f0", block.taken.label)
+        self.g.edge(_name + ":f1", block.fall_through.label)
+
+
+    def view(self, block):
+        while isinstance(block, Block):
+            name = "visit_%s" % type(block).__name__
+            if hasattr(self, name):
+                getattr(self, name)(block)
+            block = block.next_block
+        # You can use the next stmt to see the dot file
+        # print(self.g.source)
+        self.g.view()

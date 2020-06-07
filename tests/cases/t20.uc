@@ -19,6 +19,7 @@ int main() {
 // function to check prime number
 int checkPrime(int n) {
     int i, isPrime = 1;
+    int j;
     for (i = 2; i <= n / 2; ++i) {
         if (n % i == 0) {
             isPrime = 0;

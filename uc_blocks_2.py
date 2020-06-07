@@ -73,11 +73,72 @@ class ControlBlocks():
                     print(f"\t\t{code}")
 
 
+    def get_jump_labels(self, ir_list, func_blocks):
+        labels = []
+        blocks = []
+        for code in ir_list:
+            if code[0] == 'jump':
+                labels.append(code[1])
+                blocks.append(func_blocks[code[1]])
+
+        return labels, blocks
+
+
+    def create_links(self, func):
+        # get the dict block
+        func_blocks = self.functions[func]
+        block_labels_names = list(func_blocks.keys())
+
+        for counter, label in enumerate(block_labels_names):
+            current_block = func_blocks[label]
+            if isinstance(current_block, ConditionBlock):
+                print(f"Conditional Block: {current_block}")
+            else:
+                print(f"Normal Block: {current_block}")
+                if current_block.instructions[-1][0] == 'jump':
+                    # block has a jump so next
+                    # block is going to be the jump
+                    # label
+                    jump_labels, jump_blocks =\
+                        self.get_jump_labels(current_block.instructions, func_blocks)
+
+                    # add current blocks successors
+                    current_block.successors.append(jump_blocks)
+                    # add next block predecessors
+                    for next_block in jump_blocks:
+                        next_block.predecessors.append(current_block)
+
+                    # add current block next block
+                    current_block.next_block = jump_blocks[-1]
+                else:
+                    # next block is the next label on list
+                    # check if exist any jump
+                    # in the instructionsttr
+                    jump_labels, jump_blocks =\
+                        self.get_jump_labels(current_block.instructions, func_blocks)
+
+                    if len(jump_blocks) != 0:
+                        current_block.successors.append(jump_blocks)
+                        # add next block predecessors
+                        for next_block in jump_blocks:
+                            next_block.predecessors.append(current_block)
+
+                    if counter + 1 < len(block_labels_names):
+                        # get next block
+                        next_block = func_blocks[block_labels_names[counter + 1]]
+                        print(next_block.label)
+
+
     def create_basic_blocks(self):
         self.split_functions()
         self.create_pre_blocks()
 
         self.convert_conditional_blocks()
+
+        # iterate over blocks creating
+        # predecessors/sucessors/others
+        for func in self.functions:
+            self.create_links(func)
 
         self.print_pre_blocks()
 
