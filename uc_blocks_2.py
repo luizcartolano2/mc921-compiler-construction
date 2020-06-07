@@ -91,6 +91,7 @@ class ControlBlocks():
 
         for counter, label in enumerate(block_labels_names):
             current_block = func_blocks[label]
+
             if isinstance(current_block, ConditionBlock):
                 # check if exist any jump block
                 # in the middle of the code
@@ -161,6 +162,15 @@ class ControlBlocks():
                         next_block.predecessors.append(current_block)
 
 
+    def create_block_list(self, func):
+        all_blocks = []
+
+        for label in self.functions[func]:
+            all_blocks.append(self.functions[func][label])
+
+        return all_blocks
+
+    
     def create_basic_blocks(self):
         self.split_functions()
         self.create_pre_blocks()
@@ -170,12 +180,11 @@ class ControlBlocks():
         # iterate over blocks creating
         # predecessors/sucessors/others
         for func in self.functions:
-            if func != 'main':
-                self.create_links(func)
-                cfg = CFG(func)
-                cfg.view(self.functions[func]['%entry'])
-                import pdb; pdb.set_trace()
+            self.create_links(func)
+            all_blocks = self.create_block_list(func)
+            cfg = CFG(func)
+            cfg.view(self.functions[func]['%entry'], all_blocks)
 
         # debug purpose
-        # self.print_pre_blocks()
+        self.print_pre_blocks()
 

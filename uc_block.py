@@ -141,6 +141,7 @@ class CFG(object):
         if block.visited is False:
             # Get the label as node name
             _name = block.label
+
             print(f"Block name : {_name}")
             if _name:
                 # get the formatted instructions as node label
@@ -173,17 +174,15 @@ class CFG(object):
             else:
                 getattr(self, "visit_Block")(block.taken)
 
-            block.visited = True
-
-
-        if block.fall_through != block.taken:
             if isinstance(block.fall_through, ConditionBlock):
                 getattr(self, "visit_ConditionBlock")(block.fall_through)
             else:
                 getattr(self, "visit_Block")(block.fall_through)
 
+            block.visited = True
 
-    def view(self, block):
+
+    def view(self, block, all_blocks=[]):
         self.g.node(self.fname, label=None, _attributes={'shape': 'ellipse'})
         self.g.edge(self.fname, block.label)
 
@@ -192,13 +191,18 @@ class CFG(object):
                 name = "visit_ConditionBlock"
             else:
                 name = "visit_%s" % type(block).__name__
-                print(name)
+                print(f'{name}: {block.label}')
             if hasattr(self, name):
                 getattr(self, name)(block)
 
-            # if isinstance(block, ConditionBlock):
-            #     block = block.taken
-            # else:
             block = block.next_block
+
+        for block in all_blocks:
+            if block.visited is False:
+                if isinstance(block, ConditionBlock):
+                    getattr(self, "visit_ConditionBlock")(block)
+                else:
+                    getattr(self, "visit_Block")(block)
+
         # You can use the next stmt to see the dot file
         self.g.view()
