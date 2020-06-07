@@ -78,6 +78,8 @@ class Block(object):
         self.instructions = [(self.label[1:],)] if self.label != '%entry' else []
         self.rd = ReachDefinitions()
         self.lv = LiveVariable()
+        self.visited = False
+
 
     def __iter__(self):
         return iter(self.instructions)
@@ -136,45 +138,67 @@ class CFG(object):
 
 
     def visit_Block(self, block):
-        # Get the label as node name
-        _name = block.label
-        if _name:
+        if block.visited is False:
+            # Get the label as node name
+            _name = block.label
+            print(f"Block name : {_name}")
+            if _name:
+                # get the formatted instructions as node label
+                _label = "{" + _name + ":\l\t"
+                for _inst in block.instructions[1:]:
+                    _label += format_instruction(_inst) + "\l\t"
+                _label += "}"
+                self.g.node(_name, label=_label)
+                if block.next_block:
+                    self.g.edge(_name, block.next_block.label)
+
+            block.visited = True
+
+    def visit_ConditionBlock(self, block):
+        if block.visited is False:
+            # Get the label as node name
+            _name = block.label
+            print(f"Conditional Block name : {_name}")
             # get the formatted instructions as node label
             _label = "{" + _name + ":\l\t"
             for _inst in block.instructions[1:]:
                 _label += format_instruction(_inst) + "\l\t"
-            _label += "}"
+            _label +="|{<f0>T|<f1>F}}"
             self.g.node(_name, label=_label)
-            if block.next_block:
-                self.g.edge(_name, block.next_block.label)
-        else:
-            # Function definition. An empty block that connect to the Entry Block
-            self.g.node(self.fname, label=None, _attributes={'shape': 'ellipse'})
-            self.g.edge(self.fname, block.next_block.label)
+            self.g.edge(_name + ":f0", block.taken.label)
+            self.g.edge(_name + ":f1", block.fall_through.label)
+
+            if isinstance(block.taken, ConditionBlock):
+                getattr(self, "visit_ConditionBlock")(block.taken)
+            else:
+                getattr(self, "visit_Block")(block.taken)
+
+            block.visited = True
 
 
-    def visit_ConditionBlock(self, block):
-        # Get the label as node name
-        _name = block.label
-        # get the formatted instructions as node label
-        _label = "{" + _name + ":\l\t"
-        for _inst in block.instructions[1:]:
-            _label += format_instruction(_inst) + "\l\t"
-        _label +="|{<f0>T|<f1>F}}"
-        self.g.node(_name, label=_label)
-        self.g.edge(_name + ":f0", block.taken.label)
-        self.g.edge(_name + ":f1", block.fall_through.label)
+        if block.fall_through != block.taken:
+            if isinstance(block.fall_through, ConditionBlock):
+                getattr(self, "visit_ConditionBlock")(block.fall_through)
+            else:
+                getattr(self, "visit_Block")(block.fall_through)
 
 
     def view(self, block):
+        self.g.node(self.fname, label=None, _attributes={'shape': 'ellipse'})
+        self.g.edge(self.fname, block.label)
+
         while isinstance(block, Block):
             if isinstance(block, ConditionBlock):
                 name = "visit_ConditionBlock"
             else:
                 name = "visit_%s" % type(block).__name__
+                print(name)
             if hasattr(self, name):
                 getattr(self, name)(block)
+
+            # if isinstance(block, ConditionBlock):
+            #     block = block.taken
+            # else:
             block = block.next_block
         # You can use the next stmt to see the dot file
-        print(self.g.source)
         self.g.view()

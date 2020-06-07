@@ -105,8 +105,7 @@ class ControlBlocks():
 
                 # deal with the true condition
                 true_block = func_blocks[current_block.instructions[-1][-2]]
-                current_block.next_block = true_block
-                
+
                 # add current block successor
                 current_block.successors.append(true_block)
                 current_block.taken = true_block
@@ -171,10 +170,12 @@ class ControlBlocks():
         # iterate over blocks creating
         # predecessors/sucessors/others
         for func in self.functions:
-            self.create_links(func)
-            cfg = CFG(func)
-            cfg.view(self.functions[func]['%entry'])
-            import pdb; pdb.set_trace()
+            if func != 'main':
+                self.create_links(func)
+                cfg = CFG(func)
+                cfg.view(self.functions[func]['%entry'])
+                import pdb; pdb.set_trace()
 
-        self.print_pre_blocks()
+        # debug purpose
+        # self.print_pre_blocks()
 
