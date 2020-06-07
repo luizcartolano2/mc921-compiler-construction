@@ -4,7 +4,8 @@
 .idea/
 *.ast
 *.ir
-
+*.gv
+*.gv.pdf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
