@@ -8,6 +8,10 @@ class DataFlow():
         self.binary_ops = ['add', 'sub', 'mul', 'div', 'mod', 'and', 'or',
                            'not', 'ne', 'eq', 'lt', 'le', 'gt', 'ge']
         self.values_ops = ['fptosi', 'sitofp', 'param', 'print', 'return']
+        self.assignment_op = ('load', 'store', 'literal', 'elem', 'get',
+                              'add', 'sub', 'mul', 'div', 'mod', 'lt',
+                              'le', 'ge', 'gt', 'eq', 'ne', 'and', 'or',
+                              'not', 'call', 'read')
 
 
     def _set_use_def(self, inst):
@@ -25,7 +29,7 @@ class DataFlow():
             return {}, {inst[1]}
 
 
-    def computeLV_use_def(self, func):
+    def compute_lv_use_def(self, func):
         for block_lb in func:
             block = func[block_lb]
             for inst in block.instructions[1:]:
@@ -34,7 +38,11 @@ class DataFlow():
                 block.lv.defs = block.lv.defs.union(defs)
 
 
-    def computeLV_in_out(self, func):
+    def compute_lv_in_out(self, func):
+        # first compute use
+        # and def to all blocks
+        self.compute_lv_use_def(func)
+
         changed = True
         block_labels = list(func.keys())
 
@@ -72,17 +80,99 @@ class DataFlow():
         for block_lb in func:
             bb = func[block_lb]
             print(bb.label)
-            print('  use:  ', sorted(bb.lv.use))
-            print('  def:  ', sorted(bb.lv.defs))
-            print('  in :  ', sorted(bb.lv.ins))
-            print('  out:  ', sorted(bb.lv.out))
+            print('\tuse:  ', sorted(bb.lv.use))
+            print('\tdef:  ', sorted(bb.lv.defs))
+            print('\tin :  ', sorted(bb.lv.ins))
+            print('\tout:  ', sorted(bb.lv.out))
+
+
+    def compute_rd_defs(self, func):
+        defs = {}
+        blocks_label = list(func.keys())
+
+        for block_counter, block_label in enumerate(blocks_label):
+            block = func[block_label]
+            for inst_counter, inst in enumerate(block.instructions[1:]):
+                if inst[0].split('_')[0] in self.assignment_op:
+                    target = inst[-1]
+                    if target not in defs.keys():
+                        defs[target] = [(block_counter, inst_counter)]
+                    else:
+                        defs[target].append((block_counter, inst_counter))
+
+        return defs
+
+
+    def compute_rd_gen_kill(self, func):
+        blocks_label = list(func.keys())
+
+        defs = self.compute_rd_defs(func=func)
+
+        for block_counter, block_label in enumerate(blocks_label):
+            block = func[block_label]
+            for inst_counter, inst in enumerate(block.instructions[1:]):
+                if inst[0].split('_')[0] in self.assignment_op:
+                    target = inst[-1]
+                    kills = set(defs[target]) - {block_counter, inst_counter}
+                    block.rd.kill = block.rd.kill.union(kills)
+                    gen = {block_counter, inst_counter}
+                    block.rd.gen = gen.union(block.rd.gen - kills)
+
+
+    def compute_rd_in_out(self, func):
+        # first compute the gen/kill
+        self.compute_rd_gen_kill(func=func)
+
+        # get a list of blocks
+        blocks_label = list(func.keys())
+
+        # create a set of changed nodes
+        changed_nodes = set(blocks_label)
+
+        # iterate while exists nodes
+        # in the changed_nodes set
+        while changed_nodes:
+            # get a block label from
+            # the set of block labels
+            block_label = changed_nodes.pop()
+            # get a Block object
+            block = func[block_label]
+
+            # first we calculate the in[n]
+            # by the following rule :
+            # in[n] = \union_{p \in predecessors[n]}{out[p]}
+            block.rd.ins = set()
+            for predecessor in block.predecessors:
+                block.rd.ins = block.rd.ins.union(predecessor.rd.out)
+
+            # store the old out value
+            old_out = block.rd.out
+
+            # now we calculate the new out[n] that
+            # is calculated according to the rule :
+            # out[n] = gen[n] \union (in[n] - kill[n])
+            block.rd.out = block.rd.gen.union(block.rd.ins - block.rd.kill)
+
+            # if out[n] has changed, we
+            # must update the changed nodes
+            # with the successors of n
+            if block.rd.out != old_out:
+                for success in block.successors:
+                    changed_nodes.union({success})
+
+        print('==Reaching Definitions==')
+        for block_lb in func:
+            bb = func[block_lb]
+            print(bb.label)
+            print('\tgen:  ', sorted(bb.rd.gen))
+            print('\tkill: ', sorted(bb.rd.kill))
+            print('\tin :  ', sorted(bb.rd.ins))
+            print('\tout:  ', sorted(bb.rd.out))
 
 
     def optimize_code(self):
         for func in self.blocks_control.functions:
-
-            self.computeLV_use_def(self.blocks_control.functions[func])
-            self.computeLV_in_out(self.blocks_control.functions[func])
-
+            self.compute_lv_in_out(self.blocks_control.functions[func])
+            self.compute_rd_in_out(self.blocks_control.functions[func])
         # import pdb; pdb.set_trace()
         # print('oi')

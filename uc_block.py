@@ -135,7 +135,7 @@ class CFG(object):
     def __init__(self, fname):
         self.fname = fname
         self.g = Digraph('g', filename=fname + '.gv', node_attr={'shape': 'record'})
-
+        self.labels = []
 
     def visit_Block(self, block):
         if block.visited is False:
@@ -154,6 +154,7 @@ class CFG(object):
                     self.g.edge(_name, block.next_block.label)
 
             block.visited = True
+
 
     def visit_ConditionBlock(self, block):
         if block.visited is False:
@@ -180,6 +181,61 @@ class CFG(object):
                 getattr(self, "visit_Block")(block.fall_through)
 
             block.visited = True
+
+
+    def visit_Block_DFS(self, block):
+        if block.visited is False:
+            # Get the label as node name
+            _name = block.label
+
+            if _name:
+                self.labels.append(_name)
+
+            block.visited = True
+
+
+    def visit_ConditionBlock_DFS(self, block):
+        if block.visited is False:
+            # Get the label as node name
+            _name = block.label
+
+            self.labels.append(_name)
+
+            if isinstance(block.taken, ConditionBlock):
+                getattr(self, "visit_ConditionBlock_DFS")(block.taken)
+            else:
+                getattr(self, "visit_Block_DFS")(block.taken)
+
+            if isinstance(block.fall_through, ConditionBlock):
+                getattr(self, "visit_ConditionBlock_DFS")(block.fall_through)
+            else:
+                getattr(self, "visit_Block_DFS")(block.fall_through)
+
+            block.visited = True
+
+
+    def dfs_visit(self, block, all_blocks=[]):
+        self.labels = []
+
+        for block in all_blocks:
+            block.visited = False
+
+        while isinstance(block, Block):
+            if isinstance(block, ConditionBlock):
+                getattr(self, "visit_ConditionBlock_DFS")(block)
+            else:
+                getattr(self, "visit_Block_DFS")(block)
+
+            block = block.next_block
+
+        for block in all_blocks:
+            if block.visited is False:
+                if isinstance(block, ConditionBlock):
+                    getattr(self, "visit_ConditionBlock_DFS")(block)
+                else:
+                    getattr(self, "visit_Block_DFS")(block)
+
+        print(self.labels)
 
 
     def view(self, block, all_blocks=[]):

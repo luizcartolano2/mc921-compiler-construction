@@ -139,11 +139,11 @@ class ControlBlocks():
                         next_block.predecessors.append(current_block)
 
                     # add current block next block
-                    current_block.next_block = jump_blocks[-1]
+                    current_block.next_block = jump_blocks[0]
                 else:
                     # next block is the next label on list
                     # check if exist any jump
-                    # in the instructionsttr
+                    # in the instructions
                     jump_labels, jump_blocks =\
                         self.get_jump_labels(current_block.instructions, func_blocks)
 
@@ -186,6 +186,8 @@ class ControlBlocks():
             cfg = CFG(func)
             cfg.view(self.functions[func]['%entry'], all_blocks)
             self.cfg_list.append(cfg)
+            # teste
+            cfg.dfs_visit(self.functions[func]['%entry'], all_blocks)
 
         # debug purpose
         # self.print_pre_blocks()

@@ -86,7 +86,7 @@ class DataFlow(NodeVisitor):
         return op in assignment
 
 
-    def computeRD_gen_kill(self):
+    def compute_RD_gen_kill(self):
         defs = {}
         for _idx, bb in enumerate(self.rd_block):
             for _pos, inst in enumerate(bb.instructions):
