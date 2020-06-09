@@ -100,9 +100,9 @@ class ControlBlocks():
                     self.get_jump_labels(current_block.instructions, func_blocks)
 
                 if len(jump_blocks) != 0:
-                    current_block.successors.append(jump_blocks)
                     # add next block predecessors
                     for next_block in jump_blocks:
+                        current_block.successors.append(next_block)
                         next_block.predecessors.append(current_block)
 
                 # deal with the true condition
@@ -132,10 +132,10 @@ class ControlBlocks():
                     jump_labels, jump_blocks =\
                         self.get_jump_labels(current_block.instructions, func_blocks)
 
-                    # add current blocks successors
-                    current_block.successors.append(jump_blocks)
                     # add next block predecessors
                     for next_block in jump_blocks:
+                        # add current blocks successors
+                        current_block.successors.append(next_block)
                         next_block.predecessors.append(current_block)
 
                     # add current block next block
@@ -148,9 +148,9 @@ class ControlBlocks():
                         self.get_jump_labels(current_block.instructions, func_blocks)
 
                     if len(jump_blocks) != 0:
-                        current_block.successors.append(jump_blocks)
                         # add next block predecessors
                         for next_block in jump_blocks:
+                            current_block.successors.append(next_block)
                             next_block.predecessors.append(current_block)
 
                     if counter + 1 < len(block_labels_names):

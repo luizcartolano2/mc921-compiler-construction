@@ -40,20 +40,31 @@ class DataFlow():
 
         while changed:
             changed = False
+            # loop over all the blocks
+            # in reverse order
             for block_lb in list(reversed(block_labels)):
+                # get the block
                 block = func[block_lb]
 
+                # get the actual in and
+                # out before upddate
                 old_in = block.lv.ins
                 old_out = block.lv.out
 
-                if isinstance(block, ConditionBlock):
-                    block.lv.out = block.taken.lv.ins.union(block.fall_through.lv.ins)
-                else:
-                    if block.next_block:
-                        block.lv.out = block.next_block.lv.ins
+                # update lv out following the rule:
+                # out[n] = \union_{s \in success[n]} in[s]
+                temp = set()
+                for success in block.successors:
+                    # import pdb; pdb.set_trace()
+                    temp = temp.union(success.lv.ins)
+                block.lv.out = temp
 
+                # update lv in following the rule:
+                # in[n] = use[n] \union (out[n] - def[n])
                 block.lv.ins = block.lv.use.union(block.lv.out - block.lv.defs)
 
+                # if there is no change
+                # we can end the loop
                 if block.lv.out != old_out or block.lv.ins != old_in:
                     changed = True
 
