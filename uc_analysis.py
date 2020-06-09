@@ -50,16 +50,20 @@ class DataFlow(NodeVisitor):
         self.rd_block = []
         self.lv_block = []
 
+
     def show(self, buf=sys.stdout):
         _str = ""
         for _code in self.code:
             _str += format_instruction(_code) + "\n"
         buf.write(_str)
+
+
     def appendOptimizedCode(self, cfg):
         bb = EmitBlocks()
         bb.visit(cfg)
         for _code in bb.code:
             self.code.append(_code)
+
 
     def buildRD_blocks(self, cfg):
         self.rd_block = []
@@ -68,6 +72,7 @@ class DataFlow(NodeVisitor):
             self.rd_block.append(bb)
             bb = bb.next_block
 
+
     def buildLV_blocks(self, cfg):
         self.lv_block = []
         bb = cfg
@@ -75,9 +80,11 @@ class DataFlow(NodeVisitor):
             self.lv_block.append(bb)
             bb = bb.next_block
 
+
     def _is_assignment(self, inst):
         op = inst[0].split('_')[0]
         return op in assignment
+
 
     def computeRD_gen_kill(self):
         defs = {}
@@ -97,6 +104,7 @@ class DataFlow(NodeVisitor):
                     bb.rd.kill = bb.rd.kill.union(kills)
                     gen = set([_idx, _pos])
                     bb.rd.gen = gen.union(bb.rd.gen - kills)
+
 
     def computeRD_in_out(self):
         changed = set(self.rd_block)
@@ -122,6 +130,7 @@ class DataFlow(NodeVisitor):
                 print('  kill: ', sorted(bb.rd.kill))
                 print('  in :  ', sorted(bb.rd.ins))
                 print('  out:  ', sorted(bb.rd.out))
+
 
     def _op_is_binary(self, inst):
         op = inst[0].split('_')[0]
@@ -153,6 +162,7 @@ class DataFlow(NodeVisitor):
                 bb.lv.use = bb.lv.use.union(use)
                 bb.lv.defs = bb.lv.defs.union(defs)
 
+
     def computeLV_in_out(self):
         changed = True
         while changed:
@@ -178,6 +188,7 @@ class DataFlow(NodeVisitor):
                 print('  in :  ', sorted(bb.lv.ins))
                 print('  out:  ', sorted(bb.lv.out))
 
+
     def deadcode_elimination(self):
         for bb in self.lv_block:
             dead_code = set()
@@ -196,6 +207,7 @@ class DataFlow(NodeVisitor):
                 if not _pos in dead_code:
                     updated_instructions.append(inst)
             bb.instructions = updated_instructions
+
 
     def short_circuit_jumps(self, cfg):
         bb = cfg
@@ -220,6 +232,7 @@ class DataFlow(NodeVisitor):
                             p.instructions[-1] = (op, expr_test, lbl_taken, lbl_fall_through)
                     prev.next_block = bb.next_block
                     bb = prev
+
 
     def visit_Program(self, node):
         self.code = node.text

@@ -188,5 +188,5 @@ class ControlBlocks():
             self.cfg_list.append(cfg)
 
         # debug purpose
-        self.print_pre_blocks()
+        # self.print_pre_blocks()
 

@@ -15,6 +15,7 @@ from uc_sema import Visitor
 from uc_codegen import GenerateCode
 from uc_interpreter import Interpreter
 from uc_blocks_2 import ControlBlocks
+from uc_analysis_2 import DataFlow
 """
 One of the most important (and difficult) parts of writing a compiler
 is reliable reporting of error messages back to the user.  This file
@@ -160,6 +161,10 @@ class Compiler:
             for _code in self.gencode:
                 _str += f"{_code}\n"
             ir_file.write(_str)
+
+        self.dataflow = DataFlow(self.create_blocks)
+        self.dataflow.optimize_code()
+
 
     def _do_compile(self, susy, ast_file, ir_file, debug):
         """ Compiles the code to the given file object. """

@@ -75,7 +75,7 @@ class Block(object):
         self.successors = []
         self.next_block = None
         self.label = label
-        self.instructions = [(self.label[1:],)] if self.label != '%entry' else []
+        self.instructions = [(self.label[1:],)] if self.label else []
         self.rd = ReachDefinitions()
         self.lv = LiveVariable()
         self.visited = False
@@ -142,7 +142,7 @@ class CFG(object):
             # Get the label as node name
             _name = block.label
 
-            print(f"Block name : {_name}")
+            # print(f"Block name : {_name}")
             if _name:
                 # get the formatted instructions as node label
                 _label = "{" + _name + ":\l\t"
@@ -159,7 +159,7 @@ class CFG(object):
         if block.visited is False:
             # Get the label as node name
             _name = block.label
-            print(f"Conditional Block name : {_name}")
+            # print(f"Conditional Block name : {_name}")
             # get the formatted instructions as node label
             _label = "{" + _name + ":\l\t"
             for _inst in block.instructions[1:]:
@@ -191,7 +191,7 @@ class CFG(object):
                 name = "visit_ConditionBlock"
             else:
                 name = "visit_%s" % type(block).__name__
-                print(f'{name}: {block.label}')
+                # print(f'{name}: {block.label}')
             if hasattr(self, name):
                 getattr(self, name)(block)
 
@@ -205,6 +205,6 @@ class CFG(object):
                     getattr(self, "visit_Block")(block)
 
         # You can use the next stmt to see the dot file
-        self.g.view()
+        # self.g.view()
 
 
