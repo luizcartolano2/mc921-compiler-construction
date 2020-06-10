@@ -26,7 +26,10 @@ class DataFlow():
         elif op in self.values_ops and inst[0] != 'return_void':
             return {inst[1]}, {}
         else:
-            return {}, {inst[1]}
+            try:
+                return {}, {inst[1]}
+            except:
+                return {}, {}
 
 
     def compute_lv_use_def(self, func):
@@ -113,9 +116,9 @@ class DataFlow():
             for inst_counter, inst in enumerate(block.instructions[1:]):
                 if inst[0].split('_')[0] in self.assignment_op:
                     target = inst[-1]
-                    kills = set(defs[target]) - {block_counter, inst_counter}
+                    kills = set(defs[target]) - {(block_counter, inst_counter)}
                     block.rd.kill = block.rd.kill.union(kills)
-                    gen = {block_counter, inst_counter}
+                    gen = {(block_counter, inst_counter)}
                     block.rd.gen = gen.union(block.rd.gen - kills)
 
 
@@ -158,7 +161,7 @@ class DataFlow():
             # with the successors of n
             if block.rd.out != old_out:
                 for success in block.successors:
-                    changed_nodes.union({success})
+                    changed_nodes = changed_nodes.union({success.label})
 
         print('==Reaching Definitions==')
         for block_lb in func:

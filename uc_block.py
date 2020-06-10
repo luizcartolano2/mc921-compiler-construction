@@ -261,6 +261,6 @@ class CFG(object):
                     getattr(self, "visit_Block")(block)
 
         # You can use the next stmt to see the dot file
-        # self.g.view()
+        self.g.view()
 
 
