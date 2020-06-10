@@ -25,11 +25,22 @@ class DataFlow():
             return {}, {inst[2]}
         elif op in self.values_ops and inst[0] != 'return_void':
             return {inst[1]}, {}
+        elif op == 'call':
+            return {}, {inst[2]}
+        elif op == 'cbranch':
+            return {inst[1]}, {}
+        elif op == 'read':
+            return {}, {inst[1]}
         else:
-            try:
-                return {}, {inst[1]}
-            except:
-                return {}, {}
+            return {}, {}
+
+
+    def _get_full_use_def(self, inst):
+        op = inst[0].split('_')[0]
+        if op == 'alloc':
+            return {}, {inst[1]}
+        else:
+            return self._set_use_def(self, inst)
 
 
     def compute_lv_use_def(self, func):
