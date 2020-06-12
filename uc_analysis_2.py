@@ -4,7 +4,7 @@ from uc_block import Block, ConditionBlock, CFG
 class DataFlow():
     def __init__(self, blocks_control):
         self.blocks_control = blocks_control
-        self.code_to_eliminate = []
+        self.code_to_eliminate = set()
         self.variable_ops = ['load', 'store', 'get']
         self.binary_ops = ['add', 'sub', 'mul', 'div', 'mod', 'and', 'or',
                            'not', 'ne', 'eq', 'lt', 'le', 'gt', 'ge']
@@ -29,8 +29,7 @@ class DataFlow():
                             'ge'
                             }
 
-
-    def _set_use_def(self, inst):
+    def __set_use_def(self, inst):
         op = inst[0].split('_')[0]
 
         if op in self.variable_ops:
@@ -51,19 +50,19 @@ class DataFlow():
             return {}, {}
 
 
-    def _get_full_use_def(self, inst):
+    def __get_full_use_def(self, inst):
         op = inst[0].split('_')[0]
         if op == 'alloc':
             return {}, {inst[1]}
         else:
-            return self._set_use_def(inst)
+            return self.__set_use_def(inst)
 
 
-    def compute_lv_use_def(self, func):
+    def __compute_lv_use_def(self, func):
         for block_lb in func:
             block = func[block_lb]
             for inst in block.instructions[1:]:
-                use, defs = self._set_use_def(inst=inst)
+                use, defs = self.__set_use_def(inst=inst)
                 block.lv.use = block.lv.use.union(use)
                 block.lv.defs = block.lv.defs.union(defs)
 
@@ -71,7 +70,7 @@ class DataFlow():
     def compute_lv_in_out(self, func):
         # first compute use
         # and def to all blocks
-        self.compute_lv_use_def(func)
+        self.__compute_lv_use_def(func)
 
         changed = True
         block_labels = list(func.keys())
@@ -116,7 +115,7 @@ class DataFlow():
             print('\tout:  ', sorted(bb.lv.out))
 
 
-    def compute_rd_defs(self, func):
+    def __compute_rd_defs(self, func):
         defs = {}
         blocks_label = list(func.keys())
 
@@ -133,10 +132,10 @@ class DataFlow():
         return defs
 
 
-    def compute_rd_gen_kill(self, func):
+    def __compute_rd_gen_kill(self, func):
         blocks_label = list(func.keys())
 
-        defs = self.compute_rd_defs(func=func)
+        defs = self.__compute_rd_defs(func=func)
 
         for block_counter, block_label in enumerate(blocks_label):
             block = func[block_label]
@@ -151,7 +150,7 @@ class DataFlow():
 
     def compute_rd_in_out(self, func):
         # first compute the gen/kill
-        self.compute_rd_gen_kill(func=func)
+        self.__compute_rd_gen_kill(func=func)
 
         # get a list of blocks
         blocks_label = list(func.keys())
@@ -212,38 +211,62 @@ class DataFlow():
             live_variables = block.lv.defs.intersection(block.lv.out)
 
             for inst_pos, inst in reversed(list(enumerate(block.instructions))):
-                use, defs = self._get_full_use_def(inst)
+                use, defs = self.__get_full_use_def(inst)
                 _is_dead = False
                 for d in defs:
                     if d not in live_variables:
                         _is_dead = True
                 if _is_dead:
-                    # dead_code.add((inst_pos, inst))
                     dead_code.add(inst_pos)
+                    self.code_to_eliminate.add(inst)
                     live_variables = live_variables.union(use)
-
-            for code in dead_code:
-                self.code_to_eliminate.append(code)
 
             if debug:
                 updated_instructions = []
-                for _pos, inst in enumerate(block.instructions):
-                    if not _pos in dead_code:
+                for inst_pos, inst in enumerate(block.instructions):
+                    if inst_pos not in dead_code:
+                        updated_instructions.append(inst)
+
+                block.instructions = updated_instructions
+
+
+    def eliminate_unreachable_code(self, func, debug=False):
+        for block_lb in func:
+            block = func[block_lb]
+            dead_code = set()
+            live_variables = block.lv.defs.intersection(block.lv.out)
+
+            for inst_pos, inst in enumerate(block.instructions):
+                if inst[0] in ['jump', 'cbranch']:
+                    if inst_pos < len(block.instructions):
+                        for eliminate_pos in range(inst_pos + 1, len(block.instructions)):
+                            dead_code.add(eliminate_pos)
+                            self.code_to_eliminate.add(block.instructions[eliminate_pos])
+
+            if debug:
+                updated_instructions = []
+                for inst_pos, inst in enumerate(block.instructions):
+                    if inst_pos not in dead_code:
                         updated_instructions.append(inst)
 
                 block.instructions = updated_instructions
 
 
     def optimize_code(self):
-        for func in self.blocks_control.functions:
-            self.compute_lv_in_out(self.blocks_control.functions[func])
-            self.compute_rd_in_out(self.blocks_control.functions[func])
-            self.deadcode_elimination(self.blocks_control.functions[func], debug=True)
+        debug = True
 
-            all_blocks = self.blocks_control.create_block_list(func)
-            # import pdb; pdb.set_trace()
-            cfg = CFG(f"{func}-opt")
-            # import pdb; pdb.set_trace()
-            cfg.view(self.blocks_control.functions[func]['%entry'], all_blocks)
-            # import pdb; pdb.set_trace()
-        # print('oi')
+        for func in self.blocks_control.functions:
+            self.compute_rd_in_out(self.blocks_control.functions[func])
+            # make the liveness analysis
+            self.compute_lv_in_out(self.blocks_control.functions[func])
+            self.deadcode_elimination(self.blocks_control.functions[func], debug=True)
+            self.eliminate_unreachable_code(self.blocks_control.functions[func], debug=True)
+            import pdb; pdb.set_trace()
+            if debug:
+                all_blocks = self.blocks_control.create_block_list(func)
+                # import pdb; pdb.set_trace()
+                cfg = CFG(f"{func}-opt")
+                # import pdb; pdb.set_trace()
+                cfg.view(self.blocks_control.functions[func]['%entry'], all_blocks)
+                # import pdb; pdb.set_trace()
+                # print('oi')
