@@ -184,6 +184,7 @@ class ControlBlocks():
             self.create_links(func)
             all_blocks = self.create_block_list(func)
             cfg = CFG(func)
+
             cfg.view(self.functions[func]['%entry'], all_blocks)
             self.cfg_list.append(cfg)
             # teste

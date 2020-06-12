@@ -1,9 +1,10 @@
-from uc_block import Block, ConditionBlock
+from uc_block import Block, ConditionBlock, CFG
 
 
 class DataFlow():
     def __init__(self, blocks_control):
         self.blocks_control = blocks_control
+        self.code_to_eliminate = []
         self.variable_ops = ['load', 'store', 'get']
         self.binary_ops = ['add', 'sub', 'mul', 'div', 'mod', 'and', 'or',
                            'not', 'ne', 'eq', 'lt', 'le', 'gt', 'ge']
@@ -12,6 +13,21 @@ class DataFlow():
                               'add', 'sub', 'mul', 'div', 'mod', 'lt',
                               'le', 'ge', 'gt', 'eq', 'ne', 'and', 'or',
                               'not', 'call', 'read')
+        self.binary_fold = {'add',
+                            'sub',
+                            'mul',
+                            'div',
+                            'mod',
+                            'and',
+                            'or',
+                            'not',
+                            'ne',
+                            'eq',
+                            'lt',
+                            'le',
+                            'gt',
+                            'ge'
+                            }
 
 
     def _set_use_def(self, inst):
@@ -40,7 +56,7 @@ class DataFlow():
         if op == 'alloc':
             return {}, {inst[1]}
         else:
-            return self._set_use_def(self, inst)
+            return self._set_use_def(inst)
 
 
     def compute_lv_use_def(self, func):
@@ -184,9 +200,50 @@ class DataFlow():
             print('\tout:  ', sorted(bb.rd.out))
 
 
+    def deadcode_elimination(self, func, debug=False):
+        """
+            :param debug:
+            :param func:
+            :return:
+        """
+        for block_lb in func:
+            block = func[block_lb]
+            dead_code = set()
+            live_variables = block.lv.defs.intersection(block.lv.out)
+
+            for inst_pos, inst in reversed(list(enumerate(block.instructions))):
+                use, defs = self._get_full_use_def(inst)
+                _is_dead = False
+                for d in defs:
+                    if d not in live_variables:
+                        _is_dead = True
+                if _is_dead:
+                    # dead_code.add((inst_pos, inst))
+                    dead_code.add(inst_pos)
+                    live_variables = live_variables.union(use)
+
+            for code in dead_code:
+                self.code_to_eliminate.append(code)
+
+            if debug:
+                updated_instructions = []
+                for _pos, inst in enumerate(block.instructions):
+                    if not _pos in dead_code:
+                        updated_instructions.append(inst)
+
+                block.instructions = updated_instructions
+
+
     def optimize_code(self):
         for func in self.blocks_control.functions:
             self.compute_lv_in_out(self.blocks_control.functions[func])
             self.compute_rd_in_out(self.blocks_control.functions[func])
-        # import pdb; pdb.set_trace()
+            self.deadcode_elimination(self.blocks_control.functions[func], debug=True)
+
+            all_blocks = self.blocks_control.create_block_list(func)
+            # import pdb; pdb.set_trace()
+            cfg = CFG(f"{func}-opt")
+            # import pdb; pdb.set_trace()
+            cfg.view(self.blocks_control.functions[func]['%entry'], all_blocks)
+            # import pdb; pdb.set_trace()
         # print('oi')

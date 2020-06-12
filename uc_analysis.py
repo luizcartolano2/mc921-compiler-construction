@@ -203,6 +203,7 @@ class DataFlow(NodeVisitor):
                     dead_code.add(_pos)
                     live_variables = live_variables.union(use)
             updated_instructions = []
+
             for _pos, inst in enumerate(bb.instructions):
                 if not _pos in dead_code:
                     updated_instructions.append(inst)

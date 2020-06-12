@@ -239,6 +239,10 @@ class CFG(object):
 
 
     def view(self, block, all_blocks=[]):
+
+        for bb in all_blocks:
+            bb.visited = False
+
         self.g.node(self.fname, label=None, _attributes={'shape': 'ellipse'})
         self.g.edge(self.fname, block.label)
 
@@ -247,7 +251,8 @@ class CFG(object):
                 name = "visit_ConditionBlock"
             else:
                 name = "visit_%s" % type(block).__name__
-                # print(f'{name}: {block.label}')
+                print(f'{name}: {block.label}')
+
             if hasattr(self, name):
                 getattr(self, name)(block)
 
