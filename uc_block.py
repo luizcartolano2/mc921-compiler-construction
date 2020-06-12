@@ -214,28 +214,43 @@ class CFG(object):
             block.visited = True
 
 
+    def dfs_util(self, block):
+        if block.visited:
+            return
+
+        block.visited = True
+        self.labels.append(block.label)
+        for bb in block.successors:
+            if bb.visited is False:
+                self.dfs_util(bb)
+
+
     def dfs_visit(self, block, all_blocks=[]):
         self.labels = []
 
         for block in all_blocks:
             block.visited = False
 
-        while isinstance(block, Block):
-            if isinstance(block, ConditionBlock):
-                getattr(self, "visit_ConditionBlock_DFS")(block)
-            else:
-                getattr(self, "visit_Block_DFS")(block)
-
-            block = block.next_block
-
         for block in all_blocks:
-            if block.visited is False:
-                if isinstance(block, ConditionBlock):
-                    getattr(self, "visit_ConditionBlock_DFS")(block)
-                else:
-                    getattr(self, "visit_Block_DFS")(block)
+            self.dfs_util(block)
+
+        # while isinstance(block, Block):
+        #     if isinstance(block, ConditionBlock):
+        #         getattr(self, "visit_ConditionBlock_DFS")(block)
+        #     else:
+        #         getattr(self, "visit_Block_DFS")(block)
+        #
+        #     block = block.next_block
+        #
+        # for block in all_blocks:
+        #     if block.visited is False:
+        #         if isinstance(block, ConditionBlock):
+        #             getattr(self, "visit_ConditionBlock_DFS")(block)
+        #         else:
+        #             getattr(self, "visit_Block_DFS")(block)
 
         print(self.labels)
+        return self.labels
 
 
     def view(self, block, all_blocks=[]):

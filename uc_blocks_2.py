@@ -187,8 +187,6 @@ class ControlBlocks():
 
             cfg.view(self.functions[func]['%entry'], all_blocks)
             self.cfg_list.append(cfg)
-            # teste
-            cfg.dfs_visit(self.functions[func]['%entry'], all_blocks)
 
         # debug purpose
         # self.print_pre_blocks()

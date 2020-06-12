@@ -3,6 +3,7 @@ from uc_block import Block, ConditionBlock, CFG
 
 class DataFlow():
     def __init__(self, blocks_control):
+        self.all_blocks = []
         self.blocks_control = blocks_control
         self.code_to_eliminate = set()
         self.variable_ops = ['load', 'store', 'get']
@@ -61,7 +62,7 @@ class DataFlow():
     def __compute_lv_use_def(self, func):
         for block_lb in func:
             block = func[block_lb]
-            for inst in block.instructions[1:]:
+            for inst in block.instructions:
                 use, defs = self.__set_use_def(inst=inst)
                 block.lv.use = block.lv.use.union(use)
                 block.lv.defs = block.lv.defs.union(defs)
@@ -73,13 +74,22 @@ class DataFlow():
         self.__compute_lv_use_def(func)
 
         changed = True
-        block_labels = list(func.keys())
+
+        # get blocks labels
+        cfg = CFG("teste")
+        block_labels = cfg.dfs_visit(
+            func['%entry'],
+            self.all_blocks
+        )
+
+        # block_labels = list(func.keys())
 
         while changed:
             changed = False
             # loop over all the blocks
             # in reverse order
-            for block_lb in list(reversed(block_labels)):
+            for block_lb in reversed(block_labels):
+                print(block_lb)
                 # get the block
                 block = func[block_lb]
 
@@ -105,8 +115,14 @@ class DataFlow():
                 if block.lv.out != old_out or block.lv.ins != old_in:
                     changed = True
 
+        # set globals as out to all nodes
+        for block_lb in block_labels:
+            block = func[block_lb]
+            for global_inst in self.blocks_control.globals:
+                block.lv.out = block.lv.out.union({global_inst[1]})
+
         print('== Live Variable Analysis ==')
-        for block_lb in func:
+        for block_lb in block_labels:
             bb = func[block_lb]
             print(bb.label)
             print('\tuse:  ', sorted(bb.lv.use))
@@ -116,6 +132,11 @@ class DataFlow():
 
 
     def __compute_rd_defs(self, func):
+        """
+            Live! Ta OK!
+            :param func:
+            :return:
+        """
         defs = {}
         blocks_label = list(func.keys())
 
@@ -133,6 +154,11 @@ class DataFlow():
 
 
     def __compute_rd_gen_kill(self, func):
+        """
+            Ta OK!
+            :param func:
+            :return:
+        """
         blocks_label = list(func.keys())
 
         defs = self.__compute_rd_defs(func=func)
@@ -149,6 +175,11 @@ class DataFlow():
 
 
     def compute_rd_in_out(self, func):
+        """
+            Ta live tbm!
+            :param func:
+            :return:
+        """
         # first compute the gen/kill
         self.__compute_rd_gen_kill(func=func)
 
@@ -256,6 +287,8 @@ class DataFlow():
         debug = True
 
         for func in self.blocks_control.functions:
+            self.all_blocks = self.blocks_control.create_block_list(func)
+
             self.compute_rd_in_out(self.blocks_control.functions[func])
             # make the liveness analysis
             self.compute_lv_in_out(self.blocks_control.functions[func])
@@ -263,10 +296,10 @@ class DataFlow():
             self.eliminate_unreachable_code(self.blocks_control.functions[func], debug=True)
             import pdb; pdb.set_trace()
             if debug:
-                all_blocks = self.blocks_control.create_block_list(func)
+
                 # import pdb; pdb.set_trace()
                 cfg = CFG(f"{func}-opt")
                 # import pdb; pdb.set_trace()
-                cfg.view(self.blocks_control.functions[func]['%entry'], all_blocks)
+                cfg.view(self.blocks_control.functions[func]['%entry'], self.all_blocks)
                 # import pdb; pdb.set_trace()
                 # print('oi')
