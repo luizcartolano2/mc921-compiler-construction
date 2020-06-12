@@ -242,26 +242,37 @@ class DataFlow():
             live_variables = block.lv.defs.intersection(block.lv.out)
 
             for inst_pos, inst in reversed(list(enumerate(block.instructions))):
+
                 use, defs = self.__get_full_use_def(inst)
+
                 _is_dead = False
+
                 for d in defs:
                     if d not in live_variables:
                         _is_dead = True
                 if _is_dead:
-                    dead_code.add(inst_pos)
+                    dead_code.add(inst)
                     self.code_to_eliminate.add(inst)
-                    live_variables = live_variables.union(use)
+                else:
+                    live_variables = live_variables.union(use) - set(defs)
+
 
             if debug:
                 updated_instructions = []
                 for inst_pos, inst in enumerate(block.instructions):
-                    if inst_pos not in dead_code:
+                    if inst not in dead_code:
                         updated_instructions.append(inst)
 
                 block.instructions = updated_instructions
 
 
     def eliminate_unreachable_code(self, func, debug=False):
+        """
+            Parece ok!
+            :param func:
+            :param debug:
+            :return:
+        """
         for block_lb in func:
             block = func[block_lb]
             dead_code = set()
@@ -288,13 +299,13 @@ class DataFlow():
 
         for func in self.blocks_control.functions:
             self.all_blocks = self.blocks_control.create_block_list(func)
-
+            # make the reaching definitions analysis
             self.compute_rd_in_out(self.blocks_control.functions[func])
             # make the liveness analysis
             self.compute_lv_in_out(self.blocks_control.functions[func])
-            self.deadcode_elimination(self.blocks_control.functions[func], debug=True)
             self.eliminate_unreachable_code(self.blocks_control.functions[func], debug=True)
-            import pdb; pdb.set_trace()
+            self.deadcode_elimination(self.blocks_control.functions[func], debug=True)
+
             if debug:
 
                 # import pdb; pdb.set_trace()
