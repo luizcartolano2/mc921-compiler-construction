@@ -232,6 +232,7 @@ class DataFlow():
 
     def deadcode_elimination(self, func, debug=False):
         """
+            Parece OK!
             :param debug:
             :param func:
             :return:
@@ -248,7 +249,7 @@ class DataFlow():
                 _is_dead = False
 
                 for d in defs:
-                    if d not in live_variables:
+                    if d not in live_variables and 'alloc' not in inst[0]:
                         _is_dead = True
                 if _is_dead:
                     dead_code.add(inst)
