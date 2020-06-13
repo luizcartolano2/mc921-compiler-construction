@@ -183,37 +183,6 @@ class CFG(object):
             block.visited = True
 
 
-    def visit_Block_DFS(self, block):
-        if block.visited is False:
-            # Get the label as node name
-            _name = block.label
-
-            if _name:
-                self.labels.append(_name)
-
-            block.visited = True
-
-
-    def visit_ConditionBlock_DFS(self, block):
-        if block.visited is False:
-            # Get the label as node name
-            _name = block.label
-
-            self.labels.append(_name)
-
-            if isinstance(block.taken, ConditionBlock):
-                getattr(self, "visit_ConditionBlock_DFS")(block.taken)
-            else:
-                getattr(self, "visit_Block_DFS")(block.taken)
-
-            if isinstance(block.fall_through, ConditionBlock):
-                getattr(self, "visit_ConditionBlock_DFS")(block.fall_through)
-            else:
-                getattr(self, "visit_Block_DFS")(block.fall_through)
-
-            block.visited = True
-
-
     def dfs_util(self, block):
         if block.visited:
             return
@@ -234,22 +203,6 @@ class CFG(object):
         for block in all_blocks:
             self.dfs_util(block)
 
-        # while isinstance(block, Block):
-        #     if isinstance(block, ConditionBlock):
-        #         getattr(self, "visit_ConditionBlock_DFS")(block)
-        #     else:
-        #         getattr(self, "visit_Block_DFS")(block)
-        #
-        #     block = block.next_block
-        #
-        # for block in all_blocks:
-        #     if block.visited is False:
-        #         if isinstance(block, ConditionBlock):
-        #             getattr(self, "visit_ConditionBlock_DFS")(block)
-        #         else:
-        #             getattr(self, "visit_Block_DFS")(block)
-
-        print(self.labels)
         return self.labels
 
 

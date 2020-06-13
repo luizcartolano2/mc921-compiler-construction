@@ -89,7 +89,6 @@ class DataFlow():
             # loop over all the blocks
             # in reverse order
             for block_lb in reversed(block_labels):
-                print(block_lb)
                 # get the block
                 block = func[block_lb]
 
@@ -295,6 +294,37 @@ class DataFlow():
                 block.instructions = updated_instructions
 
 
+    def eliminate_unnecessary_allocs(self, func, debug=False):
+        print('== Alloc Test ==')
+        for block_lb in func:
+            block = func[block_lb]
+            dead_code = set()
+
+            for inst_pos, inst in enumerate(block.instructions):
+                if 'alloc' in inst[0]:
+                    target = inst[-1]
+                    is_dead = True
+                    for block_temp in func:
+                        bb_temp = func[block_temp]
+                        if target in bb_temp.lv.use:
+                            is_dead = False
+                    if is_dead:
+                        if debug:
+                            print(f"\t{target}")
+                        dead_code.add(inst_pos)
+                        self.code_to_eliminate.add(block.instructions[inst_pos])
+
+            # eliminate code
+            updated_instructions = []
+            for inst_pos, inst in enumerate(block.instructions):
+                if inst_pos not in dead_code:
+                    updated_instructions.append(inst)
+
+            block.instructions = updated_instructions
+
+
+        print('=' * len('== Alloc Test =='))
+
     def optimize_code(self):
         debug = True
 
@@ -306,6 +336,7 @@ class DataFlow():
             self.compute_lv_in_out(self.blocks_control.functions[func])
             self.eliminate_unreachable_code(self.blocks_control.functions[func], debug=True)
             self.deadcode_elimination(self.blocks_control.functions[func], debug=True)
+            self.eliminate_unnecessary_allocs(self.blocks_control.functions[func], debug=True)
 
             if debug:
 
