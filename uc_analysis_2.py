@@ -14,20 +14,19 @@ class DataFlow():
                               'add', 'sub', 'mul', 'div', 'mod', 'lt',
                               'le', 'ge', 'gt', 'eq', 'ne', 'and', 'or',
                               'not', 'call', 'read')
-        self.binary_fold = {'add',
-                            'sub',
-                            'mul',
-                            'div',
-                            'mod',
-                            'and',
-                            'or',
-                            'not',
-                            'ne',
-                            'eq',
-                            'lt',
-                            'le',
-                            'gt',
-                            'ge'
+        self.binary_fold = {'add': lambda left, right: left + right,
+                            'sub': lambda left, right: left - right,
+                            'mul': lambda left, right: left * right,
+                            'div': lambda left, right: left // right,
+                            'mod': lambda left, right: left % right,
+                            'and': lambda left, right: left and right,
+                            'or': lambda left, right: left or right,
+                            'ne': lambda left, right: int(left != right),
+                            'eq': lambda left, right: int(left == right),
+                            'lt': lambda left, right: int(left < right),
+                            'le': lambda left, right: int(left <= right),
+                            'gt': lambda left, right: int(left > right),
+                            'ge': lambda left, right: int(left >= right),
                             }
 
     def __set_use_def(self, inst):
@@ -325,6 +324,28 @@ class DataFlow():
 
         print('=' * len('== Alloc Test =='))
 
+
+    def constant_propagation(self, func, debug=False):
+        if debug:
+            print('== Constant Propagation ==')
+
+        blocks_label = list(func.keys())
+        blocks_list = [func[block_lb] for block_lb in blocks_label]
+
+        for block_pos, block in enumerate(blocks_list):
+            constants = {}
+
+            # rd.ins has a list of instructions
+            # stored as (block_pos, inst_pos)
+            for rd_pos, rd_in in block.rd.ins:
+                # get instruction
+                inst = blocks_list[rd_pos].instructions[rd_in]
+                if debug:
+                    print(inst)
+
+        if debug:
+            print('=' * len('== Constant Propagation =='))
+
     def optimize_code(self):
         debug = True
 
@@ -332,6 +353,8 @@ class DataFlow():
             self.all_blocks = self.blocks_control.create_block_list(func)
             # make the reaching definitions analysis
             self.compute_rd_in_out(self.blocks_control.functions[func])
+            self.constant_propagation(self.blocks_control.functions[func], debug=True)
+
             # make the liveness analysis
             self.compute_lv_in_out(self.blocks_control.functions[func])
             self.eliminate_unreachable_code(self.blocks_control.functions[func], debug=True)
@@ -339,10 +362,5 @@ class DataFlow():
             self.eliminate_unnecessary_allocs(self.blocks_control.functions[func], debug=True)
 
             if debug:
-
-                # import pdb; pdb.set_trace()
                 cfg = CFG(f"{func}-opt")
-                # import pdb; pdb.set_trace()
                 cfg.view(self.blocks_control.functions[func]['%entry'], self.all_blocks)
-                # import pdb; pdb.set_trace()
-                # print('oi')
