@@ -34,6 +34,9 @@ class ControlBlocks():
             function_ir = self.functions[key]
             label = ''
             self.functions[key] = dict()
+            if len(function_ir) <= 1:
+                continue
+
             for code in function_ir:
                 if len(code) == 1 and 'return' not in code[0]:
                     label = f'%{code[0]}'
@@ -169,7 +172,9 @@ class ControlBlocks():
         all_blocks = []
 
         for label in self.functions[func]:
-            all_blocks.append(self.functions[func][label])
+            block = self.functions[func][label]
+            if len(block.instructions) > 1:
+                all_blocks.append(self.functions[func][label])
 
         return all_blocks
 

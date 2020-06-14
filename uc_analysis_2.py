@@ -521,6 +521,6 @@ class DataFlow():
             if debug:
                 # update list of blocks
                 self.all_blocks = self.blocks_control.create_block_list(func)
+
                 cfg = CFG(f"{func}-opt")
                 cfg.view(self.blocks_control.functions[func]['%entry'], self.all_blocks)
-                print(cfg.dfs_visit(self.blocks_control.functions[func]['%entry'], self.all_blocks))
