@@ -399,9 +399,7 @@ class DataFlow():
                             pass
                         else:
                             block.instructions[inst_pos] = (f'literal_{opt_type}', constants[source], inst[2])
-                            # update inst/op
-                            inst = block.instructions[inst_pos]
-                            op = inst[0].split('_')
+
                 elif op[0] in self.binary_ops:
                     # get operands
                     left_op = inst[1]
@@ -419,9 +417,7 @@ class DataFlow():
                                                              left_value, right_value
                                                              )
 
-                        inst = (f"literal_{opt_type}", op_value, inst[3])
-                        block.instructions[inst_pos] = inst
-                        op = inst[0].split('_')
+                        block.instructions[inst_pos] = (f"literal_{opt_type}", op_value, inst[3])
 
         if debug:
             print('=' * len('== Constant Propagation =='))
