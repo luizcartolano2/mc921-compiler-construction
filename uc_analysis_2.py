@@ -371,6 +371,7 @@ class DataFlow():
                     source = inst[1]
                     if source in constants and constants[source] is not False:
                         if op[0] == 'cbranch':
+                            # self.__optimize_branch(block_pos, constants[source])
                             pass
                         else:
                             block.instructions[inst_pos] = (f'literal_{opt_type}', constants[source], inst[2])

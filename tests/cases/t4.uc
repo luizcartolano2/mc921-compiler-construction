@@ -5,7 +5,7 @@ int main() {
             break;
         }
         else {
-            i = i + 1;
+            i++;
         }
     }
     assert i == n;

@@ -765,7 +765,10 @@ class GenerateCode(NodeVisitor):
                         self.__load_location(arg)
 
                     # create the instruct to the parameter
-                    self.code.append((f'param_{arg.type.names[-1].typename}', arg.location))
+                    if isinstance(arg, Constant):
+                        self.code.append((f'param_{arg.rawtype.names[-1].typename}', arg.location))
+                    else:
+                        self.code.append((f'param_{arg.type.names[-1].typename}', arg.location))
             else:
                 self.visit(node.args)
 

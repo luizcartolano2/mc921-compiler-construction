@@ -843,7 +843,12 @@ class Visitor(NodeVisitor):
                         assert self.environment.find(arg.name), arg_line + f"{arg.name} is already used."
 
                     # assert if types are equal
-                    assert arg.type.names == fpar.type.type.names, arg_line + f"{fpar.type.declname.name} mismatch type."
+                    if isinstance(arg, Constant):
+                        assert arg.rawtype.names == fpar.type.type.names,\
+                            arg_line + f"{fpar.type.declname.name} mismatch type."
+                    else:
+                        assert arg.type.names == fpar.type.type.names,\
+                            arg_line + f"{fpar.type.declname.name} mismatch type."
             else:
                 # deal if arg is a single expression
                 # visit the arg
