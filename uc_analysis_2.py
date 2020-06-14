@@ -399,6 +399,13 @@ class DataFlow():
 
 
     def eliminate_single_jumps(self, func, func_name, debug=False):
+        """
+
+            :param func:
+            :param func_name:
+            :param debug:
+            :return:
+        """
         if debug:
             print()
             print("== Eliminate Single Jumps ==")
@@ -436,7 +443,11 @@ class DataFlow():
 
                                 # update next block predecessor
                                 block.next_block.predecessors.remove(old_taken)
-                                block.next_block.predecessors.append(predecessor)
+                                block.next_block.predecessors.insert(0, predecessor)
+
+                                # update predecessors sucessors
+                                predecessor.successors.remove(old_taken)
+                                predecessor.successors.insert(0, predecessor.taken)
 
                                 if debug:
                                     print(f"            Next block {block.next_block.label} predecessor: {block.next_block.predecessors}")
@@ -455,6 +466,10 @@ class DataFlow():
                                 block.next_block.predecessors.remove(old_fall)
                                 block.next_block.predecessors.append(predecessor)
 
+                                # update predecessors sucessors
+                                predecessor.successors.remove(old_fall)
+                                predecessor.successors.append(predecessor.fall_through)
+
                                 remove_from_func.add(block.label)
                             predecessor.instructions[-1] = (op, expr_test, lbl_taken, lbl_fall)
 
@@ -465,6 +480,10 @@ class DataFlow():
                             # update predecessor for next block
                             block.next_block.predecessors = []
                             block.next_block.predecessors.append(predecessor)
+
+                            # update sucessor
+                            predecessor.successors.remove(block)
+                            predecessor.successors.append(block.next_block)
 
                             predecessor.instructions[-1] = ('jump', jump_target)
 
@@ -503,3 +522,4 @@ class DataFlow():
                 self.all_blocks = self.blocks_control.create_block_list(func)
                 cfg = CFG(f"{func}-opt")
                 cfg.view(self.blocks_control.functions[func]['%entry'], self.all_blocks)
+                print(cfg.dfs_visit(self.blocks_control.functions[func]['%entry'], self.all_blocks))
