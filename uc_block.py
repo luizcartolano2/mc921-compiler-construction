@@ -219,7 +219,6 @@ class CFG(object):
                 name = "visit_ConditionBlock"
             else:
                 name = "visit_%s" % type(block).__name__
-                print(f'{name}: {block.label}')
 
             if hasattr(self, name):
                 getattr(self, name)(block)

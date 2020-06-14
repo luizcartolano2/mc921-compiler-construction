@@ -67,7 +67,7 @@ class DataFlow():
                 block.lv.defs = block.lv.defs.union(defs)
 
 
-    def compute_lv_in_out(self, func):
+    def compute_lv_in_out(self, func, debug=False):
         # first compute use
         # and def to all blocks
         self.__compute_lv_use_def(func)
@@ -119,14 +119,16 @@ class DataFlow():
             for global_inst in self.blocks_control.globals:
                 block.lv.out = block.lv.out.union({global_inst[1]})
 
-        print('== Live Variable Analysis ==')
-        for block_lb in block_labels:
-            bb = func[block_lb]
-            print(bb.label)
-            print('\tuse:  ', sorted(bb.lv.use))
-            print('\tdef:  ', sorted(bb.lv.defs))
-            print('\tin :  ', sorted(bb.lv.ins))
-            print('\tout:  ', sorted(bb.lv.out))
+        if debug:
+            print()
+            print('== Live Variable Analysis ==')
+            for block_lb in block_labels:
+                bb = func[block_lb]
+                print(bb.label)
+                print('\tuse:  ', sorted(bb.lv.use))
+                print('\tdef:  ', sorted(bb.lv.defs))
+                print('\tin :  ', sorted(bb.lv.ins))
+                print('\tout:  ', sorted(bb.lv.out))
 
 
     def __compute_rd_defs(self, func):
@@ -172,7 +174,7 @@ class DataFlow():
                     block.rd.gen = gen.union(block.rd.gen - kills)
 
 
-    def compute_rd_in_out(self, func):
+    def compute_rd_in_out(self, func, debug=False):
         """
             Ta live tbm!
             :param func:
@@ -218,14 +220,16 @@ class DataFlow():
                 for success in block.successors:
                     changed_nodes = changed_nodes.union({success.label})
 
-        print('==Reaching Definitions==')
-        for block_lb in func:
-            bb = func[block_lb]
-            print(bb.label)
-            print('\tgen:  ', sorted(bb.rd.gen))
-            print('\tkill: ', sorted(bb.rd.kill))
-            print('\tin :  ', sorted(bb.rd.ins))
-            print('\tout:  ', sorted(bb.rd.out))
+        if debug:
+            print()
+            print('==Reaching Definitions==')
+            for block_lb in func:
+                bb = func[block_lb]
+                print(bb.label)
+                print('\tgen:  ', sorted(bb.rd.gen))
+                print('\tkill: ', sorted(bb.rd.kill))
+                print('\tin :  ', sorted(bb.rd.ins))
+                print('\tout:  ', sorted(bb.rd.out))
 
 
     def deadcode_elimination(self, func, debug=False):
@@ -294,7 +298,10 @@ class DataFlow():
 
 
     def eliminate_unnecessary_allocs(self, func, debug=False):
-        print('== Alloc Test ==')
+        if debug:
+            print()
+            print('== Alloc Test ==')
+
         for block_lb in func:
             block = func[block_lb]
             dead_code = set()
@@ -309,7 +316,7 @@ class DataFlow():
                             is_dead = False
                     if is_dead:
                         if debug:
-                            print(f"\t{target}")
+                            print(target)
                         dead_code.add(inst_pos)
                         self.code_to_eliminate.add(block.instructions[inst_pos])
 
@@ -321,30 +328,118 @@ class DataFlow():
 
             block.instructions = updated_instructions
 
+        if debug:
+            print('=' * len('== Alloc Test =='))
 
-        print('=' * len('== Alloc Test =='))
+
+    def __set_constants(self, block, blocks_list, debug=False):
+        constants = {}
+
+        # rd.ins has a list of instructions
+        # stored as (block_pos, inst_pos)
+        if block.label == '%entry':
+            const_for = sorted(block.rd.out)
+        else:
+            const_for = sorted(block.rd.ins)
+
+        for rd_pos, rd_in in const_for:
+            # get instruction
+            inst = blocks_list[rd_pos].instructions[rd_in]
+
+            if 'alloc' in inst[0]:
+                continue
+
+            if debug:
+                print(inst)
+            target = inst[-1]
+            op = inst[0].split('_')[0]
+
+            if op == 'literal':
+                if target not in constants:
+                    constants[target] = inst[1]
+                elif constants[target] != inst[1]:
+                    constants[target] = False
+            elif op == 'store' and inst[1] in constants:
+                constants[target] = constants[inst[1]]
+            elif op == 'load' and inst[1] in constants:
+                constants[target] = constants[inst[1]]
+            elif op in self.binary_ops:
+                op_type = inst[0].split('_')[1]
+                if inst[1] in constants and inst[2] in constants\
+                        and constants[inst[1]] is not False and constants[inst[2]] is not False:
+
+                    left, right = str(constants[inst[1]]), str(constants[inst[2]])
+                    left, right = eval(op_type + '(' + left + ')'), eval(op_type + '(' + right + ')')
+
+                    constants[target] = self.binary_fold[op](left, right)
+                else:
+                    constants[target] = False
+            else:
+                constants[target] = False
+
+        return constants
+
+
+    def __constant_fold(self, inst, left_value, right_value):
+        op = inst[0].split('_')[0]
+        op_type = inst[0].split('_')[1]
+
+        left_value, right_value = str(left_value), str(right_value)
+        left, right = eval(op_type + '(' + left_value + ')'), \
+                      eval(op_type + '(' + right_value + ')')
+
+        op_value = self.binary_fold[op](left, right)
+        inst = (f"literal_{op_type}", op_value, inst[3])
+
+        return inst
 
 
     def constant_propagation(self, func, debug=False):
         if debug:
+            print()
             print('== Constant Propagation ==')
 
         blocks_label = list(func.keys())
         blocks_list = [func[block_lb] for block_lb in blocks_label]
 
         for block_pos, block in enumerate(blocks_list):
-            constants = {}
+            constants = self.__set_constants(block, blocks_list)
+            if debug:
+                print("Constants:")
+                print(constants)
 
-            # rd.ins has a list of instructions
-            # stored as (block_pos, inst_pos)
-            for rd_pos, rd_in in block.rd.ins:
-                # get instruction
-                inst = blocks_list[rd_pos].instructions[rd_in]
-                if debug:
-                    print(inst)
+            for inst_pos, inst in enumerate(block.instructions):
+                op = inst[0].split('_')
+                if op[0] in ['load', 'store', 'cbranch']:
+                    source = inst[1]
+                    if source in constants and constants[source] is not False:
+                        if op[0] == 'cbranch':
+                            if debug:
+                                print('Chora!')
+                            pass
+                        else:
+                            opt_ype = op[1]
+                            block.instructions[inst_pos] = (f'literal_{opt_ype}', constants[source], inst[2])
+                            # update inst/op
+                            inst = block.instructions[inst_pos]
+                            op = f'literal_{opt_ype}'.split('_')
+                elif op[0] in self.binary_ops:
+                    # get operands
+                    left_op = inst[1]
+                    right_op = inst[2]
+
+                    if left_op in constants and right_op in constants and\
+                            constants[left_op] is not False and constants[right_op] is not False:
+
+                        # get constants values
+                        left_value, right_value = constants[left_op], constants[right_op]
+                        inst = self.__constant_fold(inst, left_value, right_value)
+                        block.instructions[inst_pos] = inst
+                        op = inst[0].split('_')
 
         if debug:
             print('=' * len('== Constant Propagation =='))
+
 
     def optimize_code(self):
         debug = True
@@ -352,11 +447,11 @@ class DataFlow():
         for func in self.blocks_control.functions:
             self.all_blocks = self.blocks_control.create_block_list(func)
             # make the reaching definitions analysis
-            self.compute_rd_in_out(self.blocks_control.functions[func])
+            self.compute_rd_in_out(self.blocks_control.functions[func], debug=True)
             self.constant_propagation(self.blocks_control.functions[func], debug=True)
 
             # make the liveness analysis
-            self.compute_lv_in_out(self.blocks_control.functions[func])
+            self.compute_lv_in_out(self.blocks_control.functions[func], debug=True)
             self.eliminate_unreachable_code(self.blocks_control.functions[func], debug=True)
             self.deadcode_elimination(self.blocks_control.functions[func], debug=True)
             self.eliminate_unnecessary_allocs(self.blocks_control.functions[func], debug=True)

@@ -186,6 +186,7 @@ class Compiler:
                 sys.stderr.write("{} error(s) encountered.".format(errors_reported()))
             elif run_ir:
                 self.vm = Interpreter()
+                # import pdb; pdb.set_trace()
                 self.vm.run(self.gencode)
         return 0
 
