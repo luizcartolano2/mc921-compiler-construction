@@ -7,6 +7,7 @@ class DataFlow():
         self.all_blocks = []
         self.blocks_control = blocks_control
         self.code_to_eliminate = set()
+        self.code = []
         self.variable_ops = ['load', 'store', 'get']
         self.binary_ops = ['add', 'sub', 'mul', 'div', 'mod', 'and', 'or',
                            'not', 'ne', 'eq', 'lt', 'le', 'gt', 'ge']
@@ -397,7 +398,6 @@ class DataFlow():
                                     successor.predecessors.remove(temp_block.taken)
 
                                 del func[temp_block.taken.label]
-                                # del self.blocks_control.functions[func_name][temp_block.taken.label]
 
                                 temp_block.fall_through.predecessors.remove(temp_block)
                                 temp_block.fall_through.predecessors.append(new_block)
@@ -414,17 +414,6 @@ class DataFlow():
                                 temp_block.taken.predecessors.remove(temp_block)
                                 temp_block.taken.predecessors.append(new_block)
 
-                            # # find block predecessor
-                            # for predecessor in temp_block.predecessors:
-                            #     if isinstance(predecessor, ConditionBlock):
-                            #         if predecessor.taken == temp_block:
-                            #             predecessor.taken = new_block
-                            #         else:
-                            #             prev = predecessor.fall_through
-                            #     else:
-                            #         if predecessor.next_block == temp_block:
-                            #             prev = predecessor
-
                             blocks_list[block_pos] = new_block
                             func[temp_block.label] = new_block
                             self.blocks_control.functions[func_name][new_block.label] = new_block
@@ -435,7 +424,6 @@ class DataFlow():
                             constants[inst[2]] = constants[source]
 
                 elif op[0] in self.binary_ops:
-                    print(inst)
                     # get operands
                     left_op = inst[1]
                     right_op = inst[2]
@@ -577,8 +565,20 @@ class DataFlow():
             print('=' * len("== Eliminate Single Jumps =="))
 
 
+    def generate_opt_code(self):
+        code = []
+        for func in self.blocks_control.functions:
+            for block_lb in self.blocks_control.functions[func]:
+                block = self.blocks_control.functions[func][block_lb]
+                for inst in block.instructions:
+                    if 'entry' not in inst[0]:
+                        code.append(inst)
+
+        self.code = self.blocks_control.globals + code
+
+
     def optimize_code(self):
-        debug = True
+        debug = False
 
         for func in self.blocks_control.functions:
             self.all_blocks = self.blocks_control.create_block_list(func)
@@ -594,9 +594,11 @@ class DataFlow():
             self.eliminate_unnecessary_allocs(self.blocks_control.functions[func], debug=False)
 
             # circuit single jumps
-            self.eliminate_single_jumps(self.blocks_control.functions[func], func, debug=True)
+            self.eliminate_single_jumps(self.blocks_control.functions[func], func, debug=False)
             self.all_blocks = self.blocks_control.create_block_list(func)
-            
+
+            self.generate_opt_code()
+
             if debug:
                 # update list of blocks
                 self.all_blocks = self.blocks_control.create_block_list(func)

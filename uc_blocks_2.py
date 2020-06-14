@@ -180,6 +180,8 @@ class ControlBlocks():
 
 
     def create_basic_blocks(self):
+        debug = False
+
         self.split_functions()
         self.create_pre_blocks()
 
@@ -190,10 +192,11 @@ class ControlBlocks():
         for func in self.functions:
             self.create_links(func)
             all_blocks = self.create_block_list(func)
-            cfg = CFG(func)
+            if debug:
+                cfg = CFG(func)
 
-            cfg.view(self.functions[func]['%entry'], all_blocks)
-            self.cfg_list.append(cfg)
+                cfg.view(self.functions[func]['%entry'], all_blocks)
+                self.cfg_list.append(cfg)
 
-        # debug purpose
-        # self.print_pre_blocks()
+                # debug purpose
+                # self.print_pre_blocks()
