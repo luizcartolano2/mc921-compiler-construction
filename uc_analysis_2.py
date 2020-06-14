@@ -150,13 +150,13 @@ class DataFlow():
 
         for block_counter, block_label in enumerate(blocks_label):
             block = func[block_label]
-            for inst_counter, inst in enumerate(block.instructions):
+            for inst_counter, inst in enumerate(block.instructions[1:]):
                 if inst[0].split('_')[0] in self.assignment_op:
                     target = inst[-1]
                     if target not in defs.keys():
-                        defs[target] = [(block_counter, inst_counter)]
+                        defs[target] = [(block_counter, inst_counter + 1)]
                     else:
-                        defs[target].append((block_counter, inst_counter))
+                        defs[target].append((block_counter, inst_counter + 1))
 
         return defs
 
@@ -174,12 +174,12 @@ class DataFlow():
         for block_counter, block_label in enumerate(blocks_label):
             block = func[block_label]
 
-            for inst_counter, inst in enumerate(block.instructions):
+            for inst_counter, inst in enumerate(block.instructions[1:]):
                 if inst[0].split('_')[0] in self.assignment_op:
                     target = inst[-1]
-                    kills = set(defs[target]) - {(block_counter, inst_counter)}
+                    kills = set(defs[target]) - {(block_counter, inst_counter + 1)}
                     block.rd.kill = block.rd.kill.union(kills)
-                    gen = {(block_counter, inst_counter)}
+                    gen = {(block_counter, inst_counter + 1)}
                     block.rd.gen = gen.union(block.rd.gen - kills)
 
 
