@@ -33,9 +33,12 @@ class DataFlow():
                             }
 
 
-    # TODO: CHANGE
     def __get_use_def(self, inst):
-        """CHANGE"""
+        """
+
+            :param inst:
+            :return:
+        """
         op = inst[0].split('_')[0]
 
         if op in self.variable_ops:
@@ -323,15 +326,20 @@ class DataFlow():
             print('=' * len('== Alloc Test =='))
 
 
-    # TODO: CHANGE
-    def __set_constants(self, block, block_pos, blocks_list):
+    def __set_constants(self, block, blocks_list):
+        """
+
+            :param block:
+            :param blocks_list:
+            :return:
+        """
         constants = {}
 
         # rd.ins has a list of instructions
         # stored as (block_pos, inst_pos)
-        for rd_pos, rd_in in sorted(block.rd.out):
+        for block_pos, inst_pos in sorted(block.rd.out):
             # get instruction
-            inst = blocks_list[rd_pos].instructions[rd_in]
+            inst = blocks_list[block_pos].instructions[inst_pos]
 
             if 'literal' in inst[0]:
                 if inst[-1] not in constants:
@@ -344,23 +352,6 @@ class DataFlow():
         return constants
 
 
-    def __constant_operation(self, operation, left_value, right_value):
-        """
-
-            :param operation:
-            :param left_value:
-            :param right_value:
-            :return:
-        """
-        func_op = self.binary_ops[operation]
-        result = func_op(left_value, right_value)
-
-        if operation in self.comparison_ops:
-            return int(result)
-        else:
-            return result
-
-    # TODO: CHANGE
     def constant_propagation(self, func, debug=False):
         if debug:
             print()
@@ -370,7 +361,7 @@ class DataFlow():
         blocks_list = [func[block_lb] for block_lb in blocks_label]
 
         for block_pos, block in enumerate(blocks_list):
-            constants = self.__set_constants(block, block_pos, blocks_list)
+            constants = self.__set_constants(block, blocks_list)
 
             for inst_pos, inst in enumerate(block.instructions):
                 op = inst[0].split('_')
@@ -380,8 +371,6 @@ class DataFlow():
                     source = inst[1]
                     if source in constants and constants[source] is not False:
                         if op[0] == 'cbranch':
-                            if debug:
-                                print('Chora!')
                             pass
                         else:
                             block.instructions[inst_pos] = (f'literal_{opt_type}', constants[source], inst[2])
@@ -399,14 +388,95 @@ class DataFlow():
                         left_value, right_value = eval(opt_type + '(' + left_value + ')'),\
                                                   eval(opt_type + '(' + right_value + ')')
 
-                        op_value = self.__constant_operation(inst[0].split('_')[0],
-                                                             left_value, right_value
-                                                             )
+                        func_op = self.binary_ops[op[0]]
+                        result = func_op(left_value, right_value)
+                        result = int(result) if op[0] in self.comparison_ops else result
 
-                        block.instructions[inst_pos] = (f"literal_{opt_type}", op_value, inst[3])
+                        block.instructions[inst_pos] = (f"literal_{opt_type}", result, inst[3])
 
         if debug:
             print('=' * len('== Constant Propagation =='))
+
+
+    def eliminate_single_jumps(self, func, func_name, debug=False):
+        if debug:
+            print()
+            print("== Eliminate Single Jumps ==")
+
+        blocks_label = list(func.keys())
+        blocks_list = [func[block_lb] for block_lb in blocks_label]
+        remove_from_func = set()
+
+        for block_pos, block in enumerate(blocks_list):
+            if len(block.instructions) == 2:
+                if block.instructions[-1][0] == 'jump':
+                    if debug:
+                        print(f"    Block: {block.label}")
+                        print(f"    Target: {block.instructions[-1][1]}")
+                    jump_target = block.instructions[-1][1]
+
+                    for predecessor in block.predecessors:
+                        if debug:
+                            print(f"    Predecessor: {predecessor}")
+                        if isinstance(predecessor, ConditionBlock):
+                            op, expr_test, lbl_taken, lbl_fall = predecessor.instructions[-1]
+
+                            if debug:
+                                print(f"        Predecessor {predecessor.label} is a Condition.")
+                                if predecessor.taken.label == block.label:
+                                    if debug:
+                                        print(f"            Predecessor {predecessor.label} taken is the path!")
+                                    # get label taken
+                                    lbl_taken = jump_target
+
+                                    # update the taken for predecessor block
+                                    old_taken = predecessor.taken
+                                    predecessor.taken = block.next_block
+
+                                    # update next block predecessor
+                                    block.next_block.predecessors.remove(old_taken)
+                                    block.next_block.predecessors.append(predecessor)
+
+                                    if debug:
+                                        print(f"            Next block {block.next_block.label} predecessor: {block.next_block.predecessors}")
+                                    remove_from_func.add(block.label)
+                                else:
+                                    if debug:
+                                        print(f"            Predecessor {predecessor.label} fall through is the path!")
+                                    # get label fall
+                                    lbl_fall = jump_target
+
+                                    # update fall for predecessor
+                                    old_fall = predecessor.fall_through
+                                    predecessor.fall_through = block.next_block
+
+                                    # update next block predecessor
+                                    block.next_block.predecessors.remove(old_fall)
+                                    block.next_block.predecessors.append(predecessor)
+
+                                    remove_from_func.add(block.label)
+                                predecessor.instructions[-1] = (op, expr_test, lbl_taken, lbl_fall)
+
+                        elif isinstance(predecessor, Block):
+                            if debug:
+                                print(f"        Predecessor {predecessor.label} is a Block.")
+
+                            # update predecessor for next block
+                            block.next_block.predecessors = []
+                            block.next_block.predecessors.append(predecessor)
+
+                            predecessor.instructions[-1] = ('jump', jump_target)
+
+                            remove_from_func.add(block.label)
+
+        if debug:
+            print(f"    Remove from func: {remove_from_func}")
+
+        for key in remove_from_func:
+            del self.blocks_control.functions[func_name][key]
+
+        if debug:
+            print('=' * len("== Eliminate Single Jumps =="))
 
 
     def optimize_code(self):
@@ -423,6 +493,11 @@ class DataFlow():
             self.eliminate_unreachable_code(self.blocks_control.functions[func], debug=False)
             self.deadcode_elimination(self.blocks_control.functions[func], debug=False)
             self.eliminate_unnecessary_allocs(self.blocks_control.functions[func], debug=False)
+
+            # circuit single jumps
+            self.eliminate_single_jumps(self.blocks_control.functions[func], func, debug=True)
+
+            # print(self.blocks_control.functions[func])
 
             if debug:
                 cfg = CFG(f"{func}-opt")
