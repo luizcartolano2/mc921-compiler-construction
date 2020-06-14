@@ -400,6 +400,9 @@ class DataFlow():
                             else:
                                 new_block.next_block = temp_block.taken
                                 new_block.successors = [temp_block.taken]
+
+                                del func[temp_block.fall_through.label]
+
                                 temp_block.taken.predecessors.remove(temp_block)
                                 temp_block.taken.predecessors.append(new_block)
                             # # find block predecessor
