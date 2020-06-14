@@ -392,6 +392,10 @@ class DataFlow():
                                 new_block.next_block = temp_block.fall_through
                                 new_block.successors = [temp_block.fall_through]
 
+                                temp_block.taken.predecessors = []
+                                for successor in temp_block.taken.successors:
+                                    successor.predecessors.remove(temp_block.taken)
+
                                 del func[temp_block.taken.label]
                                 # del self.blocks_control.functions[func_name][temp_block.taken.label]
 
@@ -401,10 +405,15 @@ class DataFlow():
                                 new_block.next_block = temp_block.taken
                                 new_block.successors = [temp_block.taken]
 
+                                temp_block.fall_through.predecessors = []
+                                for successor in temp_block.fall_through.successors:
+                                    successor.predecessors.remove(temp_block.fall_through)
+
                                 del func[temp_block.fall_through.label]
 
                                 temp_block.taken.predecessors.remove(temp_block)
                                 temp_block.taken.predecessors.append(new_block)
+
                             # # find block predecessor
                             # for predecessor in temp_block.predecessors:
                             #     if isinstance(predecessor, ConditionBlock):
@@ -544,12 +553,15 @@ class DataFlow():
                                 print(f"        Predecessor {predecessor.label} is a Block.")
 
                             # update predecessor for next block
-                            block.next_block.predecessors = []
+                            block.next_block.predecessors.remove(block)
                             block.next_block.predecessors.append(predecessor)
 
                             # update sucessor
                             predecessor.successors.remove(block)
                             predecessor.successors.append(block.next_block)
+
+                            # update next block
+                            predecessor.next_block = block.next_block
 
                             predecessor.instructions[-1] = ('jump', jump_target)
 
@@ -574,7 +586,6 @@ class DataFlow():
             self.compute_rd_in_out(self.blocks_control.functions[func], debug=False)
             self.constant_propagation(self.blocks_control.functions[func], func,debug=False)
             self.all_blocks = self.blocks_control.create_block_list(func)
-            print(self.all_blocks)
 
             # make the liveness analysis
             self.compute_lv_in_out(self.blocks_control.functions[func], debug=False)
@@ -583,8 +594,9 @@ class DataFlow():
             self.eliminate_unnecessary_allocs(self.blocks_control.functions[func], debug=False)
 
             # circuit single jumps
-            self.eliminate_single_jumps(self.blocks_control.functions[func], func, debug=False)
-
+            self.eliminate_single_jumps(self.blocks_control.functions[func], func, debug=True)
+            self.all_blocks = self.blocks_control.create_block_list(func)
+            
             if debug:
                 # update list of blocks
                 self.all_blocks = self.blocks_control.create_block_list(func)
