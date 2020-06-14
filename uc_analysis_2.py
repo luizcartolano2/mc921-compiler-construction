@@ -15,7 +15,6 @@ class DataFlow():
                               'add', 'sub', 'mul', 'div', 'mod', 'lt',
                               'le', 'ge', 'gt', 'eq', 'ne', 'and', 'or',
                               'not', 'call', 'read')
-        # CHANGE
         self.comparison_ops = {'and', 'or', 'ne', 'eq', 'lt', 'le', 'gt', 'ge'}
 
         self.binary_fold = {'add': np.add,
@@ -34,7 +33,7 @@ class DataFlow():
                             }
 
 
-    def __set_use_def(self, inst):
+    def __get_use_def(self, inst):
         """CHANGE"""
         op = inst[0].split('_')[0]
 
@@ -52,24 +51,27 @@ class DataFlow():
             return {inst[1]}, {}
         elif op == 'read':
             return {}, {inst[1]}
+        elif op == 'alloc':
+            return {}, {inst[1]}
         else:
             return {}, {}
 
 
+    # TODO: REMOVER
     def __get_full_use_def(self, inst):
         """CHANGE"""
         op = inst[0].split('_')[0]
         if op == 'alloc':
             return {}, {inst[1]}
         else:
-            return self.__set_use_def(inst)
+            return self.__get_use_def(inst)
 
 
     def __compute_lv_use_def(self, func):
         for block_lb in func:
             block = func[block_lb]
             for inst in block.instructions:
-                use, defs = self.__set_use_def(inst=inst)
+                use, defs = self.__get_use_def(inst=inst)
                 block.lv.use = block.lv.use.union(use)
                 block.lv.defs = block.lv.defs.union(defs)
 
@@ -253,7 +255,8 @@ class DataFlow():
 
             for inst_pos, inst in reversed(list(enumerate(block.instructions))):
 
-                use, defs = self.__get_full_use_def(inst)
+                # use, defs = self.__get_full_use_def(inst)
+                use, defs = self.__get_use_def(inst)
 
                 _is_dead = False
 
