@@ -42,19 +42,19 @@ class DataFlow():
         elif op in self.binary_ops or op == 'elem':
             return {inst[1], inst[2]}, {inst[3]}
         elif op == 'literal':
-            return {}, {inst[2]}
+            return set(), {inst[2]}
         elif op in self.values_ops and inst[0] != 'return_void':
-            return {inst[1]}, {}
+            return {inst[1]}, set()
         elif op == 'call':
-            return {}, {inst[2]}
+            return set(), {inst[2]}
         elif op == 'cbranch':
-            return {inst[1]}, {}
+            return {inst[1]}, set()
         elif op == 'read':
-            return {}, {inst[1]}
+            return set(), {inst[1]}
         elif op == 'alloc':
-            return {}, {inst[1]}
+            return set(), {inst[1]}
         else:
-            return {}, {}
+            return set(), set()
 
 
     # TODO: REMOVER
@@ -255,19 +255,14 @@ class DataFlow():
 
             for inst_pos, inst in reversed(list(enumerate(block.instructions))):
 
-                # use, defs = self.__get_full_use_def(inst)
                 use, defs = self.__get_use_def(inst)
 
-                _is_dead = False
+                if len(defs) == 1:
+                    if (defs.intersection(live_variables) == set()) and 'alloc' not in inst[0]:
+                        dead_code.add(inst)
+                        self.code_to_eliminate.add(inst)
 
-                for d in defs:
-                    if d not in live_variables and 'alloc' not in inst[0]:
-                        _is_dead = True
-                if _is_dead:
-                    dead_code.add(inst)
-                    self.code_to_eliminate.add(inst)
-                else:
-                    live_variables = live_variables.union(use) - set(defs)
+                live_variables = live_variables.union(use) - set(defs)
 
             updated_instructions = []
             for inst_pos, inst in enumerate(block.instructions):
