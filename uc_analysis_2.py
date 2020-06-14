@@ -423,39 +423,40 @@ class DataFlow():
 
                             if debug:
                                 print(f"        Predecessor {predecessor.label} is a Condition.")
-                                if predecessor.taken.label == block.label:
-                                    if debug:
-                                        print(f"            Predecessor {predecessor.label} taken is the path!")
-                                    # get label taken
-                                    lbl_taken = jump_target
 
-                                    # update the taken for predecessor block
-                                    old_taken = predecessor.taken
-                                    predecessor.taken = block.next_block
+                            if predecessor.taken.label == block.label:
+                                if debug:
+                                    print(f"            Predecessor {predecessor.label} taken is the path!")
+                                # get label taken
+                                lbl_taken = jump_target
 
-                                    # update next block predecessor
-                                    block.next_block.predecessors.remove(old_taken)
-                                    block.next_block.predecessors.append(predecessor)
+                                # update the taken for predecessor block
+                                old_taken = predecessor.taken
+                                predecessor.taken = block.next_block
 
-                                    if debug:
-                                        print(f"            Next block {block.next_block.label} predecessor: {block.next_block.predecessors}")
-                                    remove_from_func.add(block.label)
-                                else:
-                                    if debug:
-                                        print(f"            Predecessor {predecessor.label} fall through is the path!")
-                                    # get label fall
-                                    lbl_fall = jump_target
+                                # update next block predecessor
+                                block.next_block.predecessors.remove(old_taken)
+                                block.next_block.predecessors.append(predecessor)
 
-                                    # update fall for predecessor
-                                    old_fall = predecessor.fall_through
-                                    predecessor.fall_through = block.next_block
+                                if debug:
+                                    print(f"            Next block {block.next_block.label} predecessor: {block.next_block.predecessors}")
+                                remove_from_func.add(block.label)
+                            else:
+                                if debug:
+                                    print(f"            Predecessor {predecessor.label} fall through is the path!")
+                                # get label fall
+                                lbl_fall = jump_target
 
-                                    # update next block predecessor
-                                    block.next_block.predecessors.remove(old_fall)
-                                    block.next_block.predecessors.append(predecessor)
+                                # update fall for predecessor
+                                old_fall = predecessor.fall_through
+                                predecessor.fall_through = block.next_block
 
-                                    remove_from_func.add(block.label)
-                                predecessor.instructions[-1] = (op, expr_test, lbl_taken, lbl_fall)
+                                # update next block predecessor
+                                block.next_block.predecessors.remove(old_fall)
+                                block.next_block.predecessors.append(predecessor)
+
+                                remove_from_func.add(block.label)
+                            predecessor.instructions[-1] = (op, expr_test, lbl_taken, lbl_fall)
 
                         elif isinstance(predecessor, Block):
                             if debug:
@@ -495,7 +496,7 @@ class DataFlow():
             self.eliminate_unnecessary_allocs(self.blocks_control.functions[func], debug=False)
 
             # circuit single jumps
-            self.eliminate_single_jumps(self.blocks_control.functions[func], func, debug=True)
+            self.eliminate_single_jumps(self.blocks_control.functions[func], func, debug=False)
 
             if debug:
                 # update list of blocks
