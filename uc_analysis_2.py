@@ -33,6 +33,7 @@ class DataFlow():
                             }
 
 
+    # TODO: CHANGE
     def __get_use_def(self, inst):
         """CHANGE"""
         op = inst[0].split('_')[0]
@@ -43,28 +44,14 @@ class DataFlow():
             return {inst[1], inst[2]}, {inst[3]}
         elif op == 'literal':
             return set(), {inst[2]}
-        elif op in self.values_ops and inst[0] != 'return_void':
+        elif (op in self.values_ops and inst[0] != 'return_void') or op == 'cbranch':
             return {inst[1]}, set()
         elif op == 'call':
             return set(), {inst[2]}
-        elif op == 'cbranch':
-            return {inst[1]}, set()
-        elif op == 'read':
-            return set(), {inst[1]}
-        elif op == 'alloc':
+        elif op in ['read', 'alloc']:
             return set(), {inst[1]}
         else:
             return set(), set()
-
-
-    # TODO: REMOVER
-    def __get_full_use_def(self, inst):
-        """CHANGE"""
-        op = inst[0].split('_')[0]
-        if op == 'alloc':
-            return {}, {inst[1]}
-        else:
-            return self.__get_use_def(inst)
 
 
     def __compute_lv_use_def(self, func):
@@ -336,6 +323,7 @@ class DataFlow():
             print('=' * len('== Alloc Test =='))
 
 
+    # TODO: CHANGE
     def __set_constants(self, block, block_pos, blocks_list):
         constants = {}
 
@@ -372,7 +360,7 @@ class DataFlow():
         else:
             return result
 
-
+    # TODO: CHANGE
     def constant_propagation(self, func, debug=False):
         if debug:
             print()

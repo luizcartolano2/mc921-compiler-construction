@@ -24,7 +24,8 @@ class ControlBlocks():
         for code in self.ir_list:
             if code[0] == 'define':
                 func_name = code[1][1:]
-                self.functions[func_name] = []
+                self.functions[func_name] = [code]
+
             self.functions[func_name].append(code)
 
 
@@ -40,6 +41,7 @@ class ControlBlocks():
                 elif code[0] == 'define':
                     label = '%entry'
                     self.functions[key][label] = Block(label=label)
+                    self.functions[key][label].append(code)
                 else:
                     self.functions[key][label].append(code)
 
