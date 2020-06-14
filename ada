@@ -343,7 +343,7 @@ class DataFlow():
 
         # rd.ins has a list of instructions
         # stored as (block_pos, inst_pos)
-        for rd_pos, rd_in in sorted(block.rd.out):
+        for rd_pos, rd_in in sorted(block.rd.ins):
             # get instruction
             inst = blocks_list[rd_pos].instructions[rd_in]
 
@@ -375,6 +375,26 @@ class DataFlow():
             return result
 
 
+    def __constant_fold(self, inst, left_value, right_value):
+        """
+
+            :param inst:
+            :param left_value:
+            :param right_value:
+            :return:
+        """
+        op_type = inst[0].split('_')[1]
+
+        left_value, right_value = str(left_value), str(right_value)
+        left, right = eval(op_type + '(' + left_value + ')'), \
+                      eval(op_type + '(' + right_value + ')')
+
+        op_value = self.__constant_operation(inst[0].split('_')[0], left, right)
+        inst = (f"literal_{op_type}", op_value, inst[3])
+
+        return inst
+
+
     def constant_propagation(self, func, debug=False):
         if debug:
             print()
@@ -389,6 +409,7 @@ class DataFlow():
             for inst_pos, inst in enumerate(block.instructions):
                 op = inst[0].split('_')
                 opt_type = op[1] if len(op) > 1 else ''
+                print(opt_type)
 
                 if op[0] in ['load', 'store', 'cbranch']:
                     source = inst[1]
