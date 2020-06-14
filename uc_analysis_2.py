@@ -346,13 +346,18 @@ class DataFlow():
                     constants[inst[-1]] = inst[1]
                 elif constants[inst[-1]] != inst[1]:
                     constants[inst[-1]] = False
+            elif 'load' in inst[0]:
+                if inst[1] in constants and constants[inst[1]] is not False:
+                    constants[inst[-1]] = inst[1]
+            elif 'print' in inst[0]:
+                pass
             else:
                 constants[inst[-1]] = False
 
         return constants
 
 
-    def constant_propagation(self, func, debug=False):
+    def constant_propagation(self, func, func_name, debug=False):
         if debug:
             print()
             print('== Constant Propagation ==')
@@ -369,17 +374,73 @@ class DataFlow():
 
                 if op[0] in ['load', 'store', 'cbranch']:
                     source = inst[1]
+
                     if source in constants and constants[source] is not False:
                         if op[0] == 'cbranch':
-                            # self.__optimize_branch(block_pos, constants[source])
-                            pass
+                            # get comparison value
+                            comp_value = constants[source]
+                            # get actual block
+                            temp_block = blocks_list[block_pos]
+
+                            # create new Block
+                            new_block = Block('novo')
+                            new_block.label = temp_block.label
+                            new_block.instructions = temp_block.instructions
+                            new_block.predecessors = temp_block.predecessors
+                            new_block.rd = temp_block.rd
+                            if comp_value == 0:
+                                new_block.next_block = temp_block.fall_through
+                                new_block.successors = [temp_block.fall_through]
+
+                                del func[temp_block.taken.label]
+                                # del self.blocks_control.functions[func_name][temp_block.taken.label]
+
+                                temp_block.fall_through.predecessors.remove(temp_block)
+                                temp_block.fall_through.predecessors.append(new_block)
+                            else:
+                                new_block.next_block = temp_block.taken
+                                new_block.successors = [temp_block.taken]
+                                temp_block.taken.predecessors.remove(temp_block)
+                                temp_block.taken.predecessors.append(new_block)
+                            # # find block predecessor
+                            # for predecessor in temp_block.predecessors:
+                            #     if isinstance(predecessor, ConditionBlock):
+                            #         if predecessor.taken == temp_block:
+                            #             predecessor.taken = new_block
+                            #         else:
+                            #             prev = predecessor.fall_through
+                            #     else:
+                            #         if predecessor.next_block == temp_block:
+                            #             prev = predecessor
+
+                            blocks_list[block_pos] = new_block
+                            func[temp_block.label] = new_block
+                            self.blocks_control.functions[func_name][new_block.label] = new_block
+                            new_block.instructions[-1] = ('jump', new_block.next_block.label)
+
                         else:
                             block.instructions[inst_pos] = (f'literal_{opt_type}', constants[source], inst[2])
+                            constants[inst[2]] = constants[source]
 
                 elif op[0] in self.binary_ops:
+                    print(inst)
                     # get operands
                     left_op = inst[1]
                     right_op = inst[2]
+
+                    if left_op in constants:
+                        if isinstance(constants[left_op], str):
+                            if constants[left_op] in constants and constants[constants[left_op]] is not False:
+                                left_op = constants[constants[left_op]]
+                            elif left_op in constants:
+                                constants[left_op] = False
+                    if right_op in constants:
+                        if isinstance(constants[right_op], str):
+                            if constants[right_op] in constants and constants[constants[right_op]] is not False:
+                                right_op = constants[constants[right_op]]
+                            elif right_op in constants:
+                                constants[right_op] = False
+
 
                     if left_op in constants and right_op in constants and\
                             constants[left_op] is not False and constants[right_op] is not False:
@@ -389,11 +450,12 @@ class DataFlow():
                         left_value, right_value = eval(opt_type + '(' + left_value + ')'),\
                                                   eval(opt_type + '(' + right_value + ')')
 
-                        func_op = self.binary_ops[op[0]]
+                        func_op = self.binary_fold[op[0]]
                         result = func_op(left_value, right_value)
                         result = int(result) if op[0] in self.comparison_ops else result
 
                         block.instructions[inst_pos] = (f"literal_{opt_type}", result, inst[3])
+                        constants[inst[3]] = result
 
         if debug:
             print('=' * len('== Constant Propagation =='))
@@ -507,7 +569,9 @@ class DataFlow():
             self.all_blocks = self.blocks_control.create_block_list(func)
             # make the reaching definitions analysis
             self.compute_rd_in_out(self.blocks_control.functions[func], debug=False)
-            self.constant_propagation(self.blocks_control.functions[func], debug=False)
+            self.constant_propagation(self.blocks_control.functions[func], func,debug=False)
+            self.all_blocks = self.blocks_control.create_block_list(func)
+            print(self.all_blocks)
 
             # make the liveness analysis
             self.compute_lv_in_out(self.blocks_control.functions[func], debug=False)
