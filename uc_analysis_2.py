@@ -259,14 +259,12 @@ class DataFlow():
                 else:
                     live_variables = live_variables.union(use) - set(defs)
 
+            updated_instructions = []
+            for inst_pos, inst in enumerate(block.instructions):
+                if inst not in dead_code:
+                    updated_instructions.append(inst)
 
-            if debug:
-                updated_instructions = []
-                for inst_pos, inst in enumerate(block.instructions):
-                    if inst not in dead_code:
-                        updated_instructions.append(inst)
-
-                block.instructions = updated_instructions
+            block.instructions = updated_instructions
 
 
     def eliminate_unreachable_code(self, func, debug=False):
@@ -288,13 +286,12 @@ class DataFlow():
                             dead_code.add(eliminate_pos)
                             self.code_to_eliminate.add(block.instructions[eliminate_pos])
 
-            if debug:
-                updated_instructions = []
-                for inst_pos, inst in enumerate(block.instructions):
-                    if inst_pos not in dead_code:
-                        updated_instructions.append(inst)
+            updated_instructions = []
+            for inst_pos, inst in enumerate(block.instructions):
+                if inst_pos not in dead_code:
+                    updated_instructions.append(inst)
 
-                block.instructions = updated_instructions
+            block.instructions = updated_instructions
 
 
     def eliminate_unnecessary_allocs(self, func, debug=False):
@@ -316,7 +313,9 @@ class DataFlow():
                             is_dead = False
                     if is_dead:
                         if debug:
+                            print("=============")
                             print(target)
+                            print("=============")
                         dead_code.add(inst_pos)
                         self.code_to_eliminate.add(block.instructions[inst_pos])
 
@@ -332,7 +331,7 @@ class DataFlow():
             print('=' * len('== Alloc Test =='))
 
 
-    def __set_constants(self, block, blocks_list, debug=False):
+    def __set_constants(self, block, block_pos, blocks_list, debug=False):
         constants = {}
 
         # rd.ins has a list of instructions
@@ -340,11 +339,14 @@ class DataFlow():
         if block.label == '%entry':
             const_for = sorted(block.rd.out)
         else:
-            const_for = sorted(block.rd.ins)
+            const_for = sorted(block.rd.out)
 
         for rd_pos, rd_in in const_for:
             # get instruction
             inst = blocks_list[rd_pos].instructions[rd_in]
+
+            if rd_pos != block_pos:
+                continue
 
             if 'alloc' in inst[0]:
                 continue
@@ -403,10 +405,7 @@ class DataFlow():
         blocks_list = [func[block_lb] for block_lb in blocks_label]
 
         for block_pos, block in enumerate(blocks_list):
-            constants = self.__set_constants(block, blocks_list)
-            if debug:
-                print("Constants:")
-                print(constants)
+            constants = self.__set_constants(block, block_pos, blocks_list, debug=debug)
 
             for inst_pos, inst in enumerate(block.instructions):
                 op = inst[0].split('_')
@@ -418,11 +417,11 @@ class DataFlow():
                                 print('Chora!')
                             pass
                         else:
-                            opt_ype = op[1]
+                            opt_ype = inst[0].split('_')[1]
                             block.instructions[inst_pos] = (f'literal_{opt_ype}', constants[source], inst[2])
                             # update inst/op
                             inst = block.instructions[inst_pos]
-                            op = f'literal_{opt_ype}'.split('_')
+                            op = inst[0].split('_')
                 elif op[0] in self.binary_ops:
                     # get operands
                     left_op = inst[1]
@@ -447,14 +446,14 @@ class DataFlow():
         for func in self.blocks_control.functions:
             self.all_blocks = self.blocks_control.create_block_list(func)
             # make the reaching definitions analysis
-            self.compute_rd_in_out(self.blocks_control.functions[func], debug=True)
-            self.constant_propagation(self.blocks_control.functions[func], debug=True)
+            self.compute_rd_in_out(self.blocks_control.functions[func], debug=False)
+            self.constant_propagation(self.blocks_control.functions[func], debug=False)
 
             # make the liveness analysis
             self.compute_lv_in_out(self.blocks_control.functions[func], debug=True)
-            self.eliminate_unreachable_code(self.blocks_control.functions[func], debug=True)
-            self.deadcode_elimination(self.blocks_control.functions[func], debug=True)
-            self.eliminate_unnecessary_allocs(self.blocks_control.functions[func], debug=True)
+            self.eliminate_unreachable_code(self.blocks_control.functions[func], debug=False)
+            self.deadcode_elimination(self.blocks_control.functions[func], debug=False)
+            self.eliminate_unnecessary_allocs(self.blocks_control.functions[func], debug=False)
 
             if debug:
                 cfg = CFG(f"{func}-opt")
