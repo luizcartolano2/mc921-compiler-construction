@@ -18,19 +18,35 @@ class DataFlow():
                               'not', 'call', 'read')
         self.comparison_ops = {'and', 'or', 'ne', 'eq', 'lt', 'le', 'gt', 'ge'}
 
-        self.binary_fold = {'add': np.add,
-                            'sub': np.subtract,
-                            'mul': np.multiply,
-                            'div': np.floor_divide,
-                            'mod': np.mod,
-                            'and': np.logical_and,
-                            'or': np.logical_or,
-                            'ne': np.logical_not,
-                            'eq': np.equal,
-                            'lt': np.less,
-                            'le': np.less_equal,
-                            'gt': np.greater,
-                            'ge': np.greater_equal,
+        # if we cant use numpy
+        # self.binary_fold = {'add': np.add,
+        #                     'sub': np.subtract,
+        #                     'mul': np.multiply,
+        #                     'div': np.floor_divide,
+        #                     'mod': np.mod,
+        #                     'and': np.logical_and,
+        #                     'or': np.logical_or,
+        #                     'ne': np.logical_not,
+        #                     'eq': np.equal,
+        #                     'lt': np.less,
+        #                     'le': np.less_equal,
+        #                     'gt': np.greater,
+        #                     'ge': np.greater_equal,
+        #                     }
+
+        self.binary_fold = {'add': lambda l, r: r + l,
+                            'sub': lambda l, r: r - l,
+                            'mul': lambda l, r: r * l,
+                            'div': lambda l, r: r // l,
+                            'mod': lambda l, r: r % l,
+                            'and': lambda l, r: r & l,
+                            'or': lambda l, r: r | l,
+                            'ne': lambda l, r: r != l,
+                            'eq': lambda l, r: r == l,
+                            'lt': lambda l, r: r < l,
+                            'le': lambda l, r: r <= l,
+                            'gt': lambda l, r: r > l,
+                            'ge': lambda l, r: r >= l,
                             }
 
 
