@@ -6,6 +6,8 @@ int main(){
     w[2] = c[1];
     v[i] = i + j + k;
     j = j - 2;
+    print("---",w[i],"---");
+    print("---",v[i],"---");
     assert w[i] == c[j] && v[i] == 9;
     return 0;
 }
