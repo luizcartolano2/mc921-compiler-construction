@@ -248,9 +248,12 @@ class DataFlow():
                 use, defs = self.__get_use_def(inst)
 
                 if len(defs) == 1:
-                    if (defs.intersection(live_variables) == set()) and 'alloc' not in inst[0]:
-                        dead_code.add(inst)
-                        self.code_to_eliminate.add(inst)
+                    if defs.intersection(live_variables) == set():
+                        if 'elem' in inst[0] or 'alloc' in inst[0] or '*' in inst[0]:
+                            pass
+                        else:
+                            dead_code.add(inst)
+                            self.code_to_eliminate.add(inst)
 
                 live_variables = live_variables.union(use) - set(defs)
 
@@ -374,9 +377,6 @@ class DataFlow():
                 if op[0] in ['load', 'store', 'cbranch']:
                     source = inst[1]
 
-                    if op[0] in ['store', 'load'] and op[-1] == '*':
-                        continue
-
                     if source in constants and constants[source] is not False:
                         if op[0] == 'cbranch':
                             # get comparison value
@@ -420,8 +420,9 @@ class DataFlow():
                             self.blocks_control.functions[func_name][new_block.label] = new_block
                             new_block.instructions[-1] = ('jump', new_block.next_block.label)
                         else:
-                            block.instructions[inst_pos] = (f'literal_{opt_type}', constants[source], inst[2])
-                            constants[inst[-1]] = constants[source]
+                            if '*' not in inst[0]:
+                                block.instructions[inst_pos] = (f'literal_{opt_type}', constants[source], inst[2])
+                                constants[inst[-1]] = constants[source]
                     else:
                         constants[inst[-1]] = False
                 elif op[0] in self.binary_ops:
