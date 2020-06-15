@@ -1,5 +1,4 @@
 from uc_block import Block, ConditionBlock, CFG
-import numpy as np
 
 
 class DataFlow():
@@ -18,35 +17,19 @@ class DataFlow():
                               'not', 'call', 'read')
         self.comparison_ops = {'and', 'or', 'ne', 'eq', 'lt', 'le', 'gt', 'ge'}
 
-        # if we cant use numpy
-        # self.binary_fold = {'add': np.add,
-        #                     'sub': np.subtract,
-        #                     'mul': np.multiply,
-        #                     'div': np.floor_divide,
-        #                     'mod': np.mod,
-        #                     'and': np.logical_and,
-        #                     'or': np.logical_or,
-        #                     'ne': np.logical_not,
-        #                     'eq': np.equal,
-        #                     'lt': np.less,
-        #                     'le': np.less_equal,
-        #                     'gt': np.greater,
-        #                     'ge': np.greater_equal,
-        #                     }
-
-        self.binary_fold = {'add': lambda l, r: r + l,
-                            'sub': lambda l, r: r - l,
-                            'mul': lambda l, r: r * l,
-                            'div': lambda l, r: r // l,
-                            'mod': lambda l, r: r % l,
-                            'and': lambda l, r: r & l,
-                            'or': lambda l, r: r | l,
-                            'ne': lambda l, r: r != l,
-                            'eq': lambda l, r: r == l,
-                            'lt': lambda l, r: r < l,
-                            'le': lambda l, r: r <= l,
-                            'gt': lambda l, r: r > l,
-                            'ge': lambda l, r: r >= l,
+        self.binary_fold = {'add': lambda l, r: l + r,
+                            'sub': lambda l, r: l - r,
+                            'mul': lambda l, r: l * r,
+                            'div': lambda l, r: l // r,
+                            'mod': lambda l, r: l % r,
+                            'and': lambda l, r: l & r,
+                            'or': lambda l, r: l | r,
+                            'ne': lambda l, r: l != r,
+                            'eq': lambda l, r: l == r,
+                            'lt': lambda l, r: l < r,
+                            'le': lambda l, r: l <= r,
+                            'gt': lambda l, r: l > r,
+                            'ge': lambda l, r: l >= r,
                             }
 
 
@@ -472,6 +455,7 @@ class DataFlow():
                         left_value, right_value = str(constants[left_op]), str(constants[right_op])
                         left_value, right_value = eval(opt_type + '(' + left_value + ')'),\
                                                   eval(opt_type + '(' + right_value + ')')
+
 
                         func_op = self.binary_fold[op[0]]
                         result = func_op(left_value, right_value)
