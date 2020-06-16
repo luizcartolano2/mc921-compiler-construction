@@ -5,7 +5,7 @@
 #                                                #
 # Code for the Basic Blocks for uC.              #
 #                                                #
-# Authors: Luiz Cartolano && Erico Faustino      #
+# Authors: Marcio M Pereira - IC - MC921         #
 ##################################################
 from graphviz import Digraph
 
