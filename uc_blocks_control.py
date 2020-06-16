@@ -197,6 +197,3 @@ class ControlBlocks():
 
                 cfg.view(self.functions[func]['%entry'], all_blocks)
                 self.cfg_list.append(cfg)
-
-                # debug purpose
-                # self.print_pre_blocks()
