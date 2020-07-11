@@ -345,7 +345,7 @@ class GenerateCode(NodeVisitor):
         self.code.append(('print_string', target))
 
         # assert breaks exec if fails
-        self.code.append(('jump', '%1'))
+        self.code.append(('jump', self.__func_ret_label))
 
         # create exit label on interpreter
         self.code.append((exit_label[1:],))
@@ -834,11 +834,11 @@ class GenerateCode(NodeVisitor):
         # we do this way (a class attr) because that
         # is an important info to know in other moments
         # of the visiting like on Breaks
+        self.__func_ret_label = self.__new_temp()
+
         if func_typename != 'void':
             self.__func_ret_location = self.__new_temp()
             self.code.append((f'alloc_{func_typename}', self.__func_ret_location))
-
-        self.__func_ret_label = self.__new_temp()
 
         # now we do two works while declaring
         # the function first, we iterate over
@@ -861,8 +861,6 @@ class GenerateCode(NodeVisitor):
         # visit declaration
         self.__func_alloc_phase = None
         self.__func_type = node.spec
-
-        self.__func_alloc_phase = None
         self.visit(node.decl)
 
         # if the function has a body we need
