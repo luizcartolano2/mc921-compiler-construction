@@ -793,7 +793,7 @@ class GenerateCode(NodeVisitor):
         # visit func name
         self.visit(node.name)
         # create the instruct to the function call
-        self.code.append(('call', node.name.location, node.location))
+        self.code.append((f'call_{node.type.names[0].typename}', node.name.location, node.location))
 
 
     def visit_FuncDecl(self, node):
