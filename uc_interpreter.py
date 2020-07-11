@@ -104,7 +104,7 @@ class Interpreter(object):
                 op = ircode[self.pc]
             except IndexError:
                 break
-            if not op[0].isdigit():
+            if len(op) > 1:
                 opcode, modifier = self._extract_operation(op[0])
                 if opcode.startswith('global'):
                     self.globals[op[1]] = self.offset
@@ -123,7 +123,7 @@ class Interpreter(object):
                         if len(op) == 3:
                             self._copy_data(self.offset, _len, op[2])
                         self.offset += _len
-                elif opcode == 'define':
+                elif opcode.startswith('define'):
                         self.globals[op[1]] = self.offset
                         M[self.offset] = self.pc
                         self.offset += 1
@@ -139,7 +139,7 @@ class Interpreter(object):
             except IndexError:
                 break
             self.pc += 1
-            if not op[0].isdigit():
+            if len(op) > 1 or op[0] == 'return_void':
                 opcode, modifier = self._extract_operation(op[0])
                 if hasattr(self, "run_" + opcode):
                     if not modifier:
@@ -211,10 +211,9 @@ class Interpreter(object):
         # and copy the parameters passed to the callee in their local vars.
         # Finally, cleanup the parameters list used to transfer these vars
         self.vars = {}
-        idx = -1
+
         for idx, val in enumerate(self.params):
             # Note that arrays (size >=1) are passed by reference only.
-            self.vars['%' + str(idx)] = self.offset
             self.vars[locs[idx]] = self.offset
             M[self.offset] = M[val]
             self.offset += 1
