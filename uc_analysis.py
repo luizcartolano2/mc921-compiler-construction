@@ -359,7 +359,9 @@ class DataFlow():
             # by eliminate the dead codes
             updated_instructions = []
             for inst_pos, inst in enumerate(block.instructions):
-                if inst not in dead_code:
+                if inst[0].startswith('define'):
+                    updated_instructions.append(inst)
+                elif inst not in dead_code:
                     updated_instructions.append(inst)
             block.instructions = updated_instructions
 
