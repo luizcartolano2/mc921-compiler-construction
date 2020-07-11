@@ -49,6 +49,7 @@ class GenerateCode(NodeVisitor):
         self.__func_alloc_phase = None
         self.__func_ret_location = None
         self.__func_ret_label = None
+        self.__func_type = None
 
         # The generated code (list of tuples)
         # code needs to be public for the uc mod
@@ -797,11 +798,13 @@ class GenerateCode(NodeVisitor):
         # we do this way because that is an important
         # info to know in other moments of the visiting
         self.__fname = f'@{node.type.declname.name}'
+        func_typename = self.__func_type.names[-1].typename
 
-        # add intruct to define the function
-        self.code.append(('define', self.__fname))
         # update function loc
         node.type.declname.location = self.__fname
+
+        # list to store function arguments
+        func_args = []
 
         # visit the function arguments
         if node.args is not None:
@@ -812,26 +815,35 @@ class GenerateCode(NodeVisitor):
             # for them, we put them on a stack (LIFO)
             # so we can pop this registers location when
             # initializing the function args
-            for _ in node.args.params:
-                self.queue.insert(0, self.__new_temp())
+            for param in node.args.params:
+                # create temp location to param
+                param_location = self.__new_temp()
+                # add param to queue
+                self.queue.insert(0, param_location)
+                # add param to list of function arguments
+                param_typename = param.type.type.names[-1].typename
+                func_args.append((param_typename, param_location))
+
+        # add instruction to define the function
+        self.code.append((f'define_{func_typename}',
+                          self.__fname,
+                          func_args)
+                         )
 
         # create label/location to where function returns
         # we do this way (a class attr) because that
         # is an important info to know in other moments
         # of the visiting like on Breaks
-        self.__func_ret_location = self.__new_temp()
+        if func_typename != 'void':
+            self.__func_ret_location = self.__new_temp()
+            self.code.append((f'alloc_{func_typename}', self.__func_ret_location))
+
         self.__func_ret_label = self.__new_temp()
 
         # now we do two works while declaring
         # the function first, we iterate over
         # all arguments declaring then
         self.__func_alloc_phase = 'arg_decl'
-        for arg in node.args or []:
-            self.visit(arg)
-
-        # after, we iterate over
-        # all arguments initalizing then
-        self.__func_alloc_phase = 'arg_init'
         for arg in node.args or []:
             self.visit(arg)
 
@@ -848,11 +860,10 @@ class GenerateCode(NodeVisitor):
         """
         # visit declaration
         self.__func_alloc_phase = None
-        self.visit(node.decl)
+        self.__func_type = node.spec
 
-        # iterate over params
-        for par in node.param_decls or []:
-            self.visit(par)
+        self.__func_alloc_phase = None
+        self.visit(node.decl)
 
         # if the function has a body we need
         # to iterate over ir, declaring/initializing
@@ -871,8 +882,15 @@ class GenerateCode(NodeVisitor):
             for decl in node.decls:
                 self.visit(decl)
 
-            # after, we iterate over
-            # all body initalizing then
+        # after, we iterate over
+        # all arguments initializing then
+        self.__func_alloc_phase = 'arg_init'
+        for arg in node.decl.type.args or []:
+            self.visit(arg)
+
+        # after, we iterate over
+        # all body initializing then
+        if node.body is not None:
             self.__func_alloc_phase = 'var_init'
             for body in node.body:
                 self.visit(body)
