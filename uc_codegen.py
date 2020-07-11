@@ -11,6 +11,7 @@ import uc_sema
 from uc_ast import *
 from uc_type import *
 
+
 class GenerateCode(NodeVisitor):
     """
         A Code Generator for the uC language.
@@ -35,18 +36,20 @@ class GenerateCode(NodeVisitor):
                 The methods that implements visit to all
                 AST nodes
     """
+
     def __init__(self):
         super(GenerateCode, self).__init__()
 
         # all the other attrs are private
         # version dictionary for temporaries
         self.__fname = '_glob_'  # We use the function name as a key
-        self.__versions = {self.__fname:0}
+        self.__versions = {self.__fname: 0}
 
         # attributes to manage function state
         self.__func_alloc_phase = None
         self.__func_ret_location = None
         self.__func_ret_label = None
+        self.__func_type = None
 
         # The generated code (list of tuples)
         # code needs to be public for the uc mod
@@ -57,42 +60,41 @@ class GenerateCode(NodeVisitor):
 
         # binary opcodes table
         self.__binary_opcodes = {
-            "+" : "add",
-            "-" : "sub",
-            "*" : "mul",
-            "/" : "div",
-            "%" : "mod",
+            "+": "add",
+            "-": "sub",
+            "*": "mul",
+            "/": "div",
+            "%": "mod",
             "&&": "and",
             "||": "or",
             "==": "eq",
             "!=": "ne",
-            ">" : "gt",
-            "<" : "lt",
+            ">": "gt",
+            "<": "lt",
             ">=": "ge",
             "<=": "le",
         }
 
         # unary operators
         self.__unary_opcodes = {
-            '+'  : '',
-            '-'  : 'sub',
-            '++' : 'add',
-            '--' : 'sub',
+            '+': '',
+            '-': 'sub',
+            '++': 'add',
+            '--': 'sub',
             'p++': 'add',
             'p--': 'sub',
-            '*'  : 'pointer',
-            '&'  : 'address',
+            '*': 'pointer',
+            '&': 'address',
         }
 
         # assign ops
         self.__assing_opcodes = {
-            "+=" : "add",
-            "-=" : "sub",
-            "*=" : "mul",
-            "/=" : "div",
-            "%=" : "mod",
+            "+=": "add",
+            "-=": "sub",
+            "*=": "mul",
+            "/=": "div",
+            "%=": "mod",
         }
-
 
     def __new_temp(self, temp_name=None):
         """
@@ -120,7 +122,6 @@ class GenerateCode(NodeVisitor):
         # return the name
         return name
 
-
     def __new_global_codes(self):
         """
             A method used to allocate global spaces
@@ -138,7 +139,6 @@ class GenerateCode(NodeVisitor):
 
         # return the name
         return name
-
 
     def __load_location(self, node):
         """
@@ -180,7 +180,6 @@ class GenerateCode(NodeVisitor):
 
         # update node location
         node.location = varname
-
 
     # You must implement visit_Nodename methods for all of the other
     # AST nodes.  In your code, you will need to make instructions
@@ -225,7 +224,6 @@ class GenerateCode(NodeVisitor):
 
         # force visit to the VarDecl function
         self.visit_VarDecl(node_type, decl, dim)
-
 
     def visit_ArrayRef(self, node):
         """
@@ -306,7 +304,6 @@ class GenerateCode(NodeVisitor):
             node.location = target
             self.code.append((f'elem_{node.type.names[-1].typename}', var, index, target))
 
-
     def visit_Assert(self, node):
         """
             A method used to represent a visit of Assert node.
@@ -333,12 +330,12 @@ class GenerateCode(NodeVisitor):
         self.code.append(('cbranch', node.expr.location, true_label, false_label))
 
         # deal if the assert is true
-        self.code.append((true_label[1:], ))
+        self.code.append((true_label[1:],))
         self.code.append(('jump', exit_label))
 
         # deal if the assert is false
         # create false label
-        self.code.append((false_label[1:], ))
+        self.code.append((false_label[1:],))
 
         # create sting to print on false label
         target = self.__new_global_codes()
@@ -348,11 +345,10 @@ class GenerateCode(NodeVisitor):
         self.code.append(('print_string', target))
 
         # assert breaks exec if fails
-        self.code.append(('jump', '%1'))
+        self.code.append(('jump', self.__func_ret_label))
 
         # create exit label on interpreter
-        self.code.append((exit_label[1:], ))
-
+        self.code.append((exit_label[1:],))
 
     def visit_Assignment(self, node):
         """
@@ -456,7 +452,6 @@ class GenerateCode(NodeVisitor):
             # on the created target
             self.code.append((f'store_{typename}', right_value_loc, left_value_loc))
 
-
     def visit_BinaryOp(self, node):
         """
             A method used to represent a visit of BinaryOp node.
@@ -500,7 +495,6 @@ class GenerateCode(NodeVisitor):
         # update node location
         node.location = target
 
-
     def visit_Break(self, node):
         """
             A method used to represent a visit of Break node.
@@ -518,7 +512,6 @@ class GenerateCode(NodeVisitor):
         # to jump to the exit label of the
         # associated loop
         self.code.append(('jump', node.bind.for_exit))
-
 
     def visit_Cast(self, node):
         """
@@ -557,7 +550,6 @@ class GenerateCode(NodeVisitor):
         # the cast operation location
         node.location = temp
 
-
     def visit_Compound(self, node):
         """
             A method used to represent a visit of Compound node.
@@ -573,7 +565,6 @@ class GenerateCode(NodeVisitor):
         # visit all blocks
         for block_item in node.block_items:
             self.visit(block_item)
-
 
     def visit_Constant(self, node):
         """
@@ -616,7 +607,6 @@ class GenerateCode(NodeVisitor):
         # update the constant node location
         node.location = target
 
-
     def visit_Decl(self, node):
         """
             A method used to represent a visit of Decl node.
@@ -641,7 +631,6 @@ class GenerateCode(NodeVisitor):
         elif isinstance(node.type, VarDecl):
             self.visit_VarDecl(node.type, node)
 
-
     def visit_DeclList(self, node):
         """
             A method used to represent a visit of DeclList node.
@@ -658,7 +647,6 @@ class GenerateCode(NodeVisitor):
         for decl in node.decls:
             self.visit(decl)
 
-
     def visit_EmptyStatement(self, node):
         """
             A method used to represent a visit of EmptyStatement node.
@@ -674,7 +662,6 @@ class GenerateCode(NodeVisitor):
         """
         pass
 
-
     def visit_ExprList(self, node):
         """
             A method used to represent a visit of ExprList node.
@@ -688,7 +675,6 @@ class GenerateCode(NodeVisitor):
                     The ExprList node.
         """
         pass
-
 
     def visit_For(self, node):
         """
@@ -709,9 +695,12 @@ class GenerateCode(NodeVisitor):
         exit_label = self.__new_temp()
         node.for_exit = exit_label
 
+        # explict jump to for conditional
+        self.code.append(('jump', entry_label))
+
         # visit init and start it on interpreter
         self.visit(node.for_init)
-        self.code.append((entry_label[1:], ))
+        self.code.append((entry_label[1:],))
 
         # branch to for condition, keeps on the loop while
         # while true and branch out of the loop when cond fails
@@ -723,7 +712,7 @@ class GenerateCode(NodeVisitor):
         self.code.append(('cbranch', node.for_cond.location, true_label, exit_label))
 
         # add to register pos to jump while label is true
-        self.code.append((true_label[1:], ))
+        self.code.append((true_label[1:],))
 
         # visit for statement
         self.visit(node.for_statement)
@@ -735,8 +724,7 @@ class GenerateCode(NodeVisitor):
         self.code.append(('jump', entry_label))
 
         # create exit label on register for cbranch works
-        self.code.append((exit_label[1:], ))
-
+        self.code.append((exit_label[1:],))
 
     def visit_FuncCall(self, node):
         """
@@ -793,8 +781,7 @@ class GenerateCode(NodeVisitor):
         # visit func name
         self.visit(node.name)
         # create the instruct to the function call
-        self.code.append(('call', node.name.location, node.location))
-
+        self.code.append((f'call_{node.type.names[0].typename}', node.name.location, node.location))
 
     def visit_FuncDecl(self, node):
         """
@@ -811,11 +798,13 @@ class GenerateCode(NodeVisitor):
         # we do this way because that is an important
         # info to know in other moments of the visiting
         self.__fname = f'@{node.type.declname.name}'
+        func_typename = self.__func_type.names[-1].typename
 
-        # add intruct to define the function
-        self.code.append(('define', self.__fname))
         # update function loc
         node.type.declname.location = self.__fname
+
+        # list to store function arguments
+        func_args = []
 
         # visit the function arguments
         if node.args is not None:
@@ -826,15 +815,30 @@ class GenerateCode(NodeVisitor):
             # for them, we put them on a stack (LIFO)
             # so we can pop this registers location when
             # initializing the function args
-            for _ in node.args.params:
-                self.queue.insert(0, self.__new_temp())
+            for param in node.args.params:
+                # create temp location to param
+                param_location = self.__new_temp()
+                # add param to queue
+                self.queue.insert(0, param_location)
+                # add param to list of function arguments
+                param_typename = param.type.type.names[-1].typename
+                func_args.append((param_typename, param_location))
+
+        # add instruction to define the function
+        self.code.append((f'define_{func_typename}',
+                          self.__fname,
+                          func_args)
+                         )
 
         # create label/location to where function returns
         # we do this way (a class attr) because that
         # is an important info to know in other moments
         # of the visiting like on Breaks
-        self.__func_ret_location = self.__new_temp()
         self.__func_ret_label = self.__new_temp()
+
+        if func_typename != 'void':
+            self.__func_ret_location = self.__new_temp()
+            self.code.append((f'alloc_{func_typename}', self.__func_ret_location))
 
         # now we do two works while declaring
         # the function first, we iterate over
@@ -842,13 +846,6 @@ class GenerateCode(NodeVisitor):
         self.__func_alloc_phase = 'arg_decl'
         for arg in node.args or []:
             self.visit(arg)
-
-        # after, we iterate over
-        # all arguments initalizing then
-        self.__func_alloc_phase = 'arg_init'
-        for arg in node.args or []:
-            self.visit(arg)
-
 
     def visit_FuncDef(self, node):
         """
@@ -863,11 +860,8 @@ class GenerateCode(NodeVisitor):
         """
         # visit declaration
         self.__func_alloc_phase = None
+        self.__func_type = node.spec
         self.visit(node.decl)
-
-        # iterate over params
-        for par in node.param_decls or []:
-            self.visit(par)
 
         # if the function has a body we need
         # to iterate over ir, declaring/initializing
@@ -886,8 +880,15 @@ class GenerateCode(NodeVisitor):
             for decl in node.decls:
                 self.visit(decl)
 
-            # after, we iterate over
-            # all body initalizing then
+        # after, we iterate over
+        # all arguments initializing then
+        self.__func_alloc_phase = 'arg_init'
+        for arg in node.decl.type.args or []:
+            self.visit(arg)
+
+        # after, we iterate over
+        # all body initializing then
+        if node.body is not None:
             self.__func_alloc_phase = 'var_init'
             for body in node.body:
                 self.visit(body)
@@ -895,13 +896,13 @@ class GenerateCode(NodeVisitor):
         # append the label/location to where
         # function returns to the list of
         # opcodes
-        self.code.append((self.__func_ret_label[1:], ))
+        self.code.append((self.__func_ret_label[1:],))
 
         # deal with the function return
         # void functions deserves a special
         # treatment
         if node.spec.names[-1].typename == 'void':
-            self.code.append(('return_void', ))
+            self.code.append(('return_void',))
         else:
             # if function isnt void then
             # we must create a new label to
@@ -913,7 +914,6 @@ class GenerateCode(NodeVisitor):
             # return value and then return it
             self.code.append((f'load_{typename}', self.__func_ret_location, return_value))
             self.code.append((f'return_{typename}', return_value))
-
 
     def visit_GlobalDecl(self, node):
         """
@@ -939,7 +939,6 @@ class GenerateCode(NodeVisitor):
             elif decl.init is None:
                 self.global_codes.append((f'global_{decl.name.type.names[-1].typename}', f'@{decl.name.name}'))
                 decl.name.location = f'@{decl.name.name}'
-
 
     def visit_ID(self, node):
         """
@@ -968,7 +967,6 @@ class GenerateCode(NodeVisitor):
             # ID location the same of the VarDecl
             node.location = bind_type.declname.location
 
-
     def visit_If(self, node):
         """
             A method used to represent a visit of If node.
@@ -996,7 +994,7 @@ class GenerateCode(NodeVisitor):
 
         # informs the register the existence of
         # the true label
-        self.code.append((true_label[1:], ))
+        self.code.append((true_label[1:],))
 
         # visit the true statement
         self.visit(node.if_true)
@@ -1009,20 +1007,19 @@ class GenerateCode(NodeVisitor):
             self.code.append(('jump', exit_label))
             # informs the register the existence of
             # the false label
-            self.code.append((false_label[1:], ))
+            self.code.append((false_label[1:],))
 
             # visit the false statement
             self.visit(node.if_false)
 
             # informs the register the existence of
             # the exit label
-            self.code.append((exit_label[1:], ))
+            self.code.append((exit_label[1:],))
         else:
             # informs the register the existence of
             # the false label that is going to be used
             # as the exit_label
-            self.code.append((false_label[1:], ))
-
+            self.code.append((false_label[1:],))
 
     def visit_InitList(self, node):
         """
@@ -1051,7 +1048,6 @@ class GenerateCode(NodeVisitor):
             else:
                 raise NotImplementedError
 
-
     def visit_ParamList(self, node):
         """
             A method used to represent a visit of ParamList node.
@@ -1067,7 +1063,6 @@ class GenerateCode(NodeVisitor):
         # visit all parameters
         for param in node.params:
             self.visit(param)
-
 
     def visit_Print(self, node):
         """
@@ -1110,7 +1105,6 @@ class GenerateCode(NodeVisitor):
             # add a print inst
             self.code.append(('print_' + typename, expr.location))
 
-
     def visit_Program(self, node):
         """
             A method used to represent a visit of Program node.
@@ -1131,11 +1125,10 @@ class GenerateCode(NodeVisitor):
         # be equals to professor examples of IR
         self.code = self.global_codes + self.code
 
-
     def visit_PtrDecl(self, node):
         """
             A method used to represent a visit of PtrDecl node.
-            Wasnt implemented.
+            Was not implemented.
             ...
 
             Parameters
@@ -1144,7 +1137,6 @@ class GenerateCode(NodeVisitor):
                     The PtrDecl node.
         """
         raise NotImplementedError
-
 
     def visit_Read(self, node):
         """
@@ -1164,6 +1156,8 @@ class GenerateCode(NodeVisitor):
             aux = node.names
         elif node.names:
             aux = [node.names]
+        else:
+            aux = []
 
         # iterate over Read names
         for name in aux:
@@ -1185,7 +1179,6 @@ class GenerateCode(NodeVisitor):
 
             # add a store inst
             self.code.append(('store_' + typename, target, name.location))
-
 
     def visit_Return(self, node):
         """
@@ -1212,13 +1205,18 @@ class GenerateCode(NodeVisitor):
             # create the store instruction, need to deal if Constant
             # because they have a diff class attrs names
             if isinstance(node.expression, Constant):
-                self.code.append(('store_' + node.expression.rawtype.names[-1].typename, node.expression.location, self.__func_ret_location))
+                self.code.append(('store_' + node.expression.rawtype.names[-1].typename,
+                                  node.expression.location,
+                                  self.__func_ret_location)
+                                 )
             else:
-                self.code.append(('store_' + node.expression.type.names[-1].typename, node.expression.location, self.__func_ret_location))
+                self.code.append(('store_' + node.expression.type.names[-1].typename,
+                                  node.expression.location,
+                                  self.__func_ret_location)
+                                 )
 
         # create the jump instruction to function label return
         self.code.append(('jump', self.__func_ret_label))
-
 
     def visit_Type(self, node):
         """
@@ -1234,7 +1232,6 @@ class GenerateCode(NodeVisitor):
 
         """
         pass
-
 
     def visit_VarDecl(self, node, decl, dim=""):
         """
@@ -1262,7 +1259,7 @@ class GenerateCode(NodeVisitor):
             # add '@' to the varname to indicate is global
             varname = f'@{node.declname.name}'
 
-            # if declaration doesnt come with a init just annouce it exists
+            # if declaration doesnt come with a init just announce it exists
             if decl.init is None:
                 self.global_codes.append((f'global_{typename}', varname))
             else:
@@ -1273,15 +1270,17 @@ class GenerateCode(NodeVisitor):
                     init_val = decl.init.list_values
                 elif isinstance(decl.init, Constant):
                     init_val = decl.init.value
+                else:
+                    init_val = 0
 
-                # create the intruct to the global var with the value
+                # create the instruct to the global var with the value
                 self.global_codes.append((f'global_{typename}', varname, init_val))
 
             # update the id location with the created spot on registers
             node.declname.location = varname
 
         else:
-            # isnt a global declaration, but a
+            # is not a global declaration, but a
             # local one get the var type
             typename = node.type.names[-1].typename + dim
 
@@ -1318,9 +1317,9 @@ class GenerateCode(NodeVisitor):
                     # make a special treatment if we init var with a list
                     if isinstance(decl.init, InitList):
                         # to make the IR looks like to professors (and make sure)
-                        # it will work with the uc_interpretor he gave us, we make
+                        # it will work with the uc_interpreter he gave us, we make
                         # the array declaration as global
-                        # first create the register alocation
+                        # first create the register a location
                         target = self.__new_global_codes()
 
                         # create the instruct for the global array decl
@@ -1336,12 +1335,14 @@ class GenerateCode(NodeVisitor):
                             # now, if we are declaring a new array to initiate
                             # we first allocate the register space and then load it
                             decl.init.location = self.__new_temp()
-                            self.code.append((f'load_{decl.init.expr.type.names[-1].typename}_*', decl.init.expr.location, decl.init.location))
+                            self.code.append((f'load_{decl.init.expr.type.names[-1].typename}_*',
+                                              decl.init.expr.location,
+                                              decl.init.location)
+                                             )
 
                         # at least we store the value of initialization to the id node
                         # the code doesnt work with pointers for lack of time
                         self.code.append((f'store_{typename}', decl.init.location, location))
-
 
     def visit_UnaryOp(self, node):
         """
@@ -1421,7 +1422,6 @@ class GenerateCode(NodeVisitor):
             if node.op in ["p++", "p--"]:
                 node.location = node.expr.location
 
-
     def visit_While(self, node):
         """
             A method used to represent a visit of While node.
@@ -1441,8 +1441,10 @@ class GenerateCode(NodeVisitor):
         exit_label = self.__new_temp()
         node.while_exit = exit_label
 
+        # explict jump to while conditional
+        self.code.append(('jump', entry_label))
         # visit cond and start the loop on interpreter
-        self.code.append((entry_label[1:], ))
+        self.code.append((entry_label[1:],))
         self.visit(node.while_cond)
 
         # branch to for condition, keeps on the loop while
@@ -1451,7 +1453,7 @@ class GenerateCode(NodeVisitor):
         self.code.append(('cbranch', node.while_cond.location, true_label, exit_label))
 
         # add to register pos to jump while label is true
-        self.code.append((true_label[1:], ))
+        self.code.append((true_label[1:],))
 
         # visit for statement
         if node.while_stmt:
@@ -1461,4 +1463,4 @@ class GenerateCode(NodeVisitor):
         self.code.append(('jump', entry_label))
 
         # create exit label on register for cbranch works
-        self.code.append((exit_label[1:], ))
+        self.code.append((exit_label[1:],))
