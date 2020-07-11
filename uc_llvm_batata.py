@@ -4,6 +4,13 @@ from ctypes import CFUNCTYPE, c_int
 from uc_ast import *
 from uc_block import *
 
+#TODO: remover
+"""
+voidptr_ty = char_type.as_pointer()
+charptr_ty = char_type.as_pointer()
+intptr_ty = int_type.as_pointer()
+floatptr_ty = float_type.as_pointer()
+"""
 bool_type = ir.IntType(1)
 llvm_false = ir.Constant(bool_type, False)
 llvm_true = ir.Constant(bool_type, True)
@@ -13,10 +20,8 @@ int_type = ir.IntType(32)
 i64_type = ir.IntType(64)
 float_type = ir.DoubleType()
 charptr_ty = char_type.as_pointer()
-# voidptr is used in printf/scanf declarations
-voidptr_ty = char_type.as_pointer()
 
-llvm_type_dict = {
+llvm_type = {
     'int': int_type,
     'float': float_type,
     'char': char_type,
@@ -81,8 +86,7 @@ class LLVMFunctionVisitor(BlockVisitor):
         self.phase = None
         self.ret_register = None
 
-    @staticmethod
-    def _extract_operation(inst):
+    def _extract_operation(self, inst):
         """
             The method that extracts the operation of an instruction
 
@@ -94,18 +98,18 @@ class LLVMFunctionVisitor(BlockVisitor):
                     The instruction.
 
         """
-        modifier = {}
-        uc_type = None
-        aux = inst.split('_')
-        opcode = aux[0]
-        if opcode not in ['fptosi', 'sitofp', 'jump', 'cbranch', 'define']:
-            uc_type = aux[1]
-            for i, val in enumerate(aux[2]):
-                if val.isdigit():
-                    modifier['dim' + str(i)] = val
-                elif val == '*':
-                    modifier['prt' + str(i)] = val
-        return opcode, uc_type, modifier
+        _modifier = {}
+        _ctype = None
+        _aux = inst.split('_')
+        _opcode = _aux[0]
+        if _opcode not in {'fptosi', 'sitofp', 'jump', 'cbranch', 'define'}:
+            _ctype = _aux[1]
+            for i, _val in enumerate(_aux[2]):
+                if _val.isdigit():
+                    _modifier['dim' + str(i)] = _val
+                elif _val == '*':
+                    _modifier['prt' + str(i)] = _val
+        return _opcode, _ctype, _modifier
 
     def _get_location(self, target):
         """
@@ -127,8 +131,7 @@ class LLVMFunctionVisitor(BlockVisitor):
         except KeyError:
             return None
 
-    @staticmethod
-    def _global_constant(builder_or_module, name, value, linkage='internal'):
+    def _global_constant(self, builder_or_module, name, value, linkage='internal'):
         """
             The method that creates a global constant
 
@@ -174,12 +177,13 @@ class LLVMFunctionVisitor(BlockVisitor):
             self.functions = self.module.get_global(_name[1:])
         except KeyError:
             _ctype = _op.split('_')[1]
-            _sig = [llvm_type_dict[arg] for arg in [item[0] for item in _args]]
-            funty = ir.FunctionType(llvm_type_dict[_ctype], _sig)
+            _sig = [llvm_type[arg] for arg in [item[0] for item in _args]]
+            funty = ir.FunctionType(llvm_type[_ctype], _sig)
             self.functions = ir.Function(self.module, funty, name=_name[1:])
         for _idx, _reg in enumerate([item[1] for item in _args]):
             self.location[_reg] = self.functions.args[_idx]
 
+    #TODO: pointer?
     def _cio(self, fname, format, *target):
         """
             A
@@ -217,7 +221,7 @@ class LLVMFunctionVisitor(BlockVisitor):
                     A.
 
         """
-        _type = llvm_type_dict[ctype]
+        _type = llvm_type[ctype]
         _location = self.builder.alloca(_type, name=target[1:])
         _location.align = get_align(_type, 1)
         self.location[target] = _location
@@ -238,7 +242,7 @@ class LLVMFunctionVisitor(BlockVisitor):
                     A.
 
         """
-        _type = llvm_type_dict[ctype]
+        _type = llvm_type[ctype]
         _width = 1
         for arg in reversed(list(kwargs.values())):
             if arg.isdigit():
@@ -272,7 +276,7 @@ class LLVMFunctionVisitor(BlockVisitor):
             try:
                 _fn = self.builder.module.get_global(name[1:])
             except KeyError:
-                _type = llvm_type_dict[ret_type]
+                _type = llvm_type[ret_type]
                 _sig = [arg.type for arg in self.params]
                 funty = ir.FunctionType(_type, _sig)
                 _fn = ir.Function(self.module, funty, name=name[1:])
@@ -354,7 +358,7 @@ class LLVMFunctionVisitor(BlockVisitor):
         """
         _source = self._get_location(source)
         _target = self._get_location(target)
-        _align = get_align(llvm_type_dict[ctype].as_pointer(), 1)
+        _align = get_align(llvm_type[ctype].as_pointer(), 1)
         self.builder.store(_source, _target, align=_align)
 
     def _build_literal(self, var_type, cte, target):
@@ -373,7 +377,7 @@ class LLVMFunctionVisitor(BlockVisitor):
                     A.
 
         """
-        _val = llvm_type_dict[var_type](cte)
+        _val = llvm_type[var_type](cte)
         _loc = self._get_location(target)
         if _loc:
             self.builder.store(_val, _loc)
@@ -400,7 +404,7 @@ class LLVMFunctionVisitor(BlockVisitor):
         if isinstance(_source, ir.Constant):
             self.location[target] = _source
         else:
-            _align = get_align(llvm_type_dict[ctype], 1)
+            _align = get_align(llvm_type[ctype], 1)
             _loc = self.builder.load(_source, align=_align)
             self.location[target] = _loc
 
@@ -423,16 +427,16 @@ class LLVMFunctionVisitor(BlockVisitor):
 
         """
         _source = self._get_location(source)
-        _type = llvm_type_dict[ctype]
+        _type = llvm_type[ctype]
         _pointee = _source.type.pointee
         if isinstance(_pointee, ir.PointerType):
             if isinstance(_pointee.pointee, ir.FunctionType):
                 _loc = self.builder.load(_source, align=8)
             else:
-                _type = llvm_type_dict[ctype].as_pointer()
+                _type = llvm_type[ctype].as_pointer()
                 _align = get_align(_type, 1)
                 _aux = self.builder.load(_source, align=_align)
-                _type = llvm_type_dict[ctype]
+                _type = llvm_type[ctype]
                 _align = get_align(_type, 1)
                 _loc = self.builder.load(_aux, align=_align)
         else:
@@ -542,7 +546,7 @@ class LLVMFunctionVisitor(BlockVisitor):
         _source = self._get_location(source)
         _target = self._get_location(target)
         if _target:
-            _align = get_align(llvm_type_dict[ctype], 1)
+            _align = get_align(llvm_type[ctype], 1)
             self.builder.store(_source, _target, _align)
         else:
             self.location[target] = _source
@@ -584,7 +588,7 @@ class LLVMFunctionVisitor(BlockVisitor):
             _temp = self.builder.load(_target, align=_align)
             self.builder.store(_source, _temp, _align)
         else:
-            _align = get_align(llvm_type_dict[ctype], 1)
+            _align = get_align(llvm_type[ctype], 1)
             self.builder.store(_source, _target, _align)
 
     def _build_add(self, expr_type, left, right, target):
@@ -902,26 +906,22 @@ class LLVMFunctionVisitor(BlockVisitor):
 
 
 class LLVMCodeGenerator(NodeVisitor):
-    def __init__(self):
-        # import binding from llvmlite
-        # and initialize it
+    def __init__(self, viewcfg):
+        self.viewcfg = viewcfg
         self.binding = binding
         self.binding.initialize()
         self.binding.initialize_native_target()
         self.binding.initialize_native_asmprinter()
 
-        # create a ir module on llvmlite
         self.module = ir.Module(name=__file__)
         self.module.triple = self.binding.get_default_triple()
 
-        # create an execution engine
-        self.engine = self.__create_execution_engine()
+        self.engine = self._create_execution_engine()
 
-        # declare printf / scanf functions
-        self.__declare_printf_function()
-        self.__declare_scanf_function()
+        self._declare_printf_function()
+        self._declare_scanf_function()
 
-    def __create_execution_engine(self):
+    def _create_execution_engine(self):
         """
             The method that creates the execution engine
 
@@ -936,10 +936,9 @@ class LLVMCodeGenerator(NodeVisitor):
         target_machine = target.create_target_machine()
         backing_mod = binding.parse_assembly("")
         engine = binding.create_mcjit_compiler(backing_mod, target_machine)
-
         return engine
 
-    def __declare_printf_function(self):
+    def _declare_printf_function(self):
         """
             The method that declares the printf functions
 
@@ -954,7 +953,7 @@ class LLVMCodeGenerator(NodeVisitor):
         printf = ir.Function(self.module, printf_ty, name="printf")
         self.printf = printf
 
-    def __declare_scanf_function(self):
+    def _declare_scanf_function(self):
         """
             The method that declares the scanf functions
 
@@ -987,7 +986,6 @@ class LLVMCodeGenerator(NodeVisitor):
         self.engine.add_module(mod)
         self.engine.finalize_object()
         self.engine.run_static_constructors()
-
         return mod
 
     def save_ir(self, output_file):
@@ -1013,8 +1011,6 @@ class LLVMCodeGenerator(NodeVisitor):
             Parameters
             ----------
                 None
-                :param opt_file: arg q o marzio tirou do cu dele
-                :param opt: arg q o marzio tirou do cu dele
 
         """
         mod = self.compile_ir()
@@ -1050,9 +1046,9 @@ class LLVMCodeGenerator(NodeVisitor):
         main_function = CFUNCTYPE(c_int)(main_ptr)
         # Now 'main_function' is an actual callable we can invoke
         res = main_function()
+        print(res)
 
-    @staticmethod
-    def _extract_global_operation(source):
+    def _extract_global_operation(self, source):
         """
             The method to extract the global operations
 
@@ -1064,30 +1060,26 @@ class LLVMCodeGenerator(NodeVisitor):
                     A.
 
         """
-        modifier = {}
-        aux = source.split('_')
-        assert aux[0] == 'global'
-        ctype = aux[1]
+        _modifier = {}
+        _aux = source.split('_')
+        assert _aux[0] == 'global'
+        _ctype = _aux[1]
+        assert _ctype in ('int', 'float', 'char', 'string')
+        if len(_aux) > 2:
+            _val = _aux[2]
+            if _val.isdigit():
+                _modifier['dim_1'] = _val
+            elif _val == "*":
+                _modifier['ptr_1'] = _val
+        if len(_aux) > 3:
+            _val = _aux[3]
+            if _val.isdigit():
+                _modifier['dim_2'] = _val
+            elif _val == "*":
+                _modifier['ptr_2'] = _val
+        return (_ctype, _modifier)
 
-        assert ctype in ['int', 'float', 'char', 'string'], \
-            f"Type of {ctype} not allowed."
-
-        if len(aux) > 2:
-            val = aux[2]
-            if val.isdigit():
-                modifier['dim_1'] = val
-            elif val == "*":
-                modifier['ptr_1'] = val
-        if len(aux) > 3:
-            val = aux[3]
-            if val.isdigit():
-                modifier['dim_2'] = val
-            elif val == "*":
-                modifier['ptr_2'] = val
-
-        return ctype, modifier
-
-    def __generate_global_instructions(self, global_inst):
+    def _generate_global_instructions(self, glbInst):
         """
             The method to generate the global instructions
 
@@ -1095,51 +1087,51 @@ class LLVMCodeGenerator(NodeVisitor):
 
             Parameters
             ----------
-                global_inst :
+                glbInst :
                     The global instructions.
 
         """
-        for inst in global_inst:
-            uc_type, modifier = self._extract_global_operation(inst[0])
-            llvm_type = llvm_type_dict[uc_type]
-            var_name = inst[1][1:]
-            var_value = inst[2]
-            fn_sig = isinstance(var_value, list)
+        for inst in glbInst:
+            _ctype, _modifier = self._extract_global_operation(inst[0])
+            _type = llvm_type[_ctype]
+            _name = inst[1][1:]
+            _value = inst[2]
+            fn_sig = isinstance(_value, list)
             if fn_sig:
-                for _el in var_value:
+                for _el in _value:
                     if _el not in list(llvm_type.keys()):
                         fn_sig = False
-            if uc_type == "string":
-                ir_constant = create_byte_array((var_value + "\00").encode('utf-8'))
-                ir_global_var = ir.GlobalVariable(self.module, ir_constant.type, var_name)
-                ir_global_var.initializer = ir_constant
-                ir_global_var.align = 1
-                ir_global_var.global_constant = True
-            elif modifier and not fn_sig:
+            if _ctype == "string":
+                cte = create_byte_array((_value + "\00").encode('utf-8'))
+                gv = ir.GlobalVariable(self.module, cte.type, _name)
+                gv.initializer = cte
+                gv.align = 1
+                gv.global_constant = True
+            elif _modifier and not fn_sig:
                 _width = 4
-                for arg in reversed(list(modifier.values())):
+                for arg in reversed(list(_modifier.values())):
                     if arg.isdigit():
                         _width = int(arg)
-                        llvm_type = ir.ArrayType(llvm_type, int(arg))
+                        _type = ir.ArrayType(_type, int(arg))
                     else:
-                        llvm_type = ir.PointerType(llvm_type)
-                ir_global_var = ir.GlobalVariable(self.module, llvm_type, var_name)
-                ir_global_var.initializer = ir.Constant(llvm_type, var_value)
-                ir_global_var.align = get_align(llvm_type, _width)
-                if var_name.startswith('.const'):
-                    ir_global_var.global_constant = True
+                        _type = ir.PointerType(_type)
+                gv = ir.GlobalVariable(self.module, _type, _name)
+                gv.initializer = ir.Constant(_type, _value)
+                gv.align = get_align(_type, _width)
+                if _name.startswith('.const'):
+                    gv.global_constant = True
                 elif fn_sig:
-                    _sig = [llvm_type[arg] for arg in var_value]
-                    ir_func_type = ir.FunctionType(llvm_type[uc_type], _sig)
-                    ir_global_var = ir.GlobalVariable(self.module, ir_func_type.as_pointer(), var_name)
-                    ir_global_var.linkage = 'common'
-                    ir_global_var.initializer = ir.Constant(ir_func_type.as_pointer(), None)
-                    ir_global_var.align = 8
+                    _sig = [llvm_type[arg] for arg in _value]
+                    funty = ir.FunctionType(llvm_type[_ctype], _sig)
+                    gv = ir.GlobalVariable(self.module, funty.as_pointer(), _name)
+                    gv.linkage = 'common'
+                    gv.initializer = ir.Constant(funty.as_pointer(), None)
+                    gv.align = 8
                 else:
-                    ir_global_var = ir.GlobalVariable(self.module, llvm_type, var_name)
-                    ir_global_var.align = get_align(llvm_type, 1)
-                    if var_value:
-                        ir_global_var.initializer = ir.Constant(llvm_type, var_value)
+                    gv = ir.GlobalVariable(self.module, _type, _name)
+                    gv.align = get_align(_type, 1)
+                    if _value:
+                        gv.initializer = ir.Constant(_type, _value)
 
     def visit_Program(self, node):
         """
@@ -1153,7 +1145,7 @@ class LLVMCodeGenerator(NodeVisitor):
                     The Node.
 
         """
-        self.__generate_global_instructions(node.text)
+        self._generate_global_instructions(node.text)
         for _decl in node.gdecls:
             if isinstance(_decl, FuncDef):
                 bb = LLVMFunctionVisitor(self.module)
@@ -1161,3 +1153,8 @@ class LLVMCodeGenerator(NodeVisitor):
                 bb.visit(_decl.cfg)
                 bb.phase = 'build_bb'
                 bb.visit(_decl.cfg)
+                if self.viewcfg:
+                    dot = binding.get_function_cfg(bb.func)
+                    gv = binding.view_dot_graph(dot, _decl.decl.name.name, False)
+                    gv.filename = _decl.decl.name.name + ".ll.gv"
+                    gv.view()
