@@ -46,7 +46,7 @@ class ControlBlocks():
         for code in self.ir_list:
             # if code is a define
             # get function name
-            if code[0] == 'define':
+            if code[0].startswith('define'):
                 func_name = code[1][1:]
                 # initialize dict of functions
                 self.functions[func_name] = [code]
@@ -80,7 +80,7 @@ class ControlBlocks():
                     label = f'%{code[0]}'
                     self.functions[key][label] = Block(label=label)
                 # set an entry block
-                elif code[0] == 'define':
+                elif code[0].startswith('define'):
                     label = '%entry'
                     self.functions[key][label] = Block(label=label)
                     self.functions[key][label].append(code)
