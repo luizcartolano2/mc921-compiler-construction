@@ -1454,6 +1454,8 @@ class GenerateCode(NodeVisitor):
         exit_label = self.__new_temp()
         node.while_exit = exit_label
 
+        # explict jump to while conditional
+        self.code.append(('jump', entry_label))
         # visit cond and start the loop on interpreter
         self.code.append((entry_label[1:], ))
         self.visit(node.while_cond)
