@@ -1135,7 +1135,7 @@ class GenerateCode(NodeVisitor):
     def visit_PtrDecl(self, node):
         """
             A method used to represent a visit of PtrDecl node.
-            Wasnt implemented.
+            Was not implemented.
             ...
 
             Parameters
@@ -1164,6 +1164,8 @@ class GenerateCode(NodeVisitor):
             aux = node.names
         elif node.names:
             aux = [node.names]
+        else:
+            aux = []
 
         # iterate over Read names
         for name in aux:
@@ -1212,9 +1214,15 @@ class GenerateCode(NodeVisitor):
             # create the store instruction, need to deal if Constant
             # because they have a diff class attrs names
             if isinstance(node.expression, Constant):
-                self.code.append(('store_' + node.expression.rawtype.names[-1].typename, node.expression.location, self.__func_ret_location))
+                self.code.append(('store_' + node.expression.rawtype.names[-1].typename,
+                                  node.expression.location,
+                                  self.__func_ret_location)
+                                 )
             else:
-                self.code.append(('store_' + node.expression.type.names[-1].typename, node.expression.location, self.__func_ret_location))
+                self.code.append(('store_' + node.expression.type.names[-1].typename,
+                                  node.expression.location,
+                                  self.__func_ret_location)
+                                 )
 
         # create the jump instruction to function label return
         self.code.append(('jump', self.__func_ret_label))
@@ -1262,7 +1270,7 @@ class GenerateCode(NodeVisitor):
             # add '@' to the varname to indicate is global
             varname = f'@{node.declname.name}'
 
-            # if declaration doesnt come with a init just annouce it exists
+            # if declaration doesnt come with a init just announce it exists
             if decl.init is None:
                 self.global_codes.append((f'global_{typename}', varname))
             else:
@@ -1273,15 +1281,17 @@ class GenerateCode(NodeVisitor):
                     init_val = decl.init.list_values
                 elif isinstance(decl.init, Constant):
                     init_val = decl.init.value
+                else:
+                    init_val = 0
 
-                # create the intruct to the global var with the value
+                # create the instruct to the global var with the value
                 self.global_codes.append((f'global_{typename}', varname, init_val))
 
             # update the id location with the created spot on registers
             node.declname.location = varname
 
         else:
-            # isnt a global declaration, but a
+            # is not a global declaration, but a
             # local one get the var type
             typename = node.type.names[-1].typename + dim
 
@@ -1318,9 +1328,9 @@ class GenerateCode(NodeVisitor):
                     # make a special treatment if we init var with a list
                     if isinstance(decl.init, InitList):
                         # to make the IR looks like to professors (and make sure)
-                        # it will work with the uc_interpretor he gave us, we make
+                        # it will work with the uc_interpreter he gave us, we make
                         # the array declaration as global
-                        # first create the register alocation
+                        # first create the register a location
                         target = self.__new_global_codes()
 
                         # create the instruct for the global array decl
@@ -1336,7 +1346,10 @@ class GenerateCode(NodeVisitor):
                             # now, if we are declaring a new array to initiate
                             # we first allocate the register space and then load it
                             decl.init.location = self.__new_temp()
-                            self.code.append((f'load_{decl.init.expr.type.names[-1].typename}_*', decl.init.expr.location, decl.init.location))
+                            self.code.append((f'load_{decl.init.expr.type.names[-1].typename}_*',
+                                              decl.init.expr.location,
+                                              decl.init.location)
+                                             )
 
                         # at least we store the value of initialization to the id node
                         # the code doesnt work with pointers for lack of time
