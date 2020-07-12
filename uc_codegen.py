@@ -1003,13 +1003,12 @@ class GenerateCode(NodeVisitor):
         if node.if_false:
             # if there is an else create the
             # instruct to jump out of the if/else
-            self.code.append(('jump', exit_label))
             # informs the register the existence of
             # the false label
             self.code.append((false_label[1:],))
-
             # visit the false statement
             self.visit(node.if_false)
+            self.code.append(('jump', exit_label))
 
             # informs the register the existence of
             # the exit label
