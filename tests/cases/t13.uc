@@ -13,6 +13,6 @@ int main() {
     for (c = 0; c < n; c++)
         print(v[c], " ");
     print();
-    assert v[0] == 0 && v[9] == 9;
+
     return 0;
 }

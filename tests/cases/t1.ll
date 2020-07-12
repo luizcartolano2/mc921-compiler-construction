@@ -24,7 +24,7 @@ define void @"main"()
   %".8" = load i32, i32* %"i", align 4
   %".9" = getelementptr [4 x i32], [4 x i32]* @"v", i32 0, i32 %".8"
   %".10" = load i32, i32* %"sum", align 4
-  %".11" = load i32, i32* %".9", align 4
+  %".11" = load i32, i32* %".9", align 8
   %".12" = add i32 %".10", %".11"
   store i32 %".12", i32* %"sum", align 4
   %".14" = load i32, i32* %"i", align 4

@@ -45,9 +45,11 @@ define i32 @"f"(i32 %".1", i32 %".2")
   %".28" = load i32, i32* %"t", align 4
   store i32 %".28", i32* %"3", align 4
   br label %"%2"
+"%6":
+  br label %"%2"
 "%2":
-  %".31" = load i32, i32* %"3", align 4
-  ret i32 %".31"
+  %".32" = load i32, i32* %"3", align 4
+  ret i32 %".32"
 }
 
 define i32 @"main"() 

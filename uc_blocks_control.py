@@ -225,6 +225,9 @@ class ControlBlocks():
                     jump_labels, jump_blocks =\
                         self.get_jump_labels(current_block.instructions, func_blocks)
 
+                    if len(jump_blocks) != 1:
+                        del current_block.instructions[-1]
+
                     # add next block predecessors
                     for next_block in jump_blocks:
                         # add current blocks successors

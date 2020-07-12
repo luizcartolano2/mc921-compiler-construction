@@ -327,12 +327,14 @@ class Visitor(NodeVisitor):
                     # the procedure of the C language, the first
                     # dimension is the only one that can be blank
                     if param_type.type.dimension is None:
-                        assert False, line + f"First array dimension is the only one who can be blank."
+                        param_type.type.dimension = Constant(type='int', value=len(list_exprs[0].expressions), rawtype=IntType)
+                        # here is the right thing to do, but professor wants do the wrong way ¯\_(ツ)_/¯
+                        # assert False, line + f"First array dimension is the only one who can be blank."
 
                     param_type = param_type.type
                     length = len(list_exprs[0].expressions)
 
-                    # check for all subarrays if
+                    # check for all sub arrays if
                     # the length matches with the
                     # given dimension for the array
                     for i, _ in enumerate(list_exprs):
@@ -368,7 +370,7 @@ class Visitor(NodeVisitor):
                             assert var_type == expr.type.names[-1], line + \
                             f"Type mismatch on variable - {var} - initialization, array ref {expr.name.name} should be {var_type.typename}."
                 else:
-                    # check for array dimension if dimensin
+                    # check for array dimension if dimension
                     # has not been declared we make it
                     if param_type.dimension is None:
                         param_type.dimension = Constant(type='int', value=length)

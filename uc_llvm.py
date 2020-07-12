@@ -300,22 +300,22 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _source = self._get_location(source)
-        _index = self._get_location(index)
-        _base = ir.Constant(_index.type, 0)
-        if isinstance(_source.type.pointee.element, ir.ArrayType):
-            col = _source.type.pointee.element.count
-            if isinstance(_index, ir.Constant):
-                _i = ir.Constant(int_type, _index.constant // col)
-                _j = ir.Constant(int_type, _index.constant % col)
+        var_source = self._get_location(source)
+        var_index = self._get_location(index)
+        var_base = ir.Constant(var_index.type, 0)
+        if isinstance(var_source.type.pointee.element, ir.ArrayType):
+            col = var_source.type.pointee.element.count
+            if isinstance(var_index, ir.Constant):
+                const_i = ir.Constant(int_type, var_index.constant // col)
+                _j = ir.Constant(int_type, var_index.constant % col)
             else:
                 _col = ir.Constant(int_type, col)
-                _i = self.builder.sdiv(_index, _col)
-                _j = self.builder.srem(_index, _col)
-            _aux = self.builder.gep(_source, [_base, _i])
-            _loc = self.builder.gep(_aux, [_base, _j])
+                const_i = self.builder.sdiv(var_index, _col)
+                _j = self.builder.srem(var_index, _col)
+            _aux = self.builder.gep(var_source, [var_base, const_i])
+            _loc = self.builder.gep(_aux, [var_base, _j])
         else:
-            _loc = self.builder.gep(_source, [_base, _index])
+            _loc = self.builder.gep(var_source, [var_base, var_index])
         self.location[target] = _loc
 
     def _build_get(self, ctype, source, target):
@@ -846,7 +846,7 @@ class LLVMFunctionVisitor:
             _loc = self.builder.icmp_signed('==', left_loc, right_loc)
         self.location[target] = _loc
 
-    def _build_neq(self, expr_type, left, right, target):
+    def _build_ne(self, expr_type, left, right, target):
         left_loc = self._get_location(left)
         right_loc = self._get_location(right)
         if expr_type == 'float':
@@ -1171,7 +1171,7 @@ class LLVMCodeGenerator:
     def __generate_global_instructions(self, global_inst):
         """
             The method to generate the global instructions
-            # TODO: bug with func declarations
+
             ...
 
             Parameters
