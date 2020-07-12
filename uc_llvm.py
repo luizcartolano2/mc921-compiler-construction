@@ -841,6 +841,18 @@ class LLVMFunctionVisitor:
             _loc = self.builder.icmp_signed('!=', left_loc, right_loc)
         self.location[target] = _loc
 
+    def _build_sitofp(self, expr_type, source, target):
+        source_loc = self._get_location(source)
+        target_loc = self.builder.sitofp(source_loc, float_type)
+
+        self.location[target] = target_loc
+
+    def _build_fptosi(self, expr_type, source, target):
+        source_loc = self._get_location(source)
+        target_loc = self.builder.fptosi(source_loc, int_type)
+
+        self.location[target] = target_loc
+
     def _build_return(self, expr_type, target):
         """
             The method that builds a return
