@@ -1186,6 +1186,7 @@ class LLVMCodeGenerator:
             var_name = inst[1][1:]
             var_value = inst[2]
             fn_sig = isinstance(var_value, list)
+
             if fn_sig:
                 for _el in var_value:
                     if _el not in list(llvm_type_dict.keys()):
@@ -1211,10 +1212,6 @@ class LLVMCodeGenerator:
                 # ptr to function
                 _sig = [llvm_type_dict[arg] for arg in var_value]
                 ir_func_type = ir.FunctionType(llvm_type_dict[uc_type], _sig)
-                ir_global_var = ir.GlobalVariable(self.module, ir_func_type.as_pointer(), var_name)
-                ir_global_var.linkage = 'common'
-                ir_global_var.initializer = ir.Constant(ir_func_type.as_pointer(), None)
-                ir_global_var.align = 8
             else:
                 # normal global var like int x = 2
                 ir_global_var = ir.GlobalVariable(self.module, llvm_type, var_name)

@@ -936,7 +936,16 @@ class GenerateCode(NodeVisitor):
             # body of the function is empty
             # in order to assignment works
             elif decl.init is None:
-                self.global_codes.append((f'global_{decl.name.type.names[-1].typename}', f'@{decl.name.name}'))
+                func_args = []
+                for param in decl.type.args.params:
+                    # add param to list of function arguments
+                    param_typename = param.type.type.names[-1].typename
+                    func_args.append(param_typename)
+
+                self.global_codes.append((f'global_{decl.name.type.names[-1].typename}_*',
+                                          f'@{decl.name.name}',
+                                          func_args)
+                                         )
                 decl.name.location = f'@{decl.name.name}'
 
     def visit_ID(self, node):
