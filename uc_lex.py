@@ -215,7 +215,7 @@ class UCLexer():
 
     # A string containing ignored characters (spaces and tabs)
     t_ignore = ' \t'
-    t_CHAR_CONST = r'''"."'''
+    t_CHAR_CONST = r'\'(.)\''
 
     ##
     ##  Get Newlines
