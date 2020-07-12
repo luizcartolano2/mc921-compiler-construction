@@ -100,11 +100,13 @@ class LLVMFunctionVisitor:
         opcode = aux[0]
         if opcode not in ['fptosi', 'sitofp', 'jump', 'cbranch', 'define']:
             uc_type = aux[1]
-            for i, val in enumerate(aux[2]):
-                if val.isdigit():
-                    modifier['dim' + str(i)] = val
-                elif val == '*':
-                    modifier['prt' + str(i)] = val
+            if len(aux) > 1:
+                for i, val in enumerate(aux[1]):
+                    if val.isdigit():
+                        modifier['dim' + str(i)] = val
+                    elif val == '*':
+                        modifier['prt' + str(i)] = val
+
         return opcode, uc_type, modifier
 
     def _get_location(self, target):
@@ -717,6 +719,32 @@ class LLVMFunctionVisitor:
             _loc = self.builder.srem(_left, _right)
         self.location[target] = _loc
 
+    def _build_ge(self, expr_type, left, right, target):
+        """
+            The method that builds a greather or equal than
+
+            ...
+
+            Parameters
+            ----------
+                expr_type :
+                    A.
+                left :
+                    A.
+                right :
+                    A.
+                target :
+                    A.
+
+        """
+        _left = self._get_location(left)
+        _right = self._get_location(right)
+        if expr_type == 'float':
+            _loc = self.builder.fcmp_ordered('>=', _left, _right)
+        else:
+            _loc = self.builder.icmp_signed('>=', _left, _right)
+        self.location[target] = _loc
+
     def _build_le(self, expr_type, left, right, target):
         """
             The method that builds a less or equal than
@@ -738,9 +766,9 @@ class LLVMFunctionVisitor:
         _left = self._get_location(left)
         _right = self._get_location(right)
         if expr_type == 'float':
-            _loc = self.builder.fcnp_signed('<=', _left, _right)
+            _loc = self.builder.fcmp_ordered('<=', _left, _right)
         else:
-            _loc = self.builder.icnp_signed('<=', _left, _right)
+            _loc = self.builder.icmp_signed('<=', _left, _right)
         self.location[target] = _loc
 
     def _build_gt(self, expr_type, left, right, target):
@@ -764,12 +792,56 @@ class LLVMFunctionVisitor:
         _left = self._get_location(left)
         _right = self._get_location(right)
         if expr_type == 'float':
-            _loc = self.builder.fcnp_signed('>', _left, _right)
+            _loc = self.builder.fcmp_ordered('>', _left, _right)
         else:
-            _loc = self.builder.icnp_signed('>', _left, _right)
+            _loc = self.builder.icmp_signed('>', _left, _right)
         self.location[target] = _loc
 
-    def build_return(self, expr_type, target):
+    def _build_lt(self, expr_type, left, right, target):
+        """
+            The method that builds a less than
+
+            ...
+
+            Parameters
+            ----------
+                expr_type :
+                    A.
+                left :
+                    A.
+                right :
+                    A.
+                target :
+                    A.
+
+        """
+        _left = self._get_location(left)
+        _right = self._get_location(right)
+        if expr_type == 'float':
+            _loc = self.builder.fcmp_ordered('<', _left, _right)
+        else:
+            _loc = self.builder.icmp_signed('<', _left, _right)
+        self.location[target] = _loc
+
+    def _build_eq(self, expr_type, left, right, target):
+        left_loc = self._get_location(left)
+        right_loc = self._get_location(right)
+        if expr_type == 'float':
+            _loc = self.builder.fcmp_ordered('==', left_loc, right_loc)
+        else:
+            _loc = self.builder.icmp_signed('==', left_loc, right_loc)
+        self.location[target] = _loc
+
+    def _build_neq(self, expr_type, left, right, target):
+        left_loc = self._get_location(left)
+        right_loc = self._get_location(right)
+        if expr_type == 'float':
+            _loc = self.builder.fcmp_ordered('!=', left_loc, right_loc)
+        else:
+            _loc = self.builder.icmp_signed('!=', left_loc, right_loc)
+        self.location[target] = _loc
+
+    def _build_return(self, expr_type, target):
         """
             The method that builds a return
 
@@ -789,7 +861,7 @@ class LLVMFunctionVisitor:
             _target = self._get_location(target)
             self.builder.ret(_target)
 
-    def build_jump(self, expr_type, target):
+    def _build_jump(self, expr_type, target):
         """
             The method that builds a jump
 
@@ -851,33 +923,27 @@ class LLVMFunctionVisitor:
         else:
             print("Warning: No _build_" + opcode + "() method", flush=True)
 
-    def visit_BasicBlock(self, block):
-        """
-            The method that visits a BasicBlock
-
-            ...
-
-            Parameters
-            ----------
-                block :
-                    The BasicBlock instance.
-
-        """
-        if self.phase == "build_bb":
-            if block.label:
-                bb = self.location[block.label]
-                self.builder = ir.IRBuilder(bb)
-                for inst in block.instructions[1:]:
-                    self.build(inst)
-
     def create_blocks(self, func_blocks_dict):
         for block_label in func_blocks_dict:
             block = func_blocks_dict[block_label]
             if block_label == '%entry':
                 self._new_function(block.instructions[1])
+
+            ir_block_loc = self.functions.append_basic_block(block_label[1:])
+            self.location[block.label] = ir_block_loc
+
+    def build_blocks(self, func_blocks_dict):
+        for block_label in func_blocks_dict:
+            block = func_blocks_dict[block_label]
+            ir_block_loc = self.location[block.label]
+            self.builder = ir.IRBuilder(ir_block_loc)
+
+            if block_label == '%entry':
+                for inst in block.instructions[2:]:
+                    self.build(inst)
             else:
-                bb = self.functions.append_basic_block(block_label[1:])
-                self.location[block.label] = bb
+                for inst in block.instructions[1:]:
+                    self.build(inst)
 
 
 class LLVMCodeGenerator:
@@ -1149,6 +1215,7 @@ class LLVMCodeGenerator:
             func_dict = self.functions[func]
             llvm_block = LLVMFunctionVisitor(self.module)
             llvm_block.create_blocks(func_dict)
+            llvm_block.build_blocks(func_dict)
 
         # for _decl in node.gdecls:
         #     if isinstance(_decl, FuncDef):

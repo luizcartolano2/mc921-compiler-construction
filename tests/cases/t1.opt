@@ -1,5 +1,5 @@
 ('global_int_4', '@v', [1, 2, 3, 4])
-('global_string', '@.str.0', 'assertion_fail on 7:5')
+('global_string', '@.str.0', 'assertion_fail on 9:5')
 ('define_void', '@main', [])
 ('alloc_int', '%sum')
 ('alloc_int', '%i')
