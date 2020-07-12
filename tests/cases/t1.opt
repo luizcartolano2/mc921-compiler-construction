@@ -4,6 +4,7 @@
 ('alloc_int', '%sum')
 ('alloc_int', '%i')
 ('literal_int', 0, '%sum')
+('literal_int', 0, '%i')
 ('jump', '%2')
 ('2',)
 ('literal_int', 4, '%6')
