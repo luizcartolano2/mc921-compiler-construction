@@ -254,6 +254,7 @@ class ControlBlocks():
                         current_block.next_block = next_block
                         # add predecessor to next block
                         next_block.predecessors.append(current_block)
+                        current_block.instructions.append(('jump', next_block.label))
 
 
     def create_block_list(self, func):

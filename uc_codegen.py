@@ -1082,7 +1082,7 @@ class GenerateCode(NodeVisitor):
             aux = [node.expr]
         else:
             # if None is given print void
-            self.global_codes.append('print_void', )
+            self.code.append(('print_void', ''))
             return
 
         for expr in aux:
