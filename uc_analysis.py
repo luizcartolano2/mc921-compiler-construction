@@ -14,6 +14,7 @@ class DataFlow():
     """
     def __init__(self, blocks_control):
         self.all_blocks = []
+        self.before_opt_blocks = None
         self.blocks_control = blocks_control
         self.code_to_eliminate = set()
         self.code = []
@@ -892,3 +893,4 @@ class DataFlow():
 
         # generate optimized code
         self.generate_opt_code()
+        print(self.blocks_control.functions)

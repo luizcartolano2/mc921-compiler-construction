@@ -19,6 +19,7 @@ class ControlBlocks():
         self.globals = []
         self.pre_blocks = dict()
         self.cfg_list = []
+        self.non_opt_blocks = None
 
 
     def split_globals(self):
@@ -301,3 +302,5 @@ class ControlBlocks():
                 # make CFG pdf
                 cfg.view(self.functions[func]['%entry'], all_blocks)
                 self.cfg_list.append(cfg)
+
+        self.non_opt_blocks = self.functions

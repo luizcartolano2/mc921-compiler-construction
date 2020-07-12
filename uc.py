@@ -126,14 +126,14 @@ class Compiler:
         self.total_warnings = 0
         self.args = cl_args
 
-    def _parse(self, susy, ast_file, debug):
+    def _parse(self):
         """ Parses the source code. If ast_file != None,
             prints out the abstract syntax tree.
         """
         self.parser = UCParser()
-        self.ast = self.parser.parse(self.code, '', debug)
+        self.ast = self.parser.parse(self.code, '', False)
 
-    def _sema(self, susy, ast_file):
+    def _sema(self):
         """ Decorate AST with semantic actions. If ast_file != None,
             prints out the abstract syntax tree. """
         try:
@@ -144,7 +144,7 @@ class Compiler:
         except AssertionError as e:
             error(None, e)
 
-    def _codegen(self, susy, ir_file, cfg):
+    def _codegen(self):
         self.gen = GenerateCode()
         self.gen.visit(self.ast)
         self.gencode = self.gen.code
@@ -155,12 +155,9 @@ class Compiler:
                 _str += f"{_code}\n"
             self.ir_file.write(_str)
 
-    def _opt(self, susy, opt_file, cfg, debug):
+    def _opt(self, blocks):
 
-        self.create_blocks = ControlBlocks(ir_list=self.gencode)
-        self.create_blocks.create_basic_blocks()
-
-        self.dataflow = DataFlow(self.create_blocks)
+        self.dataflow = DataFlow(blocks)
         self.dataflow.optimize_code()
 
         self.optcode = self.dataflow.code
@@ -172,22 +169,24 @@ class Compiler:
             self.opt_file.write(_str)
 
     def _llvm(self):
-        self.llvm = LLVMCodeGenerator(False)
+        self.llvm = LLVMCodeGenerator()
         self.llvm.visit(self.ast)
         if not self.args.susy and self.llvm_file is not None:
             self.llvm.save_ir(self.llvm_file)
         if self.run:
             self.llvm.execute_ir(self.args.llvm_opt, self.llvm_opt_file)
 
-    def _do_compile(self, susy, ast_file, ir_file, opt_file, cfg, opt, debug):
+    def _do_compile(self):
         """ Compiles the code to the given file object. """
-        self._parse(susy, ast_file, False)
+        self._parse()
         if not errors_reported():
-            self._sema(susy, ast_file)
+            self._sema()
         if not errors_reported():
-            self._codegen(susy, ir_file, cfg)
+            self._codegen()
+            self.create_blocks = ControlBlocks(ir_list=self.gencode)
+            self.create_blocks.create_basic_blocks()
             if self.args.opt:
-                self._opt(susy, opt_file, cfg, debug)
+                self._opt(self.create_blocks)
             if self.args.llvm:
                 self._llvm()
 
