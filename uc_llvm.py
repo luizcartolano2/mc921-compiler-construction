@@ -100,8 +100,8 @@ class LLVMFunctionVisitor:
         opcode = aux[0]
         if opcode not in ['fptosi', 'sitofp', 'jump', 'cbranch', 'define']:
             uc_type = aux[1]
-            if len(aux) > 1:
-                for i, val in enumerate(aux[1]):
+            if len(aux) > 2:
+                for i, val in enumerate(aux[2]):
                     if val.isdigit():
                         modifier['dim' + str(i)] = val
                     elif val == '*':
@@ -718,6 +718,20 @@ class LLVMFunctionVisitor:
         else:
             _loc = self.builder.srem(_left, _right)
         self.location[target] = _loc
+
+    def _build_and(self, expr_type, left, right, target):
+        left_loc = self._get_location(left)
+        right_loc = self._get_location(right)
+        target_loc = self.builder.and_(left_loc, right_loc)
+
+        self.location[target] = target_loc
+
+    def _build_or(self, expr_type, left, right, target):
+        left_loc = self._get_location(left)
+        right_loc = self._get_location(right)
+        target_loc = self.builder.or_(left_loc, right_loc)
+
+        self.location[target] = target_loc
 
     def _build_ge(self, expr_type, left, right, target):
         """
