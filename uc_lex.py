@@ -66,7 +66,6 @@ class UCLexer():
         # Keeps track of the last token returned from self.token()
         self.last_token = None
 
-
     def build(self, **kwargs):
         """
             Builds the lexer from the specification. Must be
@@ -77,20 +76,17 @@ class UCLexer():
         """
         self.lexer = lex.lex(object=self, **kwargs)
 
-
     def reset_lineno(self):
         """
             Resets the internal line number counter of the lexer.
         """
         self.lexer.lineno = 1
 
-
     def input(self, text):
         """
             Method to subscribe the input method
         """
         self.lexer.input(text)
-
 
     def token(self):
         """
@@ -99,14 +95,12 @@ class UCLexer():
         self.last_token = self.lexer.token()
         return self.last_token
 
-
     def find_tok_column(self, token):
         """
             Find the column of the token in its line.
         """
         last_cr = self.lexer.lexdata.rfind('\n', 0, token.lexpos)
         return token.lexpos - last_cr
-
 
     def _error(self, msg, token):
         """
@@ -116,13 +110,11 @@ class UCLexer():
         self.error_func(msg, location[0], location[1])
         self.lexer.skip(1)
 
-
     def _make_tok_location(self, token):
         """
             Gets the token location on source code.
         """
         return (token.lineno, self.find_tok_column(token))
-
 
     ##
     ##   Reserved keywords
@@ -135,7 +127,6 @@ class UCLexer():
     keyword_map = {}
     for keyword in keywords:
         keyword_map[keyword.lower()] = keyword
-
 
     ##
     ##   All the tokens recognized by the lexer
@@ -179,54 +170,52 @@ class UCLexer():
         'OR',
     )
 
-
     #
     #    Rules
     #
 
     # Operators
-    t_PLUS        = r'\+'
-    t_MINUS       = r'-'
-    t_TIMES       = r'\*'
-    t_DIVIDE      = r'/'
-    t_MOD         = r'%'
-    t_OR          = r'\|\|'
-    t_AND         = r'&&'
-    t_NOT         = r'!'
-    t_LT          = r'<'
-    t_GT          = r'>'
-    t_LE          = r'<='
-    t_GE          = r'>='
-    t_EQ          = r'=='
-    t_NE          = r'!='
+    t_PLUS = r'\+'
+    t_MINUS = r'-'
+    t_TIMES = r'\*'
+    t_DIVIDE = r'/'
+    t_MOD = r'%'
+    t_OR = r'\|\|'
+    t_AND = r'&&'
+    t_NOT = r'!'
+    t_LT = r'<'
+    t_GT = r'>'
+    t_LE = r'<='
+    t_GE = r'>='
+    t_EQ = r'=='
+    t_NE = r'!='
 
     # Assignment operators
-    t_EQUALS      = r'='
-    t_TIMESEQUAL  = r'\*='
+    t_EQUALS = r'='
+    t_TIMESEQUAL = r'\*='
     t_DIVIDEEQUAL = r'/='
-    t_MODEQUAL    = r'%='
-    t_PLUSEQUAL   = r'\+='
-    t_MINUSEQUAL  = r'-='
+    t_MODEQUAL = r'%='
+    t_PLUSEQUAL = r'\+='
+    t_MINUSEQUAL = r'-='
 
     # Increment/decrement
-    t_PLUSPLUS    = r'\+\+'
-    t_MINUSMINUS  = r'--'
+    t_PLUSPLUS = r'\+\+'
+    t_MINUSMINUS = r'--'
 
     # Delimeters
-    t_LPAREN      = r'\('
-    t_RPAREN      = r'\)'
-    t_LBRACE      = r'{'
-    t_RBRACE      = r'}'
-    t_LBRACKET    = r'\['
-    t_RBRACKET    = r'\]'
-    t_SEMI        = r';'
-    t_COMMA       = r','
-    t_ADDRESS     = r'&'
+    t_LPAREN = r'\('
+    t_RPAREN = r'\)'
+    t_LBRACE = r'{'
+    t_RBRACE = r'}'
+    t_LBRACKET = r'\['
+    t_RBRACKET = r'\]'
+    t_SEMI = r';'
+    t_COMMA = r','
+    t_ADDRESS = r'&'
 
     # A string containing ignored characters (spaces and tabs)
-    t_ignore      = ' \t'
-    t_CHAR_CONST  = r'''"."'''
-
+    t_ignore = ' \t'
+    t_CHAR_CONST = r'''"."'''
 
     ##
     ##  Get Newlines
@@ -234,7 +223,6 @@ class UCLexer():
     def t_NEWLINE(self, t):
         r'\n+'
         t.lexer.lineno += t.value.count("\n")
-
 
     ##
     ##  Get identifier
@@ -244,7 +232,6 @@ class UCLexer():
         t.type = self.keyword_map.get(t.value, "ID")
         return t
 
-
     ##
     ##  Comment with /**/ and error on comments
     ##
@@ -252,12 +239,10 @@ class UCLexer():
         r'/\*(.|\n)*?\*/'
         pass
 
-
     def t_error_comment(self, t):
         r'/\*(.|\n)*$'
         msg = "{}: Unterminated comment".format(t.lexer.lineno)
         self._error(msg, t)
-
 
     ##
     ##  Comment with //
@@ -266,16 +251,14 @@ class UCLexer():
         r'//.*'
         pass
 
-
     ##
     ##  Float constant
     ##
     def t_FLOAT_CONST(self, t):
         r'([0-9]*\.[0-9]+)|([0-9]+\.)'
         t.value = float(t.value)
-            
-        return t
 
+        return t
 
     ##
     ##  Int constant
@@ -283,9 +266,8 @@ class UCLexer():
     def t_INT_CONST(self, t):
         r'0|[1-9][0-9]*'
         t.value = int(t.value)
-   
-        return t
 
+        return t
 
     ##
     ##  String literal and error for unterminated string
@@ -293,9 +275,8 @@ class UCLexer():
     def t_STRING_LITERAL(self, t):
         r'".*?"'
         t.value = t.value
-    
-        return t
 
+        return t
 
     def t_error_string(self, t):
         r'".*$'
@@ -303,14 +284,12 @@ class UCLexer():
         self._error(msg, t)
         pass
 
-
     ##
     ##  Error function
     ##
     def t_error(self, t):
         msg = "Illegal character %s" % repr(t.value[0])
         self._error(msg, t)
-
 
     ##
     ##  An scan function for the test purposes
@@ -325,10 +304,10 @@ class UCLexer():
 
 
 if __name__ == '__main__':
-
     def print_error(msg, x, y):
         print("Lexical error: %s at %d:%d" % (msg, x, y))
 
+
     m = UCLexer(print_error)
     m.build()  # Build the lexer
-    print(m.scan(open(sys.argv[1]).read()) )
+    print(m.scan(open(sys.argv[1]).read()))

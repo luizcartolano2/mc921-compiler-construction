@@ -1009,7 +1009,11 @@ class LLVMCodeGenerator:
                     The output file.
 
         """
-        output_file.write(str(self.module))
+        try:
+            output_file.write(str(self.module))
+        except AttributeError:
+            for key, value in self.module.globals.items():
+                print(key, value)
 
     def execute_ir(self, opt, opt_file):
         """
@@ -1116,7 +1120,7 @@ class LLVMCodeGenerator:
                 for _el in var_value:
                     if _el not in list(llvm_type_dict.keys()):
                         fn_sig = False
-            if uc_type == "string":
+            if uc_type in ['string', 'char']:
                 ir_constant = create_byte_array((var_value + "\00").encode('utf-8'))
                 ir_global_var = ir.GlobalVariable(self.module, ir_constant.type, var_name)
                 ir_global_var.initializer = ir_constant
