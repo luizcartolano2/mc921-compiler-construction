@@ -11,11 +11,10 @@ declare i32 @"scanf"(i8* %".1", ...)
 define i32 @"main"() 
 {
 "%entry":
-  %"1" = alloca i32, align 4
   %"sum" = alloca i32, align 4
   %"i" = alloca i32, align 4
-  store i32 0, i32* %"sum", align 4
-  store i32 0, i32* %"i", align 4
+  store i32 0, i32* %"sum"
+  store i32 0, i32* %"i"
   br label %"%3"
 "%3":
   %".5" = load i32, i32* %"i", align 4
@@ -49,19 +48,13 @@ define i32 @"main"()
 "%5":
   %".32" = load i32, i32* %"sum", align 4
   %".33" = icmp eq i32 %".32", 21
-  br i1 %".33", label %"%33", label %"%34"
-"%33":
-  br label %"%35"
+  br i1 %".33", label %"%0", label %"%34"
 "%34":
-  %".36" = bitcast [3 x i8]* @".fmt" to i8*
-  %".37" = call i32 (i8*, ...) @"printf"(i8* %".36", [22 x i8]* @".str.0")
-  br label %"%0"
-"%35":
-  store i32 0, i32* %"1", align 4
+  %".35" = bitcast [3 x i8]* @".fmt" to i8*
+  %".36" = call i32 (i8*, ...) @"printf"(i8* %".35", [22 x i8]* @".str.0")
   br label %"%0"
 "%0":
-  %".41" = load i32, i32* %"1", align 4
-  ret i32 %".41"
+  ret i32 0
 }
 
 @".fmt" = internal constant [3 x i8] c"%s\00", align 1

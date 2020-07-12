@@ -12,124 +12,115 @@ declare i32 @"scanf"(i8* %".1", ...)
 define i32 @"main"() 
 {
 "%entry":
-  %"1" = alloca i32, align 4
   %"v" = alloca [1 x [0 x i32]], align 4
-  %"n" = alloca i32, align 4
   %"c" = alloca i32, align 4
   %"d" = alloca i32, align 4
   %"swap" = alloca i32, align 4
   %".2" = bitcast [10 x i32]* @".str.0" to i8*
   %".3" = bitcast [1 x [0 x i32]]* %"v" to i8*
   call void @"llvm.memcpy.p0i8.p0i8.i64"(i8* %".3", i8* %".2", i64 0, i1 false)
-  store i32 10, i32* %"n", align 4
-  store i32 0, i32* %"c", align 4
+  store i32 0, i32* %"c"
   br label %"%3"
 "%3":
-  %".8" = load i32, i32* %"n", align 4
-  %".9" = sub i32 %".8", 1
-  %".10" = load i32, i32* %"c", align 4
-  %".11" = icmp slt i32 %".10", %".9"
-  br i1 %".11", label %"%4", label %"%5"
+  %".7" = load i32, i32* %"c", align 4
+  %".8" = icmp slt i32 %".7", 9
+  br i1 %".8", label %"%4", label %"%5"
 "%4":
-  store i32 0, i32* %"d", align 4
+  store i32 0, i32* %"d"
   br label %"%12"
 "%12":
-  %".15" = load i32, i32* %"n", align 4
-  %".16" = load i32, i32* %"c", align 4
-  %".17" = sub i32 %".15", %".16"
-  %".18" = sub i32 %".17", 1
-  %".19" = load i32, i32* %"d", align 4
-  %".20" = icmp slt i32 %".19", %".18"
-  br i1 %".20", label %"%13", label %"%14"
+  %".12" = load i32, i32* %"c", align 4
+  %".13" = sub i32 10, %".12"
+  %".14" = sub i32 %".13", 1
+  %".15" = load i32, i32* %"d", align 4
+  %".16" = icmp slt i32 %".15", %".14"
+  br i1 %".16", label %"%13", label %"%14"
 "%13":
-  %".22" = load i32, i32* %"d", align 4
-  %".23" = sdiv i32 %".22", 0
-  %".24" = srem i32 %".22", 0
-  %".25" = getelementptr [1 x [0 x i32]], [1 x [0 x i32]]* %"v", i32 0, i32 %".23"
-  %".26" = getelementptr [0 x i32], [0 x i32]* %".25", i32 0, i32 %".24"
-  %".27" = load i32, i32* %"d", align 4
-  %".28" = add i32 %".27", 1
-  %".29" = sdiv i32 %".28", 0
-  %".30" = srem i32 %".28", 0
-  %".31" = getelementptr [1 x [0 x i32]], [1 x [0 x i32]]* %"v", i32 0, i32 %".29"
-  %".32" = getelementptr [0 x i32], [0 x i32]* %".31", i32 0, i32 %".30"
-  %".33" = load i32, i32* %".26", align 8
-  %".34" = load i32, i32* %".32", align 8
-  %".35" = icmp sgt i32 %".33", %".34"
-  br i1 %".35", label %"%23", label %"%24"
+  %".18" = load i32, i32* %"d", align 4
+  %".19" = sdiv i32 %".18", 0
+  %".20" = srem i32 %".18", 0
+  %".21" = getelementptr [1 x [0 x i32]], [1 x [0 x i32]]* %"v", i32 0, i32 %".19"
+  %".22" = getelementptr [0 x i32], [0 x i32]* %".21", i32 0, i32 %".20"
+  %".23" = load i32, i32* %"d", align 4
+  %".24" = add i32 %".23", 1
+  %".25" = sdiv i32 %".24", 0
+  %".26" = srem i32 %".24", 0
+  %".27" = getelementptr [1 x [0 x i32]], [1 x [0 x i32]]* %"v", i32 0, i32 %".25"
+  %".28" = getelementptr [0 x i32], [0 x i32]* %".27", i32 0, i32 %".26"
+  %".29" = load i32, i32* %".22", align 8
+  %".30" = load i32, i32* %".28", align 8
+  %".31" = icmp sgt i32 %".29", %".30"
+  br i1 %".31", label %"%23", label %"%24"
 "%23":
-  %".37" = load i32, i32* %"d", align 4
-  %".38" = sdiv i32 %".37", 0
-  %".39" = srem i32 %".37", 0
-  %".40" = getelementptr [1 x [0 x i32]], [1 x [0 x i32]]* %"v", i32 0, i32 %".38"
-  %".41" = getelementptr [0 x i32], [0 x i32]* %".40", i32 0, i32 %".39"
-  %".42" = load i32, i32* %".41", align 8
-  store i32 %".42", i32* %"swap", align 4
-  %".44" = load i32, i32* %"d", align 4
-  %".45" = add i32 %".44", 1
-  %".46" = sdiv i32 %".45", 0
-  %".47" = srem i32 %".45", 0
-  %".48" = getelementptr [1 x [0 x i32]], [1 x [0 x i32]]* %"v", i32 0, i32 %".46"
-  %".49" = getelementptr [0 x i32], [0 x i32]* %".48", i32 0, i32 %".47"
-  %".50" = load i32, i32* %".49", align 8
-  %".51" = load i32, i32* %"d", align 4
-  %".52" = sdiv i32 %".51", 0
-  %".53" = srem i32 %".51", 0
-  %".54" = getelementptr [1 x [0 x i32]], [1 x [0 x i32]]* %"v", i32 0, i32 %".52"
-  %".55" = getelementptr [0 x i32], [0 x i32]* %".54", i32 0, i32 %".53"
-  store i32 %".50", i32* %".55", align 4
-  %".57" = load i32, i32* %"swap", align 4
-  %".58" = load i32, i32* %"d", align 4
-  %".59" = add i32 %".58", 1
-  %".60" = sdiv i32 %".59", 0
-  %".61" = srem i32 %".59", 0
-  %".62" = getelementptr [1 x [0 x i32]], [1 x [0 x i32]]* %"v", i32 0, i32 %".60"
-  %".63" = getelementptr [0 x i32], [0 x i32]* %".62", i32 0, i32 %".61"
-  store i32 %".57", i32* %".63", align 4
+  %".33" = load i32, i32* %"d", align 4
+  %".34" = sdiv i32 %".33", 0
+  %".35" = srem i32 %".33", 0
+  %".36" = getelementptr [1 x [0 x i32]], [1 x [0 x i32]]* %"v", i32 0, i32 %".34"
+  %".37" = getelementptr [0 x i32], [0 x i32]* %".36", i32 0, i32 %".35"
+  %".38" = load i32, i32* %".37", align 8
+  store i32 %".38", i32* %"swap", align 4
+  %".40" = load i32, i32* %"d", align 4
+  %".41" = add i32 %".40", 1
+  %".42" = sdiv i32 %".41", 0
+  %".43" = srem i32 %".41", 0
+  %".44" = getelementptr [1 x [0 x i32]], [1 x [0 x i32]]* %"v", i32 0, i32 %".42"
+  %".45" = getelementptr [0 x i32], [0 x i32]* %".44", i32 0, i32 %".43"
+  %".46" = load i32, i32* %".45", align 8
+  %".47" = load i32, i32* %"d", align 4
+  %".48" = sdiv i32 %".47", 0
+  %".49" = srem i32 %".47", 0
+  %".50" = getelementptr [1 x [0 x i32]], [1 x [0 x i32]]* %"v", i32 0, i32 %".48"
+  %".51" = getelementptr [0 x i32], [0 x i32]* %".50", i32 0, i32 %".49"
+  store i32 %".46", i32* %".51", align 4
+  %".53" = load i32, i32* %"swap", align 4
+  %".54" = load i32, i32* %"d", align 4
+  %".55" = add i32 %".54", 1
+  %".56" = sdiv i32 %".55", 0
+  %".57" = srem i32 %".55", 0
+  %".58" = getelementptr [1 x [0 x i32]], [1 x [0 x i32]]* %"v", i32 0, i32 %".56"
+  %".59" = getelementptr [0 x i32], [0 x i32]* %".58", i32 0, i32 %".57"
+  store i32 %".53", i32* %".59", align 4
   br label %"%24"
 "%24":
-  %".66" = load i32, i32* %"d", align 4
-  %".67" = add i32 %".66", 1
-  store i32 %".67", i32* %"d", align 4
+  %".62" = load i32, i32* %"d", align 4
+  %".63" = add i32 %".62", 1
+  store i32 %".63", i32* %"d", align 4
   br label %"%12"
 "%14":
-  %".70" = load i32, i32* %"c", align 4
-  %".71" = add i32 %".70", 1
-  store i32 %".71", i32* %"c", align 4
+  %".66" = load i32, i32* %"c", align 4
+  %".67" = add i32 %".66", 1
+  store i32 %".67", i32* %"c", align 4
   br label %"%3"
 "%5":
-  %".74" = bitcast [3 x i8]* @".fmt" to i8*
-  %".75" = call i32 (i8*, ...) @"printf"(i8* %".74", [33 x i8]* @".str.1")
-  store i32 0, i32* %"c", align 4
+  %".70" = bitcast [3 x i8]* @".fmt" to i8*
+  %".71" = call i32 (i8*, ...) @"printf"(i8* %".70", [33 x i8]* @".str.1")
+  store i32 0, i32* %"c"
   br label %"%56"
 "%56":
-  %".78" = load i32, i32* %"c", align 4
-  %".79" = load i32, i32* %"n", align 4
-  %".80" = icmp slt i32 %".78", %".79"
-  br i1 %".80", label %"%57", label %"%58"
+  %".74" = load i32, i32* %"c", align 4
+  %".75" = icmp slt i32 %".74", 10
+  br i1 %".75", label %"%57", label %"%58"
 "%57":
-  %".82" = load i32, i32* %"c", align 4
-  %".83" = sdiv i32 %".82", 0
-  %".84" = srem i32 %".82", 0
-  %".85" = getelementptr [1 x [0 x i32]], [1 x [0 x i32]]* %"v", i32 0, i32 %".83"
-  %".86" = getelementptr [0 x i32], [0 x i32]* %".85", i32 0, i32 %".84"
-  %".87" = load i32, i32* %".86", align 8
-  %".88" = bitcast [3 x i8]* @".fmt.1" to i8*
-  %".89" = call i32 (i8*, ...) @"printf"(i8* %".88", i32 %".87")
-  %".90" = bitcast [3 x i8]* @".fmt.2" to i8*
-  %".91" = call i32 (i8*, ...) @"printf"(i8* %".90", [2 x i8]* @".str.2")
-  %".92" = load i32, i32* %"c", align 4
-  %".93" = add i32 %".92", 1
-  store i32 %".93", i32* %"c", align 4
+  %".77" = load i32, i32* %"c", align 4
+  %".78" = sdiv i32 %".77", 0
+  %".79" = srem i32 %".77", 0
+  %".80" = getelementptr [1 x [0 x i32]], [1 x [0 x i32]]* %"v", i32 0, i32 %".78"
+  %".81" = getelementptr [0 x i32], [0 x i32]* %".80", i32 0, i32 %".79"
+  %".82" = load i32, i32* %".81", align 8
+  %".83" = bitcast [3 x i8]* @".fmt.1" to i8*
+  %".84" = call i32 (i8*, ...) @"printf"(i8* %".83", i32 %".82")
+  %".85" = bitcast [3 x i8]* @".fmt.2" to i8*
+  %".86" = call i32 (i8*, ...) @"printf"(i8* %".85", [2 x i8]* @".str.2")
+  %".87" = load i32, i32* %"c", align 4
+  %".88" = add i32 %".87", 1
+  store i32 %".88", i32* %"c", align 4
   br label %"%56"
 "%58":
-  %".96" = bitcast [2 x i8]* @".fmt.3" to i8*
-  %".97" = call i32 (i8*, ...) @"printf"(i8* %".96")
-  store i32 0, i32* %"1", align 4
+  %".91" = bitcast [2 x i8]* @".fmt.3" to i8*
+  %".92" = call i32 (i8*, ...) @"printf"(i8* %".91")
   br label %"%0"
 "%0":
-  %".100" = load i32, i32* %"1", align 4
-  ret i32 %".100"
+  ret i32 0
 }
 
 declare void @"llvm.memcpy.p0i8.p0i8.i64"(i8* %".1", i8* %".2", i64 %".3", i1 %".4") 

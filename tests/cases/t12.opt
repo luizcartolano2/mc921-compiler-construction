@@ -1,0 +1,6 @@
+('global_string', '@.str.0', 'assertion_fail on 11:5')
+('define_int', '@main', [])
+('jump', '%0')
+('0',)
+('literal_int', 0, '%24')
+('return_int', '%24')

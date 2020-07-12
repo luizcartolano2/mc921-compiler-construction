@@ -13,8 +13,8 @@ define void @"main"()
 "%entry":
   %"sum" = alloca i32, align 4
   %"i" = alloca i32, align 4
-  store i32 0, i32* %"sum", align 4
-  store i32 0, i32* %"i", align 4
+  store i32 0, i32* %"sum"
+  store i32 0, i32* %"i"
   br label %"%2"
 "%2":
   %".5" = load i32, i32* %"i", align 4
@@ -34,14 +34,10 @@ define void @"main"()
 "%4":
   %".18" = load i32, i32* %"sum", align 4
   %".19" = icmp eq i32 %".18", 10
-  br i1 %".19", label %"%20", label %"%21"
-"%20":
-  br label %"%22"
+  br i1 %".19", label %"%0", label %"%21"
 "%21":
-  %".22" = bitcast [3 x i8]* @".fmt" to i8*
-  %".23" = call i32 (i8*, ...) @"printf"(i8* %".22", [22 x i8]* @".str.0")
-  br label %"%0"
-"%22":
+  %".21" = bitcast [3 x i8]* @".fmt" to i8*
+  %".22" = call i32 (i8*, ...) @"printf"(i8* %".21", [22 x i8]* @".str.0")
   br label %"%0"
 "%0":
   ret void

@@ -10,52 +10,41 @@ declare i32 @"scanf"(i8* %".1", ...)
 define i32 @"main"() 
 {
 "%entry":
-  %"1" = alloca i32, align 4
   %"n" = alloca i32, align 4
   %"r" = alloca i32, align 4
-  %"temp" = alloca i32, align 4
   %"sum" = alloca double, align 8
-  store double              0x0, double* %"sum", align 8
-  store i32 5743475, i32* %"n", align 4
-  %".4" = load i32, i32* %"n", align 4
-  store i32 %".4", i32* %"temp", align 4
+  store double              0x0, double* %"sum"
+  store i32 5743475, i32* %"n"
   br label %"%5"
 "%5":
-  %".7" = load i32, i32* %"n", align 4
-  %".8" = icmp sgt i32 %".7", 0
-  br i1 %".8", label %"%6", label %"%7"
+  %".5" = load i32, i32* %"n", align 4
+  %".6" = icmp sgt i32 %".5", 0
+  br i1 %".6", label %"%6", label %"%7"
 "%6":
-  %".10" = load i32, i32* %"n", align 4
-  %".11" = srem i32 %".10", 10
-  store i32 %".11", i32* %"r", align 4
-  %".13" = load double, double* %"sum", align 8
-  %".14" = fmul double %".13", 0x4024000000000000
-  %".15" = load i32, i32* %"r", align 4
-  %".16" = sitofp i32 %".15" to double
-  %".17" = fadd double %".14", %".16"
-  store double %".17", double* %"sum", align 8
-  %".19" = load i32, i32* %"n", align 4
-  %".20" = sdiv i32 %".19", 10
-  store i32 %".20", i32* %"n", align 4
+  %".8" = load i32, i32* %"n", align 4
+  %".9" = srem i32 %".8", 10
+  store i32 %".9", i32* %"r", align 4
+  %".11" = load double, double* %"sum", align 8
+  %".12" = fmul double %".11", 0x4024000000000000
+  %".13" = load i32, i32* %"r", align 4
+  %".14" = sitofp i32 %".13" to double
+  %".15" = fadd double %".12", %".14"
+  store double %".15", double* %"sum", align 8
+  %".17" = load i32, i32* %"n", align 4
+  %".18" = sdiv i32 %".17", 10
+  store i32 %".18", i32* %"n", align 4
   br label %"%5"
 "%7":
-  %".23" = load double, double* %"sum", align 8
-  %".24" = fptosi double %".23" to i32
-  %".25" = load i32, i32* %"temp", align 4
-  %".26" = icmp eq i32 %".25", %".24"
-  br i1 %".26", label %"%27", label %"%28"
-"%27":
-  br label %"%29"
+  %".21" = load double, double* %"sum", align 8
+  %".22" = fptosi double %".21" to i32
+  %".23" = icmp eq i32 5743475, %".22"
+  br i1 %".23", label %"%0", label %"%28"
 "%28":
-  %".29" = bitcast [3 x i8]* @".fmt" to i8*
-  %".30" = call i32 (i8*, ...) @"printf"(i8* %".29", [23 x i8]* @".str.0")
-  br label %"%0"
-"%29":
-  store i32 0, i32* %"1", align 4
+  %".25" = bitcast [3 x i8]* @".fmt" to i8*
+  %".26" = call i32 (i8*, ...) @"printf"(i8* %".25", [23 x i8]* @".str.0")
   br label %"%0"
 "%0":
-  %".34" = load i32, i32* %"1", align 4
-  ret i32 %".34"
+  ret i32 0
 }
 
 @".fmt" = internal constant [3 x i8] c"%s\00", align 1

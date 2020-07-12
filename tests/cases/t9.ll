@@ -31,31 +31,18 @@ define i32 @"foo"(i32 %".1", i32 %".2")
 define i32 @"main"() 
 {
 "%entry":
-  %"1" = alloca i32, align 4
-  %"c" = alloca i32, align 4
-  %"d" = alloca i32, align 4
   %"e" = alloca i32, align 4
-  store i32 2, i32* %"c", align 4
-  store i32 3, i32* %"d", align 4
-  %".4" = load i32, i32* %"c", align 4
-  %".5" = load i32, i32* %"d", align 4
-  %".6" = call i32 @"foo"(i32 %".4", i32 %".5")
-  store i32 %".6", i32* %"e", align 4
-  %".8" = load i32, i32* %"e", align 4
-  %".9" = icmp eq i32 %".8", 50
-  br i1 %".9", label %"%10", label %"%11"
-"%10":
-  br label %"%12"
+  %".2" = call i32 @"foo"(i32 2, i32 3)
+  store i32 %".2", i32* %"e", align 4
+  %".4" = load i32, i32* %"e", align 4
+  %".5" = icmp eq i32 %".4", 50
+  br i1 %".5", label %"%0", label %"%11"
 "%11":
-  %".12" = bitcast [3 x i8]* @".fmt" to i8*
-  %".13" = call i32 (i8*, ...) @"printf"(i8* %".12", [23 x i8]* @".str.0")
-  br label %"%0"
-"%12":
-  store i32 0, i32* %"1", align 4
+  %".7" = bitcast [3 x i8]* @".fmt" to i8*
+  %".8" = call i32 (i8*, ...) @"printf"(i8* %".7", [23 x i8]* @".str.0")
   br label %"%0"
 "%0":
-  %".17" = load i32, i32* %"1", align 4
-  ret i32 %".17"
+  ret i32 0
 }
 
 @".fmt" = internal constant [3 x i8] c"%s\00", align 1

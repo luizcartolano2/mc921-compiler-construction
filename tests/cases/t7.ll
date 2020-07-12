@@ -49,22 +49,12 @@ define i32 @"gcd"(i32 %".1", i32 %".2")
 define void @"main"() 
 {
 "%entry":
-  %"a" = alloca i32, align 4
-  %"b" = alloca i32, align 4
-  store i32 198, i32* %"a", align 4
-  store i32 36, i32* %"b", align 4
-  %".4" = load i32, i32* %"a", align 4
-  %".5" = load i32, i32* %"b", align 4
-  %".6" = call i32 @"gcd"(i32 %".4", i32 %".5")
-  %".7" = icmp eq i32 %".6", 18
-  br i1 %".7", label %"%8", label %"%9"
-"%8":
-  br label %"%10"
+  %".2" = call i32 @"gcd"(i32 198, i32 36)
+  %".3" = icmp eq i32 %".2", 18
+  br i1 %".3", label %"%0", label %"%9"
 "%9":
-  %".10" = bitcast [3 x i8]* @".fmt" to i8*
-  %".11" = call i32 (i8*, ...) @"printf"(i8* %".10", [23 x i8]* @".str.0")
-  br label %"%0"
-"%10":
+  %".5" = bitcast [3 x i8]* @".fmt" to i8*
+  %".6" = call i32 (i8*, ...) @"printf"(i8* %".5", [23 x i8]* @".str.0")
   br label %"%0"
 "%0":
   ret void

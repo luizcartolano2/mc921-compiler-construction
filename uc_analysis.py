@@ -801,11 +801,13 @@ class DataFlow():
                                 print(f"        Predecessor {predecessor.label} is a Block.")
 
                             # update predecessor for next block
-                            block.next_block.predecessors.remove(block)
+                            if block in block.next_block.predecessors:
+                                block.next_block.predecessors.remove(block)
                             block.next_block.predecessors.append(predecessor)
 
                             # update sucessor
-                            predecessor.successors.remove(block)
+                            if block in predecessor.successors:
+                                predecessor.successors.remove(block)
                             predecessor.successors.append(block.next_block)
 
                             # update next block

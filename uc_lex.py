@@ -218,7 +218,7 @@ class UCLexer():
 
     def t_CHAR_CONST(self, t):
         r'\'(.)\''
-        t.value = t.value[1:-1]
+        # t.value = t.value[1:-1]
         return t
 
     ##
