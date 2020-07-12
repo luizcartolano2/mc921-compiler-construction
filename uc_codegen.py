@@ -695,11 +695,10 @@ class GenerateCode(NodeVisitor):
         exit_label = self.__new_temp()
         node.for_exit = exit_label
 
-        # explict jump to for conditional
-        self.code.append(('jump', entry_label))
-
         # visit init and start it on interpreter
         self.visit(node.for_init)
+        # explict jump to for conditional
+        self.code.append(('jump', entry_label))
         self.code.append((entry_label[1:],))
 
         # branch to for condition, keeps on the loop while

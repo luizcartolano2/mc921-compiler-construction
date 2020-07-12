@@ -928,8 +928,7 @@ class LLVMFunctionVisitor:
             block = func_blocks_dict[block_label]
             if block_label == '%entry':
                 self._new_function(block.instructions[1])
-
-            ir_block_loc = self.functions.append_basic_block(block_label[1:])
+            ir_block_loc = self.functions.append_basic_block(block_label)
             self.location[block.label] = ir_block_loc
 
     def build_blocks(self, func_blocks_dict):
