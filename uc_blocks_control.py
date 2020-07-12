@@ -303,4 +303,4 @@ class ControlBlocks():
                 cfg.view(self.functions[func]['%entry'], all_blocks)
                 self.cfg_list.append(cfg)
 
-        self.non_opt_blocks = self.functions
+        self.non_opt_blocks = self.functions.copy()

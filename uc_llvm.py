@@ -69,7 +69,7 @@ def get_align(left_type, width):
         return _align * width
 
 
-class LLVMFunctionVisitor(BlockVisitor):
+class LLVMFunctionVisitor:
 
     def __init__(self, module):
         self.builder = None
@@ -901,8 +901,15 @@ class LLVMFunctionVisitor(BlockVisitor):
                 self.build(inst)
 
 
-class LLVMCodeGenerator(NodeVisitor):
-    def __init__(self):
+class LLVMCodeGenerator:
+    def __init__(self, control_blocks, opt):
+        # get dict with IR functions and blocks
+        if opt:
+            self.functions = control_blocks.functions
+        else:
+            self.functions = control_blocks.non_opt_blocks
+        # get IR globals
+        self.global_codes = control_blocks.globals
         # import binding from llvmlite
         # and initialize it
         self.binding = binding
@@ -1107,7 +1114,7 @@ class LLVMCodeGenerator(NodeVisitor):
             fn_sig = isinstance(var_value, list)
             if fn_sig:
                 for _el in var_value:
-                    if _el not in list(llvm_type.keys()):
+                    if _el not in list(llvm_type_dict.keys()):
                         fn_sig = False
             if uc_type == "string":
                 ir_constant = create_byte_array((var_value + "\00").encode('utf-8'))
@@ -1116,32 +1123,32 @@ class LLVMCodeGenerator(NodeVisitor):
                 ir_global_var.align = 1
                 ir_global_var.global_constant = True
             elif modifier and not fn_sig:
-                _width = 4
+                _width = 1
                 for arg in reversed(list(modifier.values())):
-                    if arg.isdigit():
-                        _width = int(arg)
-                        llvm_type = ir.ArrayType(llvm_type, int(arg))
-                    else:
-                        llvm_type = ir.PointerType(llvm_type)
+                    _width = int(arg)
+                    llvm_type = ir.ArrayType(llvm_type, int(arg))
+
                 ir_global_var = ir.GlobalVariable(self.module, llvm_type, var_name)
                 ir_global_var.initializer = ir.Constant(llvm_type, var_value)
                 ir_global_var.align = get_align(llvm_type, _width)
                 if var_name.startswith('.const'):
                     ir_global_var.global_constant = True
-                elif fn_sig:
-                    _sig = [llvm_type[arg] for arg in var_value]
-                    ir_func_type = ir.FunctionType(llvm_type[uc_type], _sig)
-                    ir_global_var = ir.GlobalVariable(self.module, ir_func_type.as_pointer(), var_name)
-                    ir_global_var.linkage = 'common'
-                    ir_global_var.initializer = ir.Constant(ir_func_type.as_pointer(), None)
-                    ir_global_var.align = 8
-                else:
-                    ir_global_var = ir.GlobalVariable(self.module, llvm_type, var_name)
-                    ir_global_var.align = get_align(llvm_type, 1)
-                    if var_value:
-                        ir_global_var.initializer = ir.Constant(llvm_type, var_value)
+            elif fn_sig:
+                # ptr to function
+                _sig = [llvm_type_dict[arg] for arg in var_value]
+                ir_func_type = ir.FunctionType(llvm_type_dict[uc_type], _sig)
+                ir_global_var = ir.GlobalVariable(self.module, ir_func_type.as_pointer(), var_name)
+                ir_global_var.linkage = 'common'
+                ir_global_var.initializer = ir.Constant(ir_func_type.as_pointer(), None)
+                ir_global_var.align = 8
+            else:
+                # normal global var like int x = 2
+                ir_global_var = ir.GlobalVariable(self.module, llvm_type, var_name)
+                ir_global_var.align = get_align(llvm_type, 1)
+                if var_value:
+                    ir_global_var.initializer = ir.Constant(llvm_type, var_value)
 
-    def visit_Program(self, node):
+    def build(self):
         """
             The method to visit the program
 
@@ -1153,11 +1160,12 @@ class LLVMCodeGenerator(NodeVisitor):
                     The Node.
 
         """
-        self.__generate_global_instructions(node.text)
-        for _decl in node.gdecls:
-            if isinstance(_decl, FuncDef):
-                bb = LLVMFunctionVisitor(self.module)
-                bb.phase = 'create_bb'
-                bb.visit(_decl.cfg)
-                bb.phase = 'build_bb'
-                bb.visit(_decl.cfg)
+        self.__generate_global_instructions(self.global_codes)
+        print()
+        # for _decl in node.gdecls:
+        #     if isinstance(_decl, FuncDef):
+        #         bb = LLVMFunctionVisitor(self.module)
+        #         bb.phase = 'create_bb'
+        #         bb.visit(_decl.cfg)
+        #         bb.phase = 'build_bb'
+        #         bb.visit(_decl.cfg)

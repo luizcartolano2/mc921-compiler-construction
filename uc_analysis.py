@@ -893,4 +893,3 @@ class DataFlow():
 
         # generate optimized code
         self.generate_opt_code()
-        print(self.blocks_control.functions)

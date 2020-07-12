@@ -1,12 +1,6 @@
-int n = 3;
+int v[] = {1, 2, 3, 4};
+int n = 10;
 
-int doubleMe (int x) {
-    return x * x;
-}
-
-void main () {
-    int v = n;
-    v = doubleMe (v);
-    assert v == n * n;
-    return;
+int main() {
+    return 0;
 }

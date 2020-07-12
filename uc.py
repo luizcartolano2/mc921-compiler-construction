@@ -168,9 +168,10 @@ class Compiler:
                 _str += f"{_code}\n"
             self.opt_file.write(_str)
 
-    def _llvm(self):
-        self.llvm = LLVMCodeGenerator()
-        self.llvm.visit(self.ast)
+    def _llvm(self, blocks, opt):
+        self.llvm = LLVMCodeGenerator(blocks, opt)
+        self.llvm.build()
+
         if not self.args.susy and self.llvm_file is not None:
             self.llvm.save_ir(self.llvm_file)
         if self.run:
@@ -188,7 +189,7 @@ class Compiler:
             if self.args.opt:
                 self._opt(self.create_blocks)
             if self.args.llvm:
-                self._llvm()
+                self._llvm(self.create_blocks, self.args.opt)
 
     def compile(self):
         """ Compiles the given  filename """
