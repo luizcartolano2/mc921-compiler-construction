@@ -863,42 +863,21 @@ class LLVMFunctionVisitor:
                     The BasicBlock instance.
 
         """
-        if self.phase == "create_bb":
-            if block.label is None:
-                assert len(block.instructions) == 1
-                self._new_function(block.instructions[0])
-            else:
-                bb = self.functions.append_basic_block(block.label[1:])
-                self.location[block.label] = bb
-
-        elif self.phase == "build_bb":
+        if self.phase == "build_bb":
             if block.label:
                 bb = self.location[block.label]
                 self.builder = ir.IRBuilder(bb)
                 for inst in block.instructions[1:]:
                     self.build(inst)
 
-    def visit_ConditionBlock(self, block):
-        """
-            The method that visits a ConditionBlock
-
-            ...
-
-            Parameters
-            ----------
-                block :
-                    The ConditionBlock instance.
-
-        """
-        if self.phase == "create_bb":
-            bb = self.functions.append_basic_block(block.label[1:])
-            self.location[block.label] = bb
-
-        elif self.phase == "build_bb":
-            bb = self.location[block.label]
-            self.builder = ir.IRBuilder(bb)
-            for inst in block.instructions[1:]:
-                self.build(inst)
+    def create_blocks(self, func_blocks_dict):
+        for block_label in func_blocks_dict:
+            block = func_blocks_dict[block_label]
+            if block_label == '%entry':
+                self._new_function(block.instructions[1])
+            else:
+                bb = self.functions.append_basic_block(block_label[1:])
+                self.location[block.label] = bb
 
 
 class LLVMCodeGenerator:
@@ -1101,7 +1080,7 @@ class LLVMCodeGenerator:
     def __generate_global_instructions(self, global_inst):
         """
             The method to generate the global instructions
-
+            # TODO: bug with func declarations
             ...
 
             Parameters
@@ -1165,7 +1144,12 @@ class LLVMCodeGenerator:
 
         """
         self.__generate_global_instructions(self.global_codes)
-        print()
+
+        for func in self.functions:
+            func_dict = self.functions[func]
+            llvm_block = LLVMFunctionVisitor(self.module)
+            llvm_block.create_blocks(func_dict)
+
         # for _decl in node.gdecls:
         #     if isinstance(_decl, FuncDef):
         #         bb = LLVMFunctionVisitor(self.module)
