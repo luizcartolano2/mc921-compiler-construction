@@ -215,7 +215,11 @@ class UCLexer():
 
     # A string containing ignored characters (spaces and tabs)
     t_ignore = ' \t'
-    t_CHAR_CONST = r'\'(.)\''
+
+    def t_CHAR_CONST(self, t):
+        r'\'(.)\''
+        t.value = t.value[1:-1]
+        return t
 
     ##
     ##  Get Newlines

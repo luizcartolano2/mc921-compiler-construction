@@ -4,7 +4,7 @@ int main() {
     int vowels = 0;
     int consonants = 0;
 
-    while(s[i++] != '.') {
+    while(s[i++] != 'e') {
         if(s[i] == 'a' || s[i] == 'e' || s[i] == 'i' || s[i] == 'o' || s[i] == 'u' )
             vowels++;
         else

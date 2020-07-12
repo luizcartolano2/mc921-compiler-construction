@@ -171,7 +171,12 @@ class Visitor(NodeVisitor):
                 right_type = node.right_value.type.names[index]
 
             # assert if types match
-            assert left_type == right_type, line + f"Types {right_type.typename} and {left_type.typename} are different on function {func}!"
+            if left_type.typename == 'char' and right_type.typename == 'string':
+                pass
+            elif left_type.typename == 'string' and right_type.typename == 'char':
+                pass
+            else:
+                assert left_type == right_type, line + f"Types {right_type.typename} and {left_type.typename} are different on function {func}!"
 
 
     def __check_operand_match(self, operator, node, operand_type, line, func_name):
