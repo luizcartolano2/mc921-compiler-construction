@@ -25,23 +25,6 @@ llvm_type_dict = {
 }
 
 
-def create_byte_array(buf):
-    """
-        A method used to create a byte array
-
-        ...
-
-        Parameters
-        ----------
-            buf :
-                The buffer.
-
-    """
-    b = bytearray(buf)
-    _len = len(b)
-    return ir.Constant(ir.ArrayType(char_type, _len), b)
-
-
 def extract_operation(inst):
     """
         The method that extracts the operation of an instruction
@@ -96,7 +79,7 @@ class LLVMFunctionVisitor:
         self.phase = None
         self.ret_register = None
 
-    def _get_location(self, target):
+    def get_location(self, target):
         """
             The method that gets the location of a target
 
@@ -117,7 +100,7 @@ class LLVMFunctionVisitor:
             return None
 
     @staticmethod
-    def _global_constant(builder_or_module, name, value, linkage='internal'):
+    def global_constant(builder_or_module, name, value, linkage='internal'):
         """
             The method that creates a global constant
 
@@ -145,7 +128,7 @@ class LLVMFunctionVisitor:
         data.initializer = value
         return data
 
-    def _new_function(self, inst):
+    def new_function(self, inst):
         """
             The method that creates a new function
 
@@ -168,7 +151,7 @@ class LLVMFunctionVisitor:
         for _idx, _reg in enumerate([item[1] for item in _args]):
             self.location[_reg] = self.functions.args[_idx]
 
-    def _cio(self, fname, format, *target):
+    def cio(self, fname, format, *target):
         """
             A
 
@@ -184,15 +167,18 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        fmt_bytes = create_byte_array((format + '\00').encode('ascii'))
-        global_fmt = self._global_constant(self.builder.module,
+        byte_array = bytearray((format + "\00").encode('ascii'))
+        len_byte_array = len(byte_array)
+        fmt_bytes = ir.Constant(ir.ArrayType(char_type, len_byte_array), byte_array)
+
+        global_fmt = self.global_constant(self.builder.module,
                                            self.builder.module.get_unique_name('.fmt'),
                                            fmt_bytes)
         fn = self.builder.module.get_global(fname)
         ptr_fmt = self.builder.bitcast(global_fmt, charptr_ty)
         return self.builder.call(fn, [ptr_fmt] + list(target))
 
-    def _build_alloc(self, ctype, target):
+    def build_alloc(self, ctype, target):
         """
             The method that builds an alloc
 
@@ -210,7 +196,7 @@ class LLVMFunctionVisitor:
         _location = self.builder.alloca(_type, name=target[1:])
         self.location[target] = _location
 
-    def _build_alloc_(self, ctype, target, **kwargs):
+    def build_alloc_(self, ctype, target, **kwargs):
         """
             The method that builds an alloc
 
@@ -237,7 +223,7 @@ class LLVMFunctionVisitor:
         _location = self.builder.alloca(_type, name=target[1:])
         self.location[target] = _location
 
-    def _build_call(self, ret_type, name, target):
+    def build_call(self, ret_type, name, target):
         """
             The method that builds a call
 
@@ -254,7 +240,7 @@ class LLVMFunctionVisitor:
 
         """
         if name == '%':
-            _loc = self.builder.call(self._get_location(name), self.params)
+            _loc = self.builder.call(self.get_location(name), self.params)
         else:
             try:
                 _fn = self.builder.module.get_global(name[1:])
@@ -267,7 +253,7 @@ class LLVMFunctionVisitor:
         self.location[target] = _loc
         self.params = []
 
-    def _build_elem(self, ctype, source, index, target):
+    def build_elem(self, ctype, source, index, target):
         """
             The method that builds an element
 
@@ -285,8 +271,8 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        var_source = self._get_location(source)
-        var_index = self._get_location(index)
+        var_source = self.get_location(source)
+        var_index = self.get_location(index)
         var_base = ir.Constant(var_index.type, 0)
         if isinstance(var_source.type.pointee.element, ir.ArrayType):
             col = var_source.type.pointee.element.count
@@ -303,7 +289,7 @@ class LLVMFunctionVisitor:
             _loc = self.builder.gep(var_source, [var_base, var_index])
         self.location[target] = _loc
 
-    def _build_get(self, ctype, source, target):
+    def build_get(self, ctype, source, target):
         """
             The method that builds a get
 
@@ -321,7 +307,7 @@ class LLVMFunctionVisitor:
         """
         pass
 
-    def _build_get_(self, ctype, source, target, **kwargs):
+    def build_get_(self, ctype, source, target, **kwargs):
         """
             The method that builds a get
 
@@ -339,11 +325,11 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _source = self._get_location(source)
-        _target = self._get_location(target)
-        self.builder.store(_source, _target, align=_align)
+        _source = self.get_location(source)
+        _target = self.get_location(target)
+        self.builder.store(_source, _target)
 
-    def _build_literal(self, var_type, cte, target):
+    def build_literal(self, var_type, cte, target):
         """
             The method that builds a literal
 
@@ -360,13 +346,13 @@ class LLVMFunctionVisitor:
 
         """
         _val = llvm_type_dict[var_type](cte)
-        _loc = self._get_location(target)
+        _loc = self.get_location(target)
         if _loc:
             self.builder.store(_val, _loc)
         else:
             self.location[target] = _val
 
-    def _build_load(self, ctype, source, target):
+    def build_load(self, ctype, source, target):
         """
             The method that builds a store
 
@@ -382,14 +368,14 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _source = self._get_location(source)
+        _source = self.get_location(source)
         if isinstance(_source, ir.Constant):
             self.location[target] = _source
         else:
             _loc = self.builder.load(_source)
             self.location[target] = _loc
 
-    def _build_load_(self, ctype, source, target, **kwargs):
+    def build_load_(self, ctype, source, target, **kwargs):
         """
             The method that builds a load
 
@@ -407,7 +393,7 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _source = self._get_location(source)
+        _source = self.get_location(source)
         _type = llvm_type_dict[ctype]
         _pointee = _source.type.pointee
         if isinstance(_pointee, ir.PointerType):
@@ -422,7 +408,7 @@ class LLVMFunctionVisitor:
             _loc = self.builder.load(_source)
         self.location[target] = _loc
 
-    def _build_param(self, par_type, source):
+    def build_param(self, par_type, source):
         """
             The method that builds a parameter
 
@@ -436,9 +422,9 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        self.params.append(self._get_location(source))
+        self.params.append(self.get_location(source))
 
-    def _build_print(self, val_type, target):
+    def build_print(self, val_type, target):
         """
             The method that builds a print
 
@@ -453,19 +439,19 @@ class LLVMFunctionVisitor:
 
         """
         if target:
-            value_to_print = self._get_location(target)
+            value_to_print = self.get_location(target)
             if val_type == 'int':
-                self._cio('printf', '%d', value_to_print)
+                self.cio('printf', '%d', value_to_print)
             elif val_type == 'float':
-                self._cio('printf', '%f', value_to_print)
+                self.cio('printf', '%f', value_to_print)
             elif val_type == 'char':
-                self._cio('printf', '%c', value_to_print)
+                self.cio('printf', '%c', value_to_print)
             elif val_type == 'string':
-                self._cio('printf', '%s', value_to_print)
+                self.cio('printf', '%s', value_to_print)
         else:
-            self._cio('printf', '\n')
+            self.cio('printf', '\n')
 
-    def _build_read(self, var_type, target):
+    def build_read(self, var_type, target):
         """
             The method that builds a read
 
@@ -479,15 +465,15 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        read_target = self._get_location(target)
+        read_target = self.get_location(target)
         if var_type == 'int':
-            self._cio('scanf', '%d', read_target)
+            self.cio('scanf', '%d', read_target)
         elif var_type == 'float':
-            self._cio('scanf', '%lf', read_target)
+            self.cio('scanf', '%lf', read_target)
         elif var_type == 'char':
-            self._cio('scanf', '%c', read_target)
+            self.cio('scanf', '%c', read_target)
 
-    def _build_read_(self, ctype, target, **kwargs):
+    def build_read_(self, ctype, target, **kwargs):
         """
             The method that builds a read
 
@@ -503,9 +489,9 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        self._build_read_(ctype, target) #Isso faz sentido?
+        self.build_read_(ctype, target) #Isso faz sentido?
 
-    def _build_store(self, ctype, source, target):
+    def build_store(self, ctype, source, target):
         """
             The method that builds a store
 
@@ -521,14 +507,14 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _source = self._get_location(source)
-        _target = self._get_location(target)
+        _source = self.get_location(source)
+        _target = self.get_location(target)
         if _target:
             self.builder.store(_source, _target)
         else:
             self.location[target] = _source
 
-    def _build_store_(self, ctype, source, target, **kwargs):
+    def build_store_(self, ctype, source, target, **kwargs):
         """
             The method that builds a store
 
@@ -546,8 +532,8 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        var_source = self._get_location(source)
-        var_target = self._get_location(target)
+        var_source = self.get_location(source)
+        var_target = self.get_location(target)
 
         if isinstance(var_target.type.pointee, ir.ArrayType):
             var_size = 1
@@ -567,7 +553,7 @@ class LLVMFunctionVisitor:
         else:
             self.builder.store(var_source, var_target)
 
-    def _build_add(self, expr_type, left, right, target):
+    def build_add(self, expr_type, left, right, target):
         """
             The method that builds a sum
 
@@ -585,15 +571,15 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _left = self._get_location(left)
-        _right = self._get_location(right)
+        _left = self.get_location(left)
+        _right = self.get_location(right)
         if expr_type == 'float':
             _loc = self.builder.fadd(_left, _right)
         else:
             _loc = self.builder.add(_left, _right)
         self.location[target] = _loc
 
-    def _build_sub(self, expr_type, left, right, target):
+    def build_sub(self, expr_type, left, right, target):
         """
             The method that builds a subtraction
 
@@ -611,15 +597,15 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _left = self._get_location(left)
-        _right = self._get_location(right)
+        _left = self.get_location(left)
+        _right = self.get_location(right)
         if expr_type == 'float':
             _loc = self.builder.fsub(_left, _right)
         else:
             _loc = self.builder.sub(_left, _right)
         self.location[target] = _loc
 
-    def _build_mul(self, expr_type, left, right, target):
+    def build_mul(self, expr_type, left, right, target):
         """
             The method that builds a multiplication
 
@@ -637,15 +623,15 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _left = self._get_location(left)
-        _right = self._get_location(right)
+        _left = self.get_location(left)
+        _right = self.get_location(right)
         if expr_type == 'float':
             _loc = self.builder.fmul(_left, _right)
         else:
             _loc = self.builder.mul(_left, _right)
         self.location[target] = _loc
 
-    def _build_div(self, expr_type, left, right, target):
+    def build_div(self, expr_type, left, right, target):
         """
             The method that builds a division
 
@@ -663,15 +649,15 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _left = self._get_location(left)
-        _right = self._get_location(right)
+        _left = self.get_location(left)
+        _right = self.get_location(right)
         if expr_type == 'float':
             _loc = self.builder.fdiv(_left, _right)
         else:
             _loc = self.builder.sdiv(_left, _right)
         self.location[target] = _loc
 
-    def _build_mod(self, expr_type, left, right, target):
+    def build_mod(self, expr_type, left, right, target):
         """
             The method that builds a mod
 
@@ -689,29 +675,29 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _left = self._get_location(left)
-        _right = self._get_location(right)
+        _left = self.get_location(left)
+        _right = self.get_location(right)
         if expr_type == 'float':
             _loc = self.builder.frem(_left, _right)
         else:
             _loc = self.builder.srem(_left, _right)
         self.location[target] = _loc
 
-    def _build_and(self, expr_type, left, right, target):
-        left_loc = self._get_location(left)
-        right_loc = self._get_location(right)
+    def build_and(self, expr_type, left, right, target):
+        left_loc = self.get_location(left)
+        right_loc = self.get_location(right)
         target_loc = self.builder.and_(left_loc, right_loc)
 
         self.location[target] = target_loc
 
-    def _build_or(self, expr_type, left, right, target):
-        left_loc = self._get_location(left)
-        right_loc = self._get_location(right)
+    def build_or(self, expr_type, left, right, target):
+        left_loc = self.get_location(left)
+        right_loc = self.get_location(right)
         target_loc = self.builder.or_(left_loc, right_loc)
 
         self.location[target] = target_loc
 
-    def _build_ge(self, expr_type, left, right, target):
+    def build_ge(self, expr_type, left, right, target):
         """
             The method that builds a greather or equal than
 
@@ -729,15 +715,15 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _left = self._get_location(left)
-        _right = self._get_location(right)
+        _left = self.get_location(left)
+        _right = self.get_location(right)
         if expr_type == 'float':
             _loc = self.builder.fcmp_ordered('>=', _left, _right)
         else:
             _loc = self.builder.icmp_signed('>=', _left, _right)
         self.location[target] = _loc
 
-    def _build_le(self, expr_type, left, right, target):
+    def build_le(self, expr_type, left, right, target):
         """
             The method that builds a less or equal than
 
@@ -755,15 +741,15 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _left = self._get_location(left)
-        _right = self._get_location(right)
+        _left = self.get_location(left)
+        _right = self.get_location(right)
         if expr_type == 'float':
             _loc = self.builder.fcmp_ordered('<=', _left, _right)
         else:
             _loc = self.builder.icmp_signed('<=', _left, _right)
         self.location[target] = _loc
 
-    def _build_gt(self, expr_type, left, right, target):
+    def build_gt(self, expr_type, left, right, target):
         """
             The method that builds a greater than
 
@@ -781,15 +767,15 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _left = self._get_location(left)
-        _right = self._get_location(right)
+        _left = self.get_location(left)
+        _right = self.get_location(right)
         if expr_type == 'float':
             _loc = self.builder.fcmp_ordered('>', _left, _right)
         else:
             _loc = self.builder.icmp_signed('>', _left, _right)
         self.location[target] = _loc
 
-    def _build_lt(self, expr_type, left, right, target):
+    def build_lt(self, expr_type, left, right, target):
         """
             The method that builds a less than
 
@@ -807,26 +793,26 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _left = self._get_location(left)
-        _right = self._get_location(right)
+        _left = self.get_location(left)
+        _right = self.get_location(right)
         if expr_type == 'float':
             _loc = self.builder.fcmp_ordered('<', _left, _right)
         else:
             _loc = self.builder.icmp_signed('<', _left, _right)
         self.location[target] = _loc
 
-    def _build_eq(self, expr_type, left, right, target):
-        left_loc = self._get_location(left)
-        right_loc = self._get_location(right)
+    def build_eq(self, expr_type, left, right, target):
+        left_loc = self.get_location(left)
+        right_loc = self.get_location(right)
         if expr_type == 'float':
             _loc = self.builder.fcmp_ordered('==', left_loc, right_loc)
         else:
             _loc = self.builder.icmp_signed('==', left_loc, right_loc)
         self.location[target] = _loc
 
-    def _build_ne(self, expr_type, left, right, target):
-        left_loc = self._get_location(left)
-        right_loc = self._get_location(right)
+    def build_ne(self, expr_type, left, right, target):
+        left_loc = self.get_location(left)
+        right_loc = self.get_location(right)
         if expr_type == 'float':
             _loc = self.builder.fcmp_ordered('!=', left_loc, right_loc)
         elif expr_type == 'char': # or expr_type == 'string':
@@ -835,19 +821,19 @@ class LLVMFunctionVisitor:
             _loc = self.builder.icmp_signed('!=', left_loc, right_loc)
         self.location[target] = _loc
 
-    def _build_sitofp(self, expr_type, source, target):
-        source_loc = self._get_location(source)
+    def build_sitofp(self, expr_type, source, target):
+        source_loc = self.get_location(source)
         target_loc = self.builder.sitofp(source_loc, float_type)
 
         self.location[target] = target_loc
 
-    def _build_fptosi(self, expr_type, source, target):
-        source_loc = self._get_location(source)
+    def build_fptosi(self, expr_type, source, target):
+        source_loc = self.get_location(source)
         target_loc = self.builder.fptosi(source_loc, int_type)
 
         self.location[target] = target_loc
 
-    def _build_return(self, expr_type, target):
+    def build_return(self, expr_type, target):
         """
             The method that builds a return
 
@@ -864,10 +850,10 @@ class LLVMFunctionVisitor:
         if expr_type == 'void':
             self.builder.ret_void()
         else:
-            _target = self._get_location(target)
+            _target = self.get_location(target)
             self.builder.ret(_target)
 
-    def _build_jump(self, expr_type, target):
+    def build_jump(self, expr_type, target):
         """
             The method that builds a jump
 
@@ -881,10 +867,10 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _target = self._get_location(target)
+        _target = self.get_location(target)
         self.builder.branch(_target)
 
-    def _build_cbranch(self, expr_type, expr_test, target, fall_through):
+    def build_cbranch(self, expr_type, expr_test, target, fall_through):
         """
             The method that builds a conditional branch
 
@@ -902,9 +888,9 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _expr_test = self._get_location(expr_test)
-        _target = self._get_location(target)
-        _fall_through = self._get_location(fall_through)
+        _expr_test = self.get_location(expr_test)
+        _target = self.get_location(target)
+        _fall_through = self.get_location(fall_through)
         self.builder.cbranch(_expr_test, _target, _fall_through)
 
     def build(self, inst):
@@ -920,12 +906,12 @@ class LLVMFunctionVisitor:
 
         """
         opcode, ctype, modifier = extract_operation(inst[0])
-        if hasattr(self, "_build_" + opcode):
+        if hasattr(self, "build_" + opcode):
             args = inst[1:] if len(inst) > 1 else (None,)
             if not modifier:
-                getattr(self, "_build_" + opcode)(ctype, *args)
+                getattr(self, "build_" + opcode)(ctype, *args)
             else:
-                getattr(self, "_build_" + opcode + "_")(ctype, *inst[1:], **modifier)
+                getattr(self, "build_" + opcode + "_")(ctype, *inst[1:], **modifier)
         else:
             print("Warning: No _build_" + opcode + "() method", flush=True)
 
@@ -933,7 +919,7 @@ class LLVMFunctionVisitor:
         for block_label in func_blocks_dict:
             block = func_blocks_dict[block_label]
             if block_label == '%entry':
-                self._new_function(block.instructions[1])
+                self.new_function(block.instructions[1])
             ir_block_loc = self.functions.append_basic_block(block_label)
             self.location[block.label] = ir_block_loc
 
@@ -1026,7 +1012,7 @@ class LLVMCodeGenerator:
         scanf = ir.Function(self.module, scanf_ty, name="scanf")
         self.scanf = scanf
 
-    def compile_ir(self):
+    def __compile_ir(self):
         """
             The method that compiles the IR
 
@@ -1078,7 +1064,7 @@ class LLVMCodeGenerator:
                 :param opt: arg q o marzio tirou do cu dele
 
         """
-        mod = self.compile_ir()
+        mod = self.__compile_ir()
 
         if opt:
             # apply some optimization passes on module
@@ -1129,12 +1115,13 @@ class LLVMCodeGenerator:
             llvm_type = llvm_type_dict[uc_type]
             var_name = inst[1][1:]
             var_value = inst[2]
-            fn_sig = isinstance(var_value, list)
+            func_signature = isinstance(var_value, list)
 
-            if fn_sig:
-                for _el in var_value:
-                    if _el not in list(llvm_type_dict.keys()):
-                        fn_sig = False
+            if func_signature and isinstance(var_value[0], list):
+                func_signature = False
+            elif func_signature and var_value[0] not in llvm_type_dict:
+                func_signature = False
+
             if uc_type in ['string']:
                 # create a byte array in order to store the string
                 byte_array = bytearray((var_value + "\00").encode('utf-8'))
@@ -1146,17 +1133,12 @@ class LLVMCodeGenerator:
                 ir_global_var.initializer = ir_constant
                 # set var as constant
                 ir_global_var.global_constant = True
-            elif modifier and not fn_sig:
-                _width = 1
+            elif modifier and not func_signature:
                 for arg in reversed(list(modifier.values())):
                     llvm_type = ir.ArrayType(llvm_type, int(arg))
-
                 ir_global_var = ir.GlobalVariable(self.module, llvm_type, var_name)
                 ir_global_var.initializer = ir.Constant(llvm_type, var_value)
-                if var_name.startswith('.const'):
-                    print('.const')
-                    ir_global_var.global_constant = True
-            elif fn_sig:
+            elif func_signature:
                 # ptr to function
                 _sig = [llvm_type_dict[arg] for arg in var_value]
                 ir_func_type = ir.FunctionType(llvm_type_dict[uc_type], _sig)
@@ -1185,11 +1167,3 @@ class LLVMCodeGenerator:
             llvm_block = LLVMFunctionVisitor(self.module)
             llvm_block.create_blocks(func_dict)
             llvm_block.build_blocks(func_dict)
-
-        # for _decl in node.gdecls:
-        #     if isinstance(_decl, FuncDef):
-        #         bb = LLVMFunctionVisitor(self.module)
-        #         bb.phase = 'create_bb'
-        #         bb.visit(_decl.cfg)
-        #         bb.phase = 'build_bb'
-        #         bb.visit(_decl.cfg)
