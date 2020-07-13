@@ -1136,19 +1136,25 @@ class LLVMCodeGenerator:
                     if _el not in list(llvm_type_dict.keys()):
                         fn_sig = False
             if uc_type in ['string']:
-                ir_constant = create_byte_array((var_value + "\00").encode('utf-8'))
+                # create a byte array in order to store the string
+                byte_array = bytearray((var_value + "\00").encode('utf-8'))
+                len_byte_array = len(byte_array)
+                ir_constant = ir.Constant(ir.ArrayType(char_type, len_byte_array), byte_array)
+                # create a global variable to refer the string
                 ir_global_var = ir.GlobalVariable(self.module, ir_constant.type, var_name)
+                # initialize global var
                 ir_global_var.initializer = ir_constant
+                # set var as constant
                 ir_global_var.global_constant = True
             elif modifier and not fn_sig:
                 _width = 1
                 for arg in reversed(list(modifier.values())):
-                    _width = int(arg)
                     llvm_type = ir.ArrayType(llvm_type, int(arg))
 
                 ir_global_var = ir.GlobalVariable(self.module, llvm_type, var_name)
                 ir_global_var.initializer = ir.Constant(llvm_type, var_value)
                 if var_name.startswith('.const'):
+                    print('.const')
                     ir_global_var.global_constant = True
             elif fn_sig:
                 # ptr to function
