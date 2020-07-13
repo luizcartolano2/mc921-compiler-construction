@@ -851,6 +851,9 @@ class LLVMFunctionVisitor:
         right_loc = self._get_location(right)
         if expr_type == 'float':
             _loc = self.builder.fcmp_ordered('!=', left_loc, right_loc)
+        elif expr_type == 'char': # or expr_type == 'string':
+            ptr_fmt = self.builder.bitcast(right_loc, charptr_ty)
+            _loc = self.builder.icmp_signed('!=', left_loc, ptr_fmt)
         else:
             _loc = self.builder.icmp_signed('!=', left_loc, right_loc)
         self.location[target] = _loc
@@ -1191,12 +1194,13 @@ class LLVMCodeGenerator:
                 for _el in var_value:
                     if _el not in list(llvm_type_dict.keys()):
                         fn_sig = False
-            if uc_type in ['string', 'char']:
+            if uc_type in ['string']:
                 ir_constant = create_byte_array((var_value + "\00").encode('utf-8'))
                 ir_global_var = ir.GlobalVariable(self.module, ir_constant.type, var_name)
                 ir_global_var.initializer = ir_constant
                 ir_global_var.align = 1
                 ir_global_var.global_constant = True
+
             elif modifier and not fn_sig:
                 _width = 1
                 for arg in reversed(list(modifier.values())):
