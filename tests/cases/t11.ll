@@ -6,7 +6,7 @@ declare i32 @"printf"(i8* %".1", ...)
 
 declare i32 @"scanf"(i8* %".1", ...) 
 
-@".str.0" = constant [23 x i8] c"assertion_fail on 15:5\00", align 1
+@".str.0" = constant [23 x i8] c"assertion_fail on 15:5\00"
 define i32 @"main"() 
 {
 "%entry":

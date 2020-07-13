@@ -42,36 +42,6 @@ def create_byte_array(buf):
     return ir.Constant(ir.ArrayType(char_type, _len), b)
 
 
-def get_align(left_type, width):
-    """
-        A
-
-        ...
-
-        Parameters
-        ----------
-            left_type :
-                A.
-            width :
-                A.
-
-    """
-    align_value = 1
-    if isinstance(left_type, ir.IntType):
-        align_value = left_type.width // 8
-    elif isinstance(left_type, (ir.DoubleType, ir.PointerType)):
-        align_value = 8
-    elif isinstance(left_type, ir.ArrayType):
-        _align = get_align(left_type.element, 1)
-        if width < 4:
-            width = 1
-        else:
-            width = 4
-        align_value = _align * width
-
-    return align_value
-
-
 def extract_operation(inst):
     """
         The method that extracts the operation of an instruction
@@ -173,7 +143,6 @@ class LLVMFunctionVisitor:
         data.linkage = linkage
         data.global_constant = True
         data.initializer = value
-        data.align = 1
         return data
 
     def _new_function(self, inst):
@@ -239,7 +208,6 @@ class LLVMFunctionVisitor:
         """
         _type = llvm_type_dict[ctype]
         _location = self.builder.alloca(_type, name=target[1:])
-        _location.align = get_align(_type, 1)
         self.location[target] = _location
 
     def _build_alloc_(self, ctype, target, **kwargs):
@@ -267,7 +235,6 @@ class LLVMFunctionVisitor:
             else:
                 _type = ir.PointerType(_type)
         _location = self.builder.alloca(_type, name=target[1:])
-        _location.align = get_align(_type, _width)
         self.location[target] = _location
 
     def _build_call(self, ret_type, name, target):
@@ -374,7 +341,6 @@ class LLVMFunctionVisitor:
         """
         _source = self._get_location(source)
         _target = self._get_location(target)
-        _align = get_align(llvm_type_dict[ctype].as_pointer(), 1)
         self.builder.store(_source, _target, align=_align)
 
     def _build_literal(self, var_type, cte, target):
@@ -420,8 +386,7 @@ class LLVMFunctionVisitor:
         if isinstance(_source, ir.Constant):
             self.location[target] = _source
         else:
-            _align = get_align(llvm_type_dict[ctype], 1)
-            _loc = self.builder.load(_source, align=_align)
+            _loc = self.builder.load(_source)
             self.location[target] = _loc
 
     def _build_load_(self, ctype, source, target, **kwargs):
@@ -447,17 +412,14 @@ class LLVMFunctionVisitor:
         _pointee = _source.type.pointee
         if isinstance(_pointee, ir.PointerType):
             if isinstance(_pointee.pointee, ir.FunctionType):
-                _loc = self.builder.load(_source, align=8)
+                _loc = self.builder.load(_source)
             else:
                 _type = llvm_type_dict[ctype].as_pointer()
-                _align = get_align(_type, 1)
-                _aux = self.builder.load(_source, align=_align)
+                _aux = self.builder.load(_source)
                 _type = llvm_type_dict[ctype]
-                _align = get_align(_type, 1)
-                _loc = self.builder.load(_aux, align=_align)
+                _loc = self.builder.load(_aux)
         else:
-            _align = get_align(_type, 1)
-            _loc = self.builder.load(_source, align=8)
+            _loc = self.builder.load(_source)
         self.location[target] = _loc
 
     def _build_param(self, par_type, source):
@@ -562,8 +524,7 @@ class LLVMFunctionVisitor:
         _source = self._get_location(source)
         _target = self._get_location(target)
         if _target:
-            _align = get_align(llvm_type_dict[ctype], 1)
-            self.builder.store(_source, _target, _align)
+            self.builder.store(_source, _target)
         else:
             self.location[target] = _source
 
@@ -601,12 +562,10 @@ class LLVMFunctionVisitor:
             _tgtptr = self.builder.bitcast(var_target, charptr_ty)
             self.builder.call(memcpy, [_tgtptr, _srcptr, ir.Constant(i64_type, var_size), llvm_false])
         elif isinstance(var_target.type.pointee, ir.PointerType):
-            _align = get_align(ir.PointerType, 1)
-            _temp = self.builder.load(var_target, align=_align)
-            self.builder.store(var_source, _temp, _align)
+            _temp = self.builder.load(var_target)
+            self.builder.store(var_source, _temp)
         else:
-            _align = get_align(llvm_type_dict[ctype], 1)
-            self.builder.store(var_source, var_target, _align)
+            self.builder.store(var_source, var_target)
 
     def _build_add(self, expr_type, left, right, target):
         """
@@ -1180,7 +1139,6 @@ class LLVMCodeGenerator:
                 ir_constant = create_byte_array((var_value + "\00").encode('utf-8'))
                 ir_global_var = ir.GlobalVariable(self.module, ir_constant.type, var_name)
                 ir_global_var.initializer = ir_constant
-                ir_global_var.align = 1
                 ir_global_var.global_constant = True
             elif modifier and not fn_sig:
                 _width = 1
@@ -1190,7 +1148,6 @@ class LLVMCodeGenerator:
 
                 ir_global_var = ir.GlobalVariable(self.module, llvm_type, var_name)
                 ir_global_var.initializer = ir.Constant(llvm_type, var_value)
-                ir_global_var.align = get_align(llvm_type, _width)
                 if var_name.startswith('.const'):
                     ir_global_var.global_constant = True
             elif fn_sig:
@@ -1200,7 +1157,6 @@ class LLVMCodeGenerator:
             else:
                 # normal global var like int x = 2
                 ir_global_var = ir.GlobalVariable(self.module, llvm_type, var_name)
-                ir_global_var.align = get_align(llvm_type, 1)
                 if var_value:
                     ir_global_var.initializer = ir.Constant(llvm_type, var_value)
 
