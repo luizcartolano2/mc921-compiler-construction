@@ -100,12 +100,19 @@ class LLVMFunctionVisitor:
         opcode = aux[0]
         if opcode not in ['fptosi', 'sitofp', 'jump', 'cbranch', 'define']:
             uc_type = aux[1]
+
             if len(aux) > 2:
-                for i, val in enumerate(aux[2]):
-                    if val.isdigit():
-                        modifier['dim' + str(i)] = val
-                    elif val == '*':
-                        modifier['prt' + str(i)] = val
+                val = aux[2]
+                if val.isdigit():
+                    modifier['dim_1'] = val
+                elif val == "*":
+                    modifier['ptr_1'] = val
+            if len(aux) > 3:
+                val = aux[3]
+                if val.isdigit():
+                    modifier['dim_2'] = val
+                elif val == "*":
+                    modifier['ptr_2'] = val
 
         return opcode, uc_type, modifier
 
@@ -198,10 +205,11 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        mod = self.builder.module
         fmt_bytes = create_byte_array((format + '\00').encode('ascii'))
-        global_fmt = self._global_constant(mod, mod.get_unique_name('.fmt'), fmt_bytes)
-        fn = mod.get_global(fname)
+        global_fmt = self._global_constant(self.builder.module,
+                                           self.builder.module.get_unique_name('.fmt'),
+                                           fmt_bytes)
+        fn = self.builder.module.get_global(fname)
         ptr_fmt = self.builder.bitcast(global_fmt, charptr_ty)
         return self.builder.call(fn, [ptr_fmt] + list(target))
 
@@ -567,27 +575,28 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _source = self._get_location(source)
-        _target = self._get_location(target)
-        if isinstance(_target.type.pointee, ir.ArrayType):
-            _size = 1
+        var_source = self._get_location(source)
+        var_target = self._get_location(target)
+
+        if isinstance(var_target.type.pointee, ir.ArrayType):
+            var_size = 1
             for arg in kwargs.values():
-                _size *= int(arg)
+                var_size *= int(arg)
             if ctype == 'float':
-                _size = _size * 8
+                var_size = var_size * 8
             elif ctype == 'int':
-                _size = _size * int_type.width // 8
+                var_size = var_size * int_type.width // 8
             memcpy = self.module.declare_intrinsic('llvm.memcpy', [charptr_ty, charptr_ty, i64_type])
-            _srcptr = self.builder.bitcast(_source, charptr_ty)
-            _tgtptr = self.builder.bitcast(_target, charptr_ty)
-            self.builder.call(memcpy, [_tgtptr, _srcptr, ir.Constant(i64_type, _size), llvm_false])
-        elif isinstance(_target.type.pointee, ir.PointerType):
+            _srcptr = self.builder.bitcast(var_source, charptr_ty)
+            _tgtptr = self.builder.bitcast(var_target, charptr_ty)
+            self.builder.call(memcpy, [_tgtptr, _srcptr, ir.Constant(i64_type, var_size), llvm_false])
+        elif isinstance(var_target.type.pointee, ir.PointerType):
             _align = get_align(ir.PointerType, 1)
-            _temp = self.builder.load(_target, align=_align)
-            self.builder.store(_source, _temp, _align)
+            _temp = self.builder.load(var_target, align=_align)
+            self.builder.store(var_source, _temp, _align)
         else:
             _align = get_align(llvm_type_dict[ctype], 1)
-            self.builder.store(_source, _target, _align)
+            self.builder.store(var_source, var_target, _align)
 
     def _build_add(self, expr_type, left, right, target):
         """
@@ -852,8 +861,7 @@ class LLVMFunctionVisitor:
         if expr_type == 'float':
             _loc = self.builder.fcmp_ordered('!=', left_loc, right_loc)
         elif expr_type == 'char': # or expr_type == 'string':
-            ptr_fmt = self.builder.bitcast(right_loc, charptr_ty)
-            _loc = self.builder.icmp_signed('!=', left_loc, ptr_fmt)
+            _loc = self.builder.fcmp_ordered('!=', left_loc, right_loc)
         else:
             _loc = self.builder.icmp_signed('!=', left_loc, right_loc)
         self.location[target] = _loc
@@ -1200,7 +1208,6 @@ class LLVMCodeGenerator:
                 ir_global_var.initializer = ir_constant
                 ir_global_var.align = 1
                 ir_global_var.global_constant = True
-
             elif modifier and not fn_sig:
                 _width = 1
                 for arg in reversed(list(modifier.values())):

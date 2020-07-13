@@ -12,8 +12,8 @@ declare i32 @"scanf"(i8* %".1", ...)
 define i32 @"main"() 
 {
 "%entry":
-  %"a" = alloca [1 x [0 x i32]], align 4
-  %"transpose" = alloca [1 x [0 x i32]], align 4
+  %"a" = alloca [10 x [10 x i32]], align 16
+  %"transpose" = alloca [10 x [10 x i32]], align 16
   %"i" = alloca i32, align 4
   %"j" = alloca i32, align 4
   store i32 0, i32* %"i"
@@ -39,10 +39,10 @@ define i32 @"main"()
   %".18" = mul i32 10, %".17"
   %".19" = load i32, i32* %"j", align 4
   %".20" = add i32 %".18", %".19"
-  %".21" = sdiv i32 %".20", 0
-  %".22" = srem i32 %".20", 0
-  %".23" = getelementptr [1 x [0 x i32]], [1 x [0 x i32]]* %"a", i32 0, i32 %".21"
-  %".24" = getelementptr [0 x i32], [0 x i32]* %".23", i32 0, i32 %".22"
+  %".21" = sdiv i32 %".20", 10
+  %".22" = srem i32 %".20", 10
+  %".23" = getelementptr [10 x [10 x i32]], [10 x [10 x i32]]* %"a", i32 0, i32 %".21"
+  %".24" = getelementptr [10 x i32], [10 x i32]* %".23", i32 0, i32 %".22"
   store i32 %".16", i32* %".24", align 4
   %".26" = load i32, i32* %"j", align 4
   %".27" = add i32 %".26", 1
@@ -76,10 +76,10 @@ define i32 @"main"()
   %".49" = mul i32 10, %".48"
   %".50" = load i32, i32* %"j", align 4
   %".51" = add i32 %".49", %".50"
-  %".52" = sdiv i32 %".51", 0
-  %".53" = srem i32 %".51", 0
-  %".54" = getelementptr [1 x [0 x i32]], [1 x [0 x i32]]* %"a", i32 0, i32 %".52"
-  %".55" = getelementptr [0 x i32], [0 x i32]* %".54", i32 0, i32 %".53"
+  %".52" = sdiv i32 %".51", 10
+  %".53" = srem i32 %".51", 10
+  %".54" = getelementptr [10 x [10 x i32]], [10 x [10 x i32]]* %"a", i32 0, i32 %".52"
+  %".55" = getelementptr [10 x i32], [10 x i32]* %".54", i32 0, i32 %".53"
   %".56" = load i32, i32* %".55", align 8
   %".57" = bitcast [3 x i8]* @".fmt.2" to i8*
   %".58" = call i32 (i8*, ...) @"printf"(i8* %".57", i32 %".56")
@@ -121,19 +121,19 @@ define i32 @"main"()
   %".86" = mul i32 10, %".85"
   %".87" = load i32, i32* %"j", align 4
   %".88" = add i32 %".86", %".87"
-  %".89" = sdiv i32 %".88", 0
-  %".90" = srem i32 %".88", 0
-  %".91" = getelementptr [1 x [0 x i32]], [1 x [0 x i32]]* %"a", i32 0, i32 %".89"
-  %".92" = getelementptr [0 x i32], [0 x i32]* %".91", i32 0, i32 %".90"
+  %".89" = sdiv i32 %".88", 10
+  %".90" = srem i32 %".88", 10
+  %".91" = getelementptr [10 x [10 x i32]], [10 x [10 x i32]]* %"a", i32 0, i32 %".89"
+  %".92" = getelementptr [10 x i32], [10 x i32]* %".91", i32 0, i32 %".90"
   %".93" = load i32, i32* %".92", align 8
   %".94" = load i32, i32* %"j", align 4
   %".95" = mul i32 10, %".94"
   %".96" = load i32, i32* %"i", align 4
   %".97" = add i32 %".95", %".96"
-  %".98" = sdiv i32 %".97", 0
-  %".99" = srem i32 %".97", 0
-  %".100" = getelementptr [1 x [0 x i32]], [1 x [0 x i32]]* %"transpose", i32 0, i32 %".98"
-  %".101" = getelementptr [0 x i32], [0 x i32]* %".100", i32 0, i32 %".99"
+  %".98" = sdiv i32 %".97", 10
+  %".99" = srem i32 %".97", 10
+  %".100" = getelementptr [10 x [10 x i32]], [10 x [10 x i32]]* %"transpose", i32 0, i32 %".98"
+  %".101" = getelementptr [10 x i32], [10 x i32]* %".100", i32 0, i32 %".99"
   store i32 %".93", i32* %".101", align 4
   %".103" = load i32, i32* %"j", align 4
   %".104" = add i32 %".103", 1
@@ -167,10 +167,10 @@ define i32 @"main"()
   %".126" = mul i32 10, %".125"
   %".127" = load i32, i32* %"j", align 4
   %".128" = add i32 %".126", %".127"
-  %".129" = sdiv i32 %".128", 0
-  %".130" = srem i32 %".128", 0
-  %".131" = getelementptr [1 x [0 x i32]], [1 x [0 x i32]]* %"transpose", i32 0, i32 %".129"
-  %".132" = getelementptr [0 x i32], [0 x i32]* %".131", i32 0, i32 %".130"
+  %".129" = sdiv i32 %".128", 10
+  %".130" = srem i32 %".128", 10
+  %".131" = getelementptr [10 x [10 x i32]], [10 x [10 x i32]]* %"transpose", i32 0, i32 %".129"
+  %".132" = getelementptr [10 x i32], [10 x i32]* %".131", i32 0, i32 %".130"
   %".133" = load i32, i32* %".132", align 8
   %".134" = bitcast [3 x i8]* @".fmt.7" to i8*
   %".135" = call i32 (i8*, ...) @"printf"(i8* %".134", i32 %".133")

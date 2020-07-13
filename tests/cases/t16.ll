@@ -34,55 +34,54 @@ define i32 @"main"()
   store i32 %".10", i32* %"i", align 4
   %".12" = getelementptr [9 x i8], [9 x i8]* %"s", i32 0, i32 %".9"
   %".13" = load i8, i8* %".12", align 8
-  %".14" = bitcast [2 x i8]* @".str.1" to i8*
-  %".15" = icmp ne i8 %".13", %".14"
-  br i1 %".15", label %"%6", label %"%7"
+  %".14" = fcmp one i8 %".13", @".str.1"
+  br i1 %".14", label %"%6", label %"%7"
 "%6":
-  %".17" = load i32, i32* %"i", align 4
-  %".18" = getelementptr [9 x i8], [9 x i8]* %"s", i32 0, i32 %".17"
-  %".19" = load i8, i8* %".18", align 8
-  %".20" = icmp eq i8 %".19", @".str.2"
-  %".21" = load i32, i32* %"i", align 4
-  %".22" = getelementptr [9 x i8], [9 x i8]* %"s", i32 0, i32 %".21"
-  %".23" = load i8, i8* %".22", align 8
-  %".24" = icmp eq i8 %".23", @".str.3"
-  %".25" = or i1 %".20", %".24"
-  %".26" = load i32, i32* %"i", align 4
-  %".27" = getelementptr [9 x i8], [9 x i8]* %"s", i32 0, i32 %".26"
-  %".28" = load i8, i8* %".27", align 8
-  %".29" = icmp eq i8 %".28", @".str.4"
-  %".30" = or i1 %".25", %".29"
-  %".31" = load i32, i32* %"i", align 4
-  %".32" = getelementptr [9 x i8], [9 x i8]* %"s", i32 0, i32 %".31"
-  %".33" = load i8, i8* %".32", align 8
-  %".34" = icmp eq i8 %".33", @".str.5"
-  %".35" = or i1 %".30", %".34"
-  %".36" = load i32, i32* %"i", align 4
-  %".37" = getelementptr [9 x i8], [9 x i8]* %"s", i32 0, i32 %".36"
-  %".38" = load i8, i8* %".37", align 8
-  %".39" = icmp eq i8 %".38", @".str.6"
-  %".40" = or i1 %".35", %".39"
-  br i1 %".40", label %"%14", label %"%15"
+  %".16" = load i32, i32* %"i", align 4
+  %".17" = getelementptr [9 x i8], [9 x i8]* %"s", i32 0, i32 %".16"
+  %".18" = load i8, i8* %".17", align 8
+  %".19" = icmp eq i8 %".18", @".str.2"
+  %".20" = load i32, i32* %"i", align 4
+  %".21" = getelementptr [9 x i8], [9 x i8]* %"s", i32 0, i32 %".20"
+  %".22" = load i8, i8* %".21", align 8
+  %".23" = icmp eq i8 %".22", @".str.3"
+  %".24" = or i1 %".19", %".23"
+  %".25" = load i32, i32* %"i", align 4
+  %".26" = getelementptr [9 x i8], [9 x i8]* %"s", i32 0, i32 %".25"
+  %".27" = load i8, i8* %".26", align 8
+  %".28" = icmp eq i8 %".27", @".str.4"
+  %".29" = or i1 %".24", %".28"
+  %".30" = load i32, i32* %"i", align 4
+  %".31" = getelementptr [9 x i8], [9 x i8]* %"s", i32 0, i32 %".30"
+  %".32" = load i8, i8* %".31", align 8
+  %".33" = icmp eq i8 %".32", @".str.5"
+  %".34" = or i1 %".29", %".33"
+  %".35" = load i32, i32* %"i", align 4
+  %".36" = getelementptr [9 x i8], [9 x i8]* %"s", i32 0, i32 %".35"
+  %".37" = load i8, i8* %".36", align 8
+  %".38" = icmp eq i8 %".37", @".str.6"
+  %".39" = or i1 %".34", %".38"
+  br i1 %".39", label %"%14", label %"%15"
 "%14":
-  %".42" = load i32, i32* %"vowels", align 4
-  %".43" = add i32 %".42", 1
-  store i32 %".43", i32* %"vowels", align 4
+  %".41" = load i32, i32* %"vowels", align 4
+  %".42" = add i32 %".41", 1
+  store i32 %".42", i32* %"vowels", align 4
   br label %"%15"
 "%15":
-  %".46" = load i32, i32* %"consonants", align 4
-  %".47" = add i32 %".46", 1
-  store i32 %".47", i32* %"consonants", align 4
+  %".45" = load i32, i32* %"consonants", align 4
+  %".46" = add i32 %".45", 1
+  store i32 %".46", i32* %"consonants", align 4
   br label %"%5"
 "%7":
-  %".50" = load i32, i32* %"vowels", align 4
-  %".51" = icmp eq i32 %".50", 3
-  %".52" = load i32, i32* %"consonants", align 4
-  %".53" = icmp eq i32 %".52", 5
-  %".54" = and i1 %".51", %".53"
-  br i1 %".54", label %"%0", label %"%55"
+  %".49" = load i32, i32* %"vowels", align 4
+  %".50" = icmp eq i32 %".49", 3
+  %".51" = load i32, i32* %"consonants", align 4
+  %".52" = icmp eq i32 %".51", 5
+  %".53" = and i1 %".50", %".52"
+  br i1 %".53", label %"%0", label %"%55"
 "%55":
-  %".56" = bitcast [3 x i8]* @".fmt" to i8*
-  %".57" = call i32 (i8*, ...) @"printf"(i8* %".56", [23 x i8]* @".str.7")
+  %".55" = bitcast [3 x i8]* @".fmt" to i8*
+  %".56" = call i32 (i8*, ...) @"printf"(i8* %".55", [23 x i8]* @".str.7")
   br label %"%0"
 "%0":
   ret i32 0
