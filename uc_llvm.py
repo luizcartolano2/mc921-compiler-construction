@@ -56,17 +56,62 @@ def get_align(left_type, width):
                 A.
 
     """
+    align_value = 1
     if isinstance(left_type, ir.IntType):
-        return left_type.width // 8
-    elif isinstance(left_type, ir.DoubleType) or isinstance(left_type, ir.PointerType):
-        return 8
+        align_value = left_type.width // 8
+    elif isinstance(left_type, (ir.DoubleType, ir.PointerType)):
+        align_value = 8
     elif isinstance(left_type, ir.ArrayType):
         _align = get_align(left_type.element, 1)
         if width < 4:
             width = 1
         else:
             width = 4
-        return _align * width
+        align_value = _align * width
+
+    return align_value
+
+
+def extract_operation(inst):
+    """
+        The method that extracts the operation of an instruction
+
+        ...
+
+        Parameters
+        ----------
+            inst :
+                The instruction.
+
+    """
+    # create a modifier
+    # dict to store info
+    # associated with array
+    # or pointer
+    modifier = {}
+    # create var to get op type
+    uc_type = None
+    aux = inst.split('_')
+
+    # get opcode
+    opcode = aux[0]
+
+    if len(aux) > 1:
+        # if inst has a
+        # type associated
+        uc_type = aux[1]
+
+        # if inst has info
+        # associated with array
+        # or pointer
+        if len(aux) > 2:
+            for i, val in enumerate(aux[2:]):
+                if val.isdigit():
+                    modifier['dim' + str(i)] = val
+                elif val == '*':
+                    modifier['prt' + str(i)] = val
+
+    return opcode, uc_type, modifier
 
 
 class LLVMFunctionVisitor:
@@ -80,41 +125,6 @@ class LLVMFunctionVisitor:
         self.params = []
         self.phase = None
         self.ret_register = None
-
-    @staticmethod
-    def _extract_operation(inst):
-        """
-            The method that extracts the operation of an instruction
-
-            ...
-
-            Parameters
-            ----------
-                inst :
-                    The instruction.
-
-        """
-        modifier = {}
-        uc_type = None
-        aux = inst.split('_')
-        opcode = aux[0]
-        if opcode not in ['fptosi', 'sitofp', 'jump', 'cbranch', 'define']:
-            uc_type = aux[1]
-
-            if len(aux) > 2:
-                val = aux[2]
-                if val.isdigit():
-                    modifier['dim_1'] = val
-                elif val == "*":
-                    modifier['ptr_1'] = val
-            if len(aux) > 3:
-                val = aux[3]
-                if val.isdigit():
-                    modifier['dim_2'] = val
-                elif val == "*":
-                    modifier['ptr_2'] = val
-
-        return opcode, uc_type, modifier
 
     def _get_location(self, target):
         """
@@ -950,7 +960,7 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        opcode, ctype, modifier = self._extract_operation(inst[0])
+        opcode, ctype, modifier = extract_operation(inst[0])
         if hasattr(self, "_build_" + opcode):
             args = inst[1:] if len(inst) > 1 else (None,)
             if not modifier:
@@ -1143,42 +1153,6 @@ class LLVMCodeGenerator:
         # Now 'main_function' is an actual callable we can invoke
         res = main_function()
 
-    @staticmethod
-    def _extract_global_operation(source):
-        """
-            The method to extract the global operations
-
-            ...
-
-            Parameters
-            ----------
-                source :
-                    A.
-
-        """
-        modifier = {}
-        aux = source.split('_')
-        assert aux[0] == 'global'
-        ctype = aux[1]
-
-        assert ctype in ['int', 'float', 'char', 'string'], \
-            f"Type of {ctype} not allowed."
-
-        if len(aux) > 2:
-            val = aux[2]
-            if val.isdigit():
-                modifier['dim_1'] = val
-            elif val == "*":
-                modifier['ptr_1'] = val
-        if len(aux) > 3:
-            val = aux[3]
-            if val.isdigit():
-                modifier['dim_2'] = val
-            elif val == "*":
-                modifier['ptr_2'] = val
-
-        return ctype, modifier
-
     def __generate_global_instructions(self, global_inst):
         """
             The method to generate the global instructions
@@ -1192,7 +1166,7 @@ class LLVMCodeGenerator:
 
         """
         for inst in global_inst:
-            uc_type, modifier = self._extract_global_operation(inst[0])
+            _, uc_type, modifier = extract_operation(inst[0])
             llvm_type = llvm_type_dict[uc_type]
             var_name = inst[1][1:]
             var_value = inst[2]
