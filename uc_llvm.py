@@ -1,8 +1,6 @@
-from llvmlite import ir, binding
 from ctypes import CFUNCTYPE, c_int
 
-from uc_ast import *
-from uc_block import *
+from llvmlite import ir, binding
 
 bool_type = ir.IntType(1)
 llvm_false = ir.Constant(bool_type, False)
@@ -178,25 +176,7 @@ class LLVMFunctionVisitor:
         ptr_fmt = self.builder.bitcast(global_fmt, charptr_ty)
         return self.builder.call(fn, [ptr_fmt] + list(target))
 
-    def build_alloc(self, ctype, target):
-        """
-            The method that builds an alloc
-
-            ...
-
-            Parameters
-            ----------
-                ctype :
-                    A.
-                target :
-                    A.
-
-        """
-        _type = llvm_type_dict[ctype]
-        _location = self.builder.alloca(_type, name=target[1:])
-        self.location[target] = _location
-
-    def build_alloc_(self, ctype, target, **kwargs):
+    def build_alloc(self, ctype, target, **kwargs):
         """
             The method that builds an alloc
 
@@ -289,25 +269,7 @@ class LLVMFunctionVisitor:
             _loc = self.builder.gep(var_source, [var_base, var_index])
         self.location[target] = _loc
 
-    def build_get(self, ctype, source, target):
-        """
-            The method that builds a get
-
-            ...
-
-            Parameters
-            ----------
-                ctype :
-                    A.
-                source :
-                    A.
-                target :
-                    A.
-
-        """
-        pass
-
-    def build_get_(self, ctype, source, target, **kwargs):
+    def build_get(self, ctype, source, target, **kwargs):
         """
             The method that builds a get
 
@@ -352,30 +314,7 @@ class LLVMFunctionVisitor:
         else:
             self.location[target] = _val
 
-    def build_load(self, ctype, source, target):
-        """
-            The method that builds a store
-
-            ...
-
-            Parameters
-            ----------
-                ctype :
-                    A.
-                source :
-                    A.
-                target :
-                    A.
-
-        """
-        _source = self.get_location(source)
-        if isinstance(_source, ir.Constant):
-            self.location[target] = _source
-        else:
-            _loc = self.builder.load(_source)
-            self.location[target] = _loc
-
-    def build_load_(self, ctype, source, target, **kwargs):
+    def build_load(self, ctype, source, target, **kwargs):
         """
             The method that builds a load
 
@@ -473,48 +412,7 @@ class LLVMFunctionVisitor:
         elif var_type == 'char':
             self.cio('scanf', '%c', read_target)
 
-    def build_read_(self, ctype, target, **kwargs):
-        """
-            The method that builds a read
-
-            ...
-
-            Parameters
-            ----------
-                ctype :
-                    A.
-                target :
-                    A.
-                **kwargs :
-                    A.
-
-        """
-        self.build_read_(ctype, target) #Isso faz sentido?
-
-    def build_store(self, ctype, source, target):
-        """
-            The method that builds a store
-
-            ...
-
-            Parameters
-            ----------
-                ctype :
-                    A.
-                source :
-                    A.
-                target :
-                    A.
-
-        """
-        _source = self.get_location(source)
-        _target = self.get_location(target)
-        if _target:
-            self.builder.store(_source, _target)
-        else:
-            self.location[target] = _source
-
-    def build_store_(self, ctype, source, target, **kwargs):
+    def build_store(self, ctype, source, target, **kwargs):
         """
             The method that builds a store
 
@@ -833,7 +731,7 @@ class LLVMFunctionVisitor:
 
         self.location[target] = target_loc
 
-    def build_return(self, expr_type, target):
+    def build_return(self, expr_type, target=None):
         """
             The method that builds a return
 
@@ -905,15 +803,11 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        opcode, ctype, modifier = extract_operation(inst[0])
-        if hasattr(self, "build_" + opcode):
-            args = inst[1:] if len(inst) > 1 else (None,)
-            if not modifier:
-                getattr(self, "build_" + opcode)(ctype, *args)
-            else:
-                getattr(self, "build_" + opcode + "_")(ctype, *inst[1:], **modifier)
-        else:
-            print("Warning: No _build_" + opcode + "() method", flush=True)
+        opcode, uc_type, modifier = extract_operation(inst[0])
+
+        args = inst[1:] if len(inst) > 1 else (None,)
+
+        getattr(self, f"build_{opcode}")(uc_type, *inst[1:], **modifier)
 
     def create_blocks(self, func_blocks_dict):
         for block_label in func_blocks_dict:
