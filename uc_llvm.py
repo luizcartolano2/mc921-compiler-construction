@@ -89,42 +89,14 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        try:
-            if target[0] == '%':
-                return self.location[target]
-            elif target[0] == '@':
-                return self.module.get_global(target[1:])
-        except KeyError:
-            return None
+        location = None
 
-    @staticmethod
-    def global_constant(builder_or_module, name, value, linkage='internal'):
-        """
-            The method that creates a global constant
+        if target[0] == '%' and target in self.location:
+            location = self.location[target]
+        elif target[0] == '@' and target[1:] in self.module.globals:
+            location = self.module.get_global(target[1:])
 
-            ...
-
-            Parameters
-            ----------
-                builder_or_module :
-                    A.
-                name :
-                    A.
-                value :
-                    A.
-                linkage :
-                    A.
-
-        """
-        if isinstance(builder_or_module, ir.Module):
-            mod = builder_or_module
-        else:
-            mod = builder_or_module.module
-        data = ir.GlobalVariable(mod, value.type, name=name)
-        data.linkage = linkage
-        data.global_constant = True
-        data.initializer = value
-        return data
+        return location
 
     def new_function(self, inst):
         """
@@ -138,16 +110,18 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _op, _name, _args = inst
-        try:
-            self.functions = self.module.get_global(_name[1:])
-        except KeyError:
-            _ctype = _op.split('_')[1]
-            _sig = [llvm_type_dict[arg] for arg in [item[0] for item in _args]]
-            funty = ir.FunctionType(llvm_type_dict[_ctype], _sig)
-            self.functions = ir.Function(self.module, funty, name=_name[1:])
-        for _idx, _reg in enumerate([item[1] for item in _args]):
-            self.location[_reg] = self.functions.args[_idx]
+        operand, func_name, func_args = inst
+
+        if func_name[1:] in self.module.globals:
+            self.functions = self.module.get_global(func_name[1:])
+        else:
+            uc_type = operand.split('_')[1]
+            args_types = [llvm_type_dict[arg] for arg in [item[0] for item in func_args]]
+            func_type = ir.FunctionType(llvm_type_dict[uc_type], args_types)
+            self.functions = ir.Function(self.module, func_type, name=func_name[1:])
+
+        for arg_id, arg_target in enumerate([item[1] for item in func_args]):
+            self.location[arg_target] = self.functions.args[arg_id]
 
     def cio(self, fname, format, *target):
         """
@@ -169,9 +143,14 @@ class LLVMFunctionVisitor:
         len_byte_array = len(byte_array)
         fmt_bytes = ir.Constant(ir.ArrayType(char_type, len_byte_array), byte_array)
 
-        global_fmt = self.global_constant(self.builder.module,
-                                           self.builder.module.get_unique_name('.fmt'),
-                                           fmt_bytes)
+        mod = self.builder.module
+
+        data = ir.GlobalVariable(mod, fmt_bytes.type, name=mod.get_unique_name('.fmt'))
+        data.linkage = 'internal'
+        data.global_constant = True
+        data.initializer = fmt_bytes
+        global_fmt = data
+
         fn = self.builder.module.get_global(fname)
         ptr_fmt = self.builder.bitcast(global_fmt, charptr_ty)
         return self.builder.call(fn, [ptr_fmt] + list(target))
