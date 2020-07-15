@@ -270,7 +270,7 @@ class LLVMFunctionVisitor:
 
         self.builder.store(source_location, target_location)
 
-    def build_literal(self, var_type, cte, target):
+    def build_literal(self, var_type, constant, target):
         """
             The method that builds a literal
 
@@ -280,20 +280,20 @@ class LLVMFunctionVisitor:
             ----------
                 var_type :
                     A.
-                cte :
+                constant :
                     A.
                 target :
                     A.
 
         """
-        _val = llvm_type_dict[var_type](cte)
-        _loc = self.get_location(target)
-        if _loc:
-            self.builder.store(_val, _loc)
+        literal_val = llvm_type_dict[var_type](constant)
+        literal_location = self.get_location(target)
+        if literal_location:
+            self.builder.store(literal_val, literal_location)
         else:
-            self.location[target] = _val
+            self.location[target] = literal_val
 
-    def build_load(self, ctype, source, target, **kwargs):
+    def build_load(self, uc_type, source, target, **kwargs):
         """
             The method that builds a load
 
@@ -301,7 +301,7 @@ class LLVMFunctionVisitor:
 
             Parameters
             ----------
-                ctype :
+                uc_type :
                     A.
                 source :
                     A.
@@ -311,22 +311,12 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _source = self.get_location(source)
-        _type = llvm_type_dict[ctype]
-        _pointee = _source.type.pointee
-        if isinstance(_pointee, ir.PointerType):
-            if isinstance(_pointee.pointee, ir.FunctionType):
-                _loc = self.builder.load(_source)
-            else:
-                _type = llvm_type_dict[ctype].as_pointer()
-                _aux = self.builder.load(_source)
-                _type = llvm_type_dict[ctype]
-                _loc = self.builder.load(_aux)
-        else:
-            _loc = self.builder.load(_source)
-        self.location[target] = _loc
+        source_location = self.get_location(source)
+        target_location = self.builder.load(source_location)
 
-    def build_param(self, par_type, source):
+        self.location[target] = target_location
+
+    def build_param(self, param_type, param_source):
         """
             The method that builds a parameter
 
@@ -334,13 +324,13 @@ class LLVMFunctionVisitor:
 
             Parameters
             ----------
-                par_type :
+                param_type :
                     A.
-                source :
+                param_source :
                     A.
 
         """
-        self.params.append(self.get_location(source))
+        self.params.append(self.get_location(param_source))
 
     def build_print(self, val_type, target):
         """
