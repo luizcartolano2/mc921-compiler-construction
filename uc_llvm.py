@@ -155,7 +155,7 @@ class LLVMFunctionVisitor:
         ptr_fmt = self.builder.bitcast(global_fmt, charptr_ty)
         return self.builder.call(fn, [ptr_fmt] + list(target))
 
-    def build_alloc(self, ctype, target, **kwargs):
+    def build_alloc(self, uc_type, target, **kwargs):
         """
             The method that builds an alloc
 
@@ -163,7 +163,7 @@ class LLVMFunctionVisitor:
 
             Parameters
             ----------
-                ctype :
+                uc_type :
                     A.
                 target :
                     A.
@@ -171,16 +171,13 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _type = llvm_type_dict[ctype]
-        _width = 1
-        for arg in reversed(list(kwargs.values())):
-            if arg.isdigit():
-                _width *= int(arg)
-                _type = ir.ArrayType(_type, int(arg))
-            else:
-                _type = ir.PointerType(_type)
-        _location = self.builder.alloca(_type, name=target[1:])
-        self.location[target] = _location
+        llvm_type = llvm_type_dict[uc_type]
+
+        for arg in list(kwargs.values()):
+            llvm_type = ir.ArrayType(llvm_type, int(arg))
+
+        target_location = self.builder.alloca(llvm_type, name=target[1:])
+        self.location[target] = target_location
 
     def build_call(self, ret_type, name, target):
         """
