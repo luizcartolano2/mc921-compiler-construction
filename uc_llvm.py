@@ -179,7 +179,7 @@ class LLVMFunctionVisitor:
         target_location = self.builder.alloca(llvm_type, name=target[1:])
         self.location[target] = target_location
 
-    def build_call(self, ret_type, name, target):
+    def build_call(self, return_type, name, target):
         """
             The method that builds a call
 
@@ -187,7 +187,7 @@ class LLVMFunctionVisitor:
 
             Parameters
             ----------
-                ret_type :
+                return_type :
                     A.
                 name :
                     A.
@@ -196,17 +196,19 @@ class LLVMFunctionVisitor:
 
         """
         if name == '%':
-            _loc = self.builder.call(self.get_location(name), self.params)
+            func_call_loc = self.builder.call(self.get_location(name), self.params)
+        elif name[1:] in self.builder.module.globals:
+            func_name = self.builder.module.get_global(name[1:])
+            func_call_loc = self.builder.call(func_name, self.params)
         else:
-            try:
-                _fn = self.builder.module.get_global(name[1:])
-            except KeyError:
-                _type = llvm_type_dict[ret_type]
-                _sig = [arg.type for arg in self.params]
-                funty = ir.FunctionType(_type, _sig)
-                _fn = ir.Function(self.module, funty, name=name[1:])
-            _loc = self.builder.call(_fn, self.params)
-        self.location[target] = _loc
+            llvm_type = llvm_type_dict[return_type]
+            arg_type = [arg.type for arg in self.params]
+            func_type = ir.FunctionType(llvm_type, arg_type)
+            func_name = ir.Function(self.module, func_type, name=name[1:])
+
+            func_call_loc = self.builder.call(func_name, self.params)
+
+        self.location[target] = func_call_loc
         self.params = []
 
     def build_elem(self, ctype, source, index, target):
