@@ -123,7 +123,7 @@ class LLVMFunctionVisitor:
         for arg_id, arg_target in enumerate([item[1] for item in func_args]):
             self.location[arg_target] = self.functions.args[arg_id]
 
-    def cio(self, fname, format, *target):
+    def cio(self, func_name, string_format, *target):
         """
             A
 
@@ -131,15 +131,15 @@ class LLVMFunctionVisitor:
 
             Parameters
             ----------
-                fname :
+                func_name :
                     A.
-                format :
+                string_format :
                     A.
                 *target :
                     A.
 
         """
-        byte_array = bytearray((format + "\00").encode('ascii'))
+        byte_array = bytearray((string_format + "\00").encode('ascii'))
         len_byte_array = len(byte_array)
         fmt_bytes = ir.Constant(ir.ArrayType(char_type, len_byte_array), byte_array)
 
@@ -151,7 +151,7 @@ class LLVMFunctionVisitor:
         data.initializer = fmt_bytes
         global_fmt = data
 
-        fn = self.builder.module.get_global(fname)
+        fn = self.builder.module.get_global(func_name)
         ptr_fmt = self.builder.bitcast(global_fmt, charptr_ty)
         return self.builder.call(fn, [ptr_fmt] + list(target))
 
@@ -211,7 +211,7 @@ class LLVMFunctionVisitor:
         self.location[target] = func_call_loc
         self.params = []
 
-    def build_elem(self, ctype, source, index, target):
+    def build_elem(self, uc_type, source, index, target):
         """
             The method that builds an element
 
@@ -219,7 +219,7 @@ class LLVMFunctionVisitor:
 
             Parameters
             ----------
-                ctype :
+                uc_type :
                     A.
                 source :
                     A.
@@ -236,18 +236,18 @@ class LLVMFunctionVisitor:
             col = var_source.type.pointee.element.count
             if isinstance(var_index, ir.Constant):
                 const_i = ir.Constant(int_type, var_index.constant // col)
-                _j = ir.Constant(int_type, var_index.constant % col)
+                const_j = ir.Constant(int_type, var_index.constant % col)
             else:
-                _col = ir.Constant(int_type, col)
-                const_i = self.builder.sdiv(var_index, _col)
-                _j = self.builder.srem(var_index, _col)
-            _aux = self.builder.gep(var_source, [var_base, const_i])
-            _loc = self.builder.gep(_aux, [var_base, _j])
+                col = ir.Constant(int_type, col)
+                const_i = self.builder.sdiv(var_index, col)
+                const_j = self.builder.srem(var_index, col)
+            var_aux = self.builder.gep(var_source, [var_base, const_i])
+            var_location = self.builder.gep(var_aux, [var_base, const_j])
         else:
-            _loc = self.builder.gep(var_source, [var_base, var_index])
-        self.location[target] = _loc
+            var_location = self.builder.gep(var_source, [var_base, var_index])
+        self.location[target] = var_location
 
-    def build_get(self, ctype, source, target, **kwargs):
+    def build_get(self, source, target, **kwargs):
         """
             The method that builds a get
 
@@ -265,9 +265,10 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _source = self.get_location(source)
-        _target = self.get_location(target)
-        self.builder.store(_source, _target)
+        source_location = self.get_location(source)
+        target_location = self.get_location(target)
+
+        self.builder.store(source_location, target_location)
 
     def build_literal(self, var_type, cte, target):
         """
