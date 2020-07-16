@@ -9,7 +9,6 @@
 """
 
 from uc_ast import *
-from uc_type import *
 from uc_env import *
 
 class Visitor(NodeVisitor):

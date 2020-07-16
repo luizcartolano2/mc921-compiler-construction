@@ -7,9 +7,9 @@
 # Authors: Luiz Cartolano && Erico Faustino     #
 #################################################
 """
+import uc_env
 import uc_sema
 from uc_ast import *
-from uc_type import *
 
 
 class GenerateCode(NodeVisitor):
@@ -538,7 +538,7 @@ class GenerateCode(NodeVisitor):
 
         # check if the cast is a int
         # to float or a float to int
-        if node.to_type.names[-1].typename == uc_sema.IntType.typename:
+        if node.to_type.names[-1].typename == uc_env.IntType.typename:
             cast_op = 'fptosi'
         else:
             cast_op = 'sitofp'
