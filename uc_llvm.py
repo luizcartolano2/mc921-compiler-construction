@@ -381,7 +381,7 @@ class LLVMFunctionVisitor:
         elif var_type == 'char':
             self.cio('scanf', '%c', read_target)
 
-    def build_store(self, ctype, source, target, **kwargs):
+    def build_store(self, uc_type, source, target, **kwargs):
         """
             The method that builds a store
 
@@ -389,7 +389,7 @@ class LLVMFunctionVisitor:
 
             Parameters
             ----------
-                ctype :
+                uc_type :
                     A.
                 source :
                     A.
@@ -399,26 +399,26 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        var_source = self.get_location(source)
-        var_target = self.get_location(target)
+        location_source = self.get_location(source)
+        location_target = self.get_location(target)
 
-        if isinstance(var_target.type.pointee, ir.ArrayType):
+        if isinstance(location_target.type.pointee, ir.ArrayType):
             var_size = 1
             for arg in kwargs.values():
                 var_size *= int(arg)
-            if ctype == 'float':
-                var_size = var_size * 8
-            elif ctype == 'int':
-                var_size = var_size * int_type.width // 8
-            memcpy = self.module.declare_intrinsic('llvm.memcpy', [charptr_ty, charptr_ty, i64_type])
-            _srcptr = self.builder.bitcast(var_source, charptr_ty)
-            _tgtptr = self.builder.bitcast(var_target, charptr_ty)
-            self.builder.call(memcpy, [_tgtptr, _srcptr, ir.Constant(i64_type, var_size), llvm_false])
-        elif isinstance(var_target.type.pointee, ir.PointerType):
-            _temp = self.builder.load(var_target)
-            self.builder.store(var_source, _temp)
+
+            if uc_type == 'float':
+                var_size *= 8
+            elif uc_type == 'int':
+                var_size *= int_type.width // 8
+
+            memory_copy = self.module.declare_intrinsic('llvm.memcpy', [charptr_ty, charptr_ty, i64_type])
+            source_pointer = self.builder.bitcast(location_source, charptr_ty)
+            target_pointer = self.builder.bitcast(location_target, charptr_ty)
+
+            self.builder.call(memory_copy, [target_pointer, source_pointer, ir.Constant(i64_type, var_size), llvm_false])
         else:
-            self.builder.store(var_source, var_target)
+            self.builder.store(location_source, location_target)
 
     def build_add(self, expr_type, left, right, target):
         """
