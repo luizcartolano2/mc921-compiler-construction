@@ -4,6 +4,8 @@
 .idea/
 *.ast
 *.ir
+*.opt
+*.ll
 *.gv
 *.gv.pdf
 
