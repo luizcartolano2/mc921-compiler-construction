@@ -86,7 +86,7 @@ class LLVMBuilder:
             Parameters
             ----------
                 target :
-                    A.
+                    The instruction target.
 
         """
         location = None
@@ -107,7 +107,7 @@ class LLVMBuilder:
             Parameters
             ----------
                 inst :
-                    A.
+                    The instruction.
 
         """
         operand, func_name, func_args = inst
@@ -125,18 +125,18 @@ class LLVMBuilder:
 
     def cio(self, func_name, string_format, *target):
         """
-            A
+            The method cio
 
             ...
 
             Parameters
             ----------
                 func_name :
-                    A.
+                    The function name.
                 string_format :
-                    A.
+                    The string format.
                 *target :
-                    A.
+                    The instruction type.
 
         """
         byte_array = bytearray((string_format + "\00").encode('ascii'))
@@ -164,11 +164,11 @@ class LLVMBuilder:
             Parameters
             ----------
                 uc_type :
-                    A.
+                    The instruction type.
                 target :
-                    A.
+                    The instruction target.
                 **kwargs :
-                    A.
+                    Possible extra arguments.
 
         """
         llvm_type = llvm_type_dict[uc_type]
@@ -188,11 +188,11 @@ class LLVMBuilder:
             Parameters
             ----------
                 return_type :
-                    A.
+                    The return type.
                 name :
-                    A.
+                    The called instruction name.
                 target :
-                    A.
+                    The instruction target.
 
         """
         if name == '%':
@@ -220,13 +220,13 @@ class LLVMBuilder:
             Parameters
             ----------
                 uc_type :
-                    A.
+                    The instruction type.
                 source :
-                    A.
+                    The instruction source.
                 index :
-                    A.
+                    The instruction index.
                 target :
-                    A.
+                    The instruction target.
 
         """
         var_source = self.get_location(source)
@@ -255,14 +255,12 @@ class LLVMBuilder:
 
             Parameters
             ----------
-                ctype :
-                    A.
                 source :
-                    A.
+                    The instruction source.
                 target :
-                    A.
+                    The instruction target.
                 **kwargs :
-                    A.
+                    Possible extra arguments.
 
         """
         self.builder.store(self.get_location(source),
@@ -277,11 +275,11 @@ class LLVMBuilder:
             Parameters
             ----------
                 var_type :
-                    A.
+                    The variable type.
                 constant :
-                    A.
+                    The constant value.
                 target :
-                    A.
+                    The instruction target.
 
         """
         literal_val = llvm_type_dict[var_type](constant)
@@ -300,13 +298,13 @@ class LLVMBuilder:
             Parameters
             ----------
                 uc_type :
-                    A.
+                    The instruction type.
                 source :
-                    A.
+                    The instruction source.
                 target :
-                    A.
+                    The instruction target.
                 **kwargs :
-                    A.
+                    Possible extra arguments.
 
         """
         target_location = self.builder.load(self.get_location(source))
@@ -322,9 +320,9 @@ class LLVMBuilder:
             Parameters
             ----------
                 param_type :
-                    A.
+                    The parameter type.
                 param_source :
-                    A.
+                    The parameter source.
 
         """
         self.params.append(self.get_location(param_source))
@@ -338,9 +336,9 @@ class LLVMBuilder:
             Parameters
             ----------
                 val_type :
-                    A.
+                    The value type.
                 target :
-                    A.
+                    The instruction target.
 
         """
         if target:
@@ -365,9 +363,9 @@ class LLVMBuilder:
             Parameters
             ----------
                 var_type :
-                    A.
+                    The variable type.
                 target :
-                    A.
+                    The instruction target.
 
         """
         read_target = self.get_location(target)
@@ -426,13 +424,13 @@ class LLVMBuilder:
             Parameters
             ----------
                 expr_type :
-                    A.
+                    The expression type.
                 left :
-                    A.
+                    The left value.
                 right :
-                    A.
+                    The right value.
                 target :
-                    A.
+                    The result target.
 
         """
         if expr_type == 'float':
@@ -453,13 +451,13 @@ class LLVMBuilder:
             Parameters
             ----------
                 expr_type :
-                    A.
+                    The expression type.
                 left :
-                    A.
+                    The left value.
                 right :
-                    A.
+                    The right value.
                 target :
-                    A.
+                    The result target.
 
         """
         if expr_type == 'float':
@@ -480,13 +478,13 @@ class LLVMBuilder:
             Parameters
             ----------
                 expr_type :
-                    A.
+                    The expression type.
                 left :
-                    A.
+                    The left value.
                 right :
-                    A.
+                    The right value.
                 target :
-                    A.
+                    The result target.
 
         """
         if expr_type == 'float':
@@ -506,13 +504,13 @@ class LLVMBuilder:
             Parameters
             ----------
                 expr_type :
-                    A.
+                    The expression type.
                 left :
-                    A.
+                    The left value.
                 right :
-                    A.
+                    The right value.
                 target :
-                    A.
+                    The result target.
 
         """
         if expr_type == 'float':
@@ -526,20 +524,20 @@ class LLVMBuilder:
 
     def build_mod(self, expr_type, left, right, target):
         """
-            The method that builds a mod
+            The method that builds a mod expression
 
             ...
 
             Parameters
             ----------
                 expr_type :
-                    A.
+                    The expression type.
                 left :
-                    A.
+                    The left value.
                 right :
-                    A.
+                    The right value.
                 target :
-                    A.
+                    The result target.
 
         """
         if expr_type == 'float':
@@ -552,12 +550,46 @@ class LLVMBuilder:
         self.location[target] = result_location
 
     def build_and(self, expr_type, left, right, target):
+        """
+            The method that builds an and expression
+
+            ...
+
+            Parameters
+            ----------
+                expr_type :
+                    The expression type.
+                left :
+                    The left value.
+                right :
+                    The right value.
+                target :
+                    The result target.
+
+        """
         target_loc = self.builder.and_(self.get_location(left),
                                        self.get_location(right))
 
         self.location[target] = target_loc
 
     def build_or(self, expr_type, left, right, target):
+        """
+            The method that builds an or expression
+
+            ...
+
+            Parameters
+            ----------
+                expr_type :
+                    The expression type.
+                left :
+                    The left value.
+                right :
+                    The right value.
+                target :
+                    The result target.
+
+        """
         target_loc = self.builder.or_(self.get_location(left),
                                       self.get_location(right))
 
@@ -565,20 +597,20 @@ class LLVMBuilder:
 
     def build_ge(self, expr_type, left, right, target):
         """
-            The method that builds a greather or equal than
+            The method that builds a greater of equals than
 
             ...
 
             Parameters
             ----------
                 expr_type :
-                    A.
+                    The expression type.
                 left :
-                    A.
+                    The left value.
                 right :
-                    A.
+                    The right value.
                 target :
-                    A.
+                    The result target.
 
         """
         if expr_type == 'float':
@@ -594,20 +626,20 @@ class LLVMBuilder:
 
     def build_le(self, expr_type, left, right, target):
         """
-            The method that builds a less or equal than
+            The method that builds a less of equals than
 
             ...
 
             Parameters
             ----------
                 expr_type :
-                    A.
+                    The expression type.
                 left :
-                    A.
+                    The left value.
                 right :
-                    A.
+                    The right value.
                 target :
-                    A.
+                    The result target.
 
         """
         if expr_type == 'float':
@@ -630,13 +662,13 @@ class LLVMBuilder:
             Parameters
             ----------
                 expr_type :
-                    A.
+                    The expression type.
                 left :
-                    A.
+                    The left value.
                 right :
-                    A.
+                    The right value.
                 target :
-                    A.
+                    The result target.
 
         """
         if expr_type == 'float':
@@ -659,13 +691,13 @@ class LLVMBuilder:
             Parameters
             ----------
                 expr_type :
-                    A.
+                    The expression type.
                 left :
-                    A.
+                    The left value.
                 right :
-                    A.
+                    The right value.
                 target :
-                    A.
+                    The result target.
 
         """
         if expr_type == 'float':
@@ -680,6 +712,23 @@ class LLVMBuilder:
         self.location[target] = result_location
 
     def build_eq(self, expr_type, left, right, target):
+        """
+            The method that builds an equals expression
+
+            ...
+
+            Parameters
+            ----------
+                expr_type :
+                    The expression type.
+                left :
+                    The left value.
+                right :
+                    The right value.
+                target :
+                    The result target.
+
+        """
         if expr_type == 'float':
             result_location = self.builder.fcmp_ordered('==',
                                                         self.get_location(left),
@@ -692,6 +741,23 @@ class LLVMBuilder:
         self.location[target] = result_location
 
     def build_ne(self, expr_type, left, right, target):
+        """
+            The method that builds a not equals expression
+
+            ...
+
+            Parameters
+            ----------
+                expr_type :
+                    The expression type.
+                left :
+                    The left value.
+                right :
+                    The right value.
+                target :
+                    The result target.
+
+        """
         if expr_type == 'float':
             result_location = self.builder.fcmp_ordered('!=',
                                                         self.get_location(left),
@@ -724,9 +790,9 @@ class LLVMBuilder:
             Parameters
             ----------
                 expr_type :
-                    A.
+                    The expression type.
                 target :
-                    A.
+                    The return target.
 
         """
         if expr_type == 'void':
@@ -743,9 +809,9 @@ class LLVMBuilder:
             Parameters
             ----------
                 expr_type :
-                    A.
+                    The expression type.
                 target :
-                    A.
+                    The jump target.
 
         """
         self.builder.branch(self.get_location(target))
@@ -759,13 +825,13 @@ class LLVMBuilder:
             Parameters
             ----------
                 expr_type :
-                    A.
+                    The expression type.
                 expr_test :
-                    A.
+                    The expression test.
                 target :
-                    A.
+                    The branch target.
                 fall_through :
-                    A.
+                    The branch fall through.
 
         """
         self.builder.cbranch(self.get_location(expr_test),
@@ -775,14 +841,14 @@ class LLVMBuilder:
 
     def build(self, inst):
         """
-            A
+            The method to build a instruction
 
             ...
 
             Parameters
             ----------
                 inst :
-                    A.
+                    The instruction.
 
         """
         opcode, uc_type, modifier = extract_operation(inst[0])
@@ -792,6 +858,17 @@ class LLVMBuilder:
         getattr(self, f"build_{opcode}")(uc_type, *inst[1:], **modifier)
 
     def create_blocks(self, func_blocks_dict):
+        """
+            The method to create the blocks for LLVM
+
+            ...
+
+            Parameters
+            ----------
+                func_blocks_dict :
+                    The dictionary of function blocks.
+
+        """
         for block_label in func_blocks_dict:
             block = func_blocks_dict[block_label]
             if block_label == '%entry':
@@ -800,6 +877,17 @@ class LLVMBuilder:
             self.location[block.label] = ir_block_loc
 
     def build_blocks(self, func_blocks_dict):
+        """
+            The method to build the blocks for LLVM
+
+            ...
+
+            Parameters
+            ----------
+                func_blocks_dict :
+                    The dictionary of function blocks.
+
+        """
         for block_label in func_blocks_dict:
             block = func_blocks_dict[block_label]
             ir_block_loc = self.location[block.label]
