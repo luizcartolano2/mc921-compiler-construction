@@ -385,13 +385,13 @@ class LLVMBuilder:
             Parameters
             ----------
                 uc_type :
-                    A.
+                    The type.
                 source :
-                    A.
+                    The instruction source.
                 target :
-                    A.
+                    The instruction target.
                 **kwargs :
-                    A.
+                    Possible extra arguments.
 
         """
         location_source = self.get_location(source)
@@ -770,12 +770,42 @@ class LLVMBuilder:
         self.location[target] = result_location
 
     def build_sitofp(self, expr_type, source, target):
+        """
+            The method that builds sitofp
+
+            ...
+
+            Parameters
+            ----------
+                expr_type :
+                    The expression type.
+                source :
+                    The instruction source.
+                target :
+                    The instruction target.
+
+        """
         target_loc = self.builder.sitofp(self.get_location(source),
                                          float_type)
 
         self.location[target] = target_loc
 
     def build_fptosi(self, expr_type, source, target):
+        """
+            The method that builds fptosi
+
+            ...
+
+            Parameters
+            ----------
+                expr_type :
+                    The expression type.
+                source :
+                    The instruction source.
+                target :
+                    The instruction target.
+
+        """
         target_loc = self.builder.fptosi(self.get_location(source),
                                          int_type)
 
