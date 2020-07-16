@@ -65,7 +65,7 @@ def extract_operation(inst):
     return opcode, uc_type, modifier
 
 
-class LLVMFunctionVisitor:
+class LLVMBuilder:
 
     def __init__(self, module):
         self.builder = None
@@ -265,10 +265,8 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        source_location = self.get_location(source)
-        target_location = self.get_location(target)
-
-        self.builder.store(source_location, target_location)
+        self.builder.store(self.get_location(source),
+                           self.get_location(target))
 
     def build_literal(self, var_type, constant, target):
         """
@@ -311,8 +309,7 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        source_location = self.get_location(source)
-        target_location = self.builder.load(source_location)
+        target_location = self.builder.load(self.get_location(source))
 
         self.location[target] = target_location
 
@@ -438,13 +435,14 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _left = self.get_location(left)
-        _right = self.get_location(right)
         if expr_type == 'float':
-            _loc = self.builder.fadd(_left, _right)
+            result_location = self.builder.fadd(self.get_location(left),
+                                                self.get_location(right))
         else:
-            _loc = self.builder.add(_left, _right)
-        self.location[target] = _loc
+            result_location = self.builder.add(self.get_location(left),
+                                               self.get_location(right))
+
+        self.location[target] = result_location
 
     def build_sub(self, expr_type, left, right, target):
         """
@@ -464,13 +462,14 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _left = self.get_location(left)
-        _right = self.get_location(right)
         if expr_type == 'float':
-            _loc = self.builder.fsub(_left, _right)
+            result_location = self.builder.fsub(self.get_location(left),
+                                                self.get_location(right))
         else:
-            _loc = self.builder.sub(_left, _right)
-        self.location[target] = _loc
+            result_location = self.builder.sub(self.get_location(left),
+                                               self.get_location(right))
+
+        self.location[target] = result_location
 
     def build_mul(self, expr_type, left, right, target):
         """
@@ -490,13 +489,13 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _left = self.get_location(left)
-        _right = self.get_location(right)
         if expr_type == 'float':
-            _loc = self.builder.fmul(_left, _right)
+            result_location = self.builder.fmul(self.get_location(left),
+                                                self.get_location(right))
         else:
-            _loc = self.builder.mul(_left, _right)
-        self.location[target] = _loc
+            result_location = self.builder.mul(self.get_location(left),
+                                               self.get_location(right))
+        self.location[target] = result_location
 
     def build_div(self, expr_type, left, right, target):
         """
@@ -516,13 +515,14 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _left = self.get_location(left)
-        _right = self.get_location(right)
         if expr_type == 'float':
-            _loc = self.builder.fdiv(_left, _right)
+            result_location = self.builder.fdiv(self.get_location(left),
+                                                self.get_location(right))
         else:
-            _loc = self.builder.sdiv(_left, _right)
-        self.location[target] = _loc
+            result_location = self.builder.sdiv(self.get_location(left),
+                                                self.get_location(right))
+
+        self.location[target] = result_location
 
     def build_mod(self, expr_type, left, right, target):
         """
@@ -542,25 +542,24 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _left = self.get_location(left)
-        _right = self.get_location(right)
         if expr_type == 'float':
-            _loc = self.builder.frem(_left, _right)
+            result_location = self.builder.frem(self.get_location(left),
+                                                self.get_location(right))
         else:
-            _loc = self.builder.srem(_left, _right)
-        self.location[target] = _loc
+            result_location = self.builder.srem(self.get_location(left),
+                                                self.get_location(right))
+
+        self.location[target] = result_location
 
     def build_and(self, expr_type, left, right, target):
-        left_loc = self.get_location(left)
-        right_loc = self.get_location(right)
-        target_loc = self.builder.and_(left_loc, right_loc)
+        target_loc = self.builder.and_(self.get_location(left),
+                                       self.get_location(right))
 
         self.location[target] = target_loc
 
     def build_or(self, expr_type, left, right, target):
-        left_loc = self.get_location(left)
-        right_loc = self.get_location(right)
-        target_loc = self.builder.or_(left_loc, right_loc)
+        target_loc = self.builder.or_(self.get_location(left),
+                                      self.get_location(right))
 
         self.location[target] = target_loc
 
@@ -582,13 +581,16 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _left = self.get_location(left)
-        _right = self.get_location(right)
         if expr_type == 'float':
-            _loc = self.builder.fcmp_ordered('>=', _left, _right)
+            result_location = self.builder.fcmp_ordered('>=',
+                                                        self.get_location(left),
+                                                        self.get_location(right))
         else:
-            _loc = self.builder.icmp_signed('>=', _left, _right)
-        self.location[target] = _loc
+            result_location = self.builder.icmp_signed('>=',
+                                                       self.get_location(left),
+                                                       self.get_location(right))
+
+        self.location[target] = result_location
 
     def build_le(self, expr_type, left, right, target):
         """
@@ -608,13 +610,16 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _left = self.get_location(left)
-        _right = self.get_location(right)
         if expr_type == 'float':
-            _loc = self.builder.fcmp_ordered('<=', _left, _right)
+            result_location = self.builder.fcmp_ordered('<=',
+                                                        self.get_location(left),
+                                                        self.get_location(right))
         else:
-            _loc = self.builder.icmp_signed('<=', _left, _right)
-        self.location[target] = _loc
+            result_location = self.builder.icmp_signed('<=',
+                                                       self.get_location(left),
+                                                       self.get_location(right))
+
+        self.location[target] = result_location
 
     def build_gt(self, expr_type, left, right, target):
         """
@@ -634,13 +639,16 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _left = self.get_location(left)
-        _right = self.get_location(right)
         if expr_type == 'float':
-            _loc = self.builder.fcmp_ordered('>', _left, _right)
+            result_location = self.builder.fcmp_ordered('>',
+                                                        self.get_location(left),
+                                                        self.get_location(right))
         else:
-            _loc = self.builder.icmp_signed('>', _left, _right)
-        self.location[target] = _loc
+            result_location = self.builder.icmp_signed('>',
+                                                       self.get_location(left),
+                                                       self.get_location(right))
+
+        self.location[target] = result_location
 
     def build_lt(self, expr_type, left, right, target):
         """
@@ -660,43 +668,50 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _left = self.get_location(left)
-        _right = self.get_location(right)
         if expr_type == 'float':
-            _loc = self.builder.fcmp_ordered('<', _left, _right)
+            result_location = self.builder.fcmp_ordered('<',
+                                                        self.get_location(left),
+                                                        self.get_location(right))
         else:
-            _loc = self.builder.icmp_signed('<', _left, _right)
-        self.location[target] = _loc
+            result_location = self.builder.icmp_signed('<',
+                                                       self.get_location(left),
+                                                       self.get_location(right))
+
+        self.location[target] = result_location
 
     def build_eq(self, expr_type, left, right, target):
-        left_loc = self.get_location(left)
-        right_loc = self.get_location(right)
         if expr_type == 'float':
-            _loc = self.builder.fcmp_ordered('==', left_loc, right_loc)
+            result_location = self.builder.fcmp_ordered('==',
+                                                        self.get_location(left),
+                                                        self.get_location(right))
         else:
-            _loc = self.builder.icmp_signed('==', left_loc, right_loc)
-        self.location[target] = _loc
+            result_location = self.builder.icmp_signed('==',
+                                                       self.get_location(left),
+                                                       self.get_location(right))
+
+        self.location[target] = result_location
 
     def build_ne(self, expr_type, left, right, target):
-        left_loc = self.get_location(left)
-        right_loc = self.get_location(right)
         if expr_type == 'float':
-            _loc = self.builder.fcmp_ordered('!=', left_loc, right_loc)
-        elif expr_type == 'char': # or expr_type == 'string':
-            _loc = self.builder.fcmp_ordered('!=', left_loc, right_loc)
+            result_location = self.builder.fcmp_ordered('!=',
+                                                        self.get_location(left),
+                                                        self.get_location(right))
         else:
-            _loc = self.builder.icmp_signed('!=', left_loc, right_loc)
-        self.location[target] = _loc
+            result_location = self.builder.icmp_signed('!=',
+                                                       self.get_location(left),
+                                                       self.get_location(right))
+
+        self.location[target] = result_location
 
     def build_sitofp(self, expr_type, source, target):
-        source_loc = self.get_location(source)
-        target_loc = self.builder.sitofp(source_loc, float_type)
+        target_loc = self.builder.sitofp(self.get_location(source),
+                                         float_type)
 
         self.location[target] = target_loc
 
     def build_fptosi(self, expr_type, source, target):
-        source_loc = self.get_location(source)
-        target_loc = self.builder.fptosi(source_loc, int_type)
+        target_loc = self.builder.fptosi(self.get_location(source),
+                                         int_type)
 
         self.location[target] = target_loc
 
@@ -717,8 +732,7 @@ class LLVMFunctionVisitor:
         if expr_type == 'void':
             self.builder.ret_void()
         else:
-            _target = self.get_location(target)
-            self.builder.ret(_target)
+            self.builder.ret(self.get_location(target))
 
     def build_jump(self, expr_type, target):
         """
@@ -734,8 +748,7 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _target = self.get_location(target)
-        self.builder.branch(_target)
+        self.builder.branch(self.get_location(target))
 
     def build_cbranch(self, expr_type, expr_test, target, fall_through):
         """
@@ -755,10 +768,10 @@ class LLVMFunctionVisitor:
                     A.
 
         """
-        _expr_test = self.get_location(expr_test)
-        _target = self.get_location(target)
-        _fall_through = self.get_location(fall_through)
-        self.builder.cbranch(_expr_test, _target, _fall_through)
+        self.builder.cbranch(self.get_location(expr_test),
+                             self.get_location(target),
+                             self.get_location(fall_through)
+                             )
 
     def build(self, inst):
         """
@@ -1027,6 +1040,6 @@ class LLVMCodeGenerator:
 
         for func in self.functions:
             func_dict = self.functions[func]
-            llvm_block = LLVMFunctionVisitor(self.module)
+            llvm_block = LLVMBuilder(self.module)
             llvm_block.create_blocks(func_dict)
             llvm_block.build_blocks(func_dict)
