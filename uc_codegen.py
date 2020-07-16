@@ -158,7 +158,10 @@ class GenerateCode(NodeVisitor):
         varname = self.__new_temp()
 
         # get the type for load
-        typename = node.type.names[-1].typename
+        if isinstance(node, Constant):
+            typename = node.rawtype.names[-1].typename
+        else:
+            typename = node.type.names[-1].typename
 
         # if referencing an array we need to
         # append the _* to end of type to reproduce
@@ -176,7 +179,10 @@ class GenerateCode(NodeVisitor):
                 typename += f'_{node.bin.dim.value}'
 
         # load the variable to the register
-        self.code.append((f'load_{typename}', node.location, varname))
+        if typename == 'string':
+            self.code.append((f'load_char', node.location, varname))
+        else:
+            self.code.append((f'load_{typename}', node.location, varname))
 
         # update node location
         node.location = varname
@@ -477,6 +483,8 @@ class GenerateCode(NodeVisitor):
 
         if isinstance(node.right_value, (ID, ArrayRef)):
             self.__load_location(node.right_value)
+        # elif node.right_value.type == 'string':
+        #     self.__load_location(node.right_value)
 
         # allocate the target register to
         # store the operation result
@@ -582,7 +590,7 @@ class GenerateCode(NodeVisitor):
         # we are going to make all strings to be declared
         # as global definitions, because of it, strings
         # are going to receive a special treatment
-        if node.type == "string":
+        if node.type == "string" and (len(node.value) > 1 or node.value == ' '):
             # here we check if string already
             # exists in the memory, if yes we
             # dont realocate it just getting the
@@ -596,13 +604,15 @@ class GenerateCode(NodeVisitor):
                 self.global_codes.append(('global_string', target, node.value))
             else:
                 target = temp[0][1]
-
         else:
             # generates the label to a new local declaration
             target = self.__new_temp()
 
-            # creates the instruction to the literal
-            self.code.append((f'literal_{node.type}', node.value, target))
+            if node.type == 'string':
+                self.code.append(('literal_char', node.value, target))
+            else:
+                # creates the instruction to the literal
+                self.code.append((f'literal_{node.type}', node.value, target))
 
         # update the constant node location
         node.location = target
@@ -1006,6 +1016,7 @@ class GenerateCode(NodeVisitor):
 
         # visit the true statement
         self.visit(node.if_true)
+        self.code.append(('jump', exit_label))
 
         # make sure the false statement (else)
         # exists
@@ -1027,6 +1038,7 @@ class GenerateCode(NodeVisitor):
             # the false label that is going to be used
             # as the exit_label
             self.code.append((false_label[1:],))
+            self.code.append((exit_label[1:],))
 
     def visit_InitList(self, node):
         """

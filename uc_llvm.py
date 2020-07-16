@@ -1,3 +1,10 @@
+##################################################
+# uc_llvm.py                                     #
+#                                                #
+# Code for the convert ucIR to LLVM              #
+#                                                #
+# Authors: Luiz Cartolano && Erico Faustino      #
+##################################################
 from ctypes import CFUNCTYPE, c_int
 
 from llvmlite import ir, binding
@@ -69,13 +76,10 @@ class LLVMBuilder:
 
     def __init__(self, module):
         self.builder = None
-        self.code = []
         self.functions = None
         self.location = {}
         self.module = module
         self.params = []
-        self.phase = None
-        self.ret_register = None
 
     def get_location(self, target):
         """
@@ -232,19 +236,16 @@ class LLVMBuilder:
         var_source = self.get_location(source)
         var_index = self.get_location(index)
         var_base = ir.Constant(var_index.type, 0)
-        if isinstance(var_source.type.pointee.element, ir.ArrayType):
-            col = var_source.type.pointee.element.count
-            if isinstance(var_index, ir.Constant):
-                const_i = ir.Constant(int_type, var_index.constant // col)
-                const_j = ir.Constant(int_type, var_index.constant % col)
-            else:
-                col = ir.Constant(int_type, col)
-                const_i = self.builder.sdiv(var_index, col)
-                const_j = self.builder.srem(var_index, col)
+
+        if not isinstance(var_source.type.pointee.element, ir.ArrayType):
+            var_location = self.builder.gep(var_source, [var_base, var_index])
+        else:
+            col = ir.Constant(int_type, var_source.type.pointee.element.count)
+            const_i = self.builder.sdiv(var_index, col)
+            const_j = self.builder.srem(var_index, col)
             var_aux = self.builder.gep(var_source, [var_base, const_i])
             var_location = self.builder.gep(var_aux, [var_base, const_j])
-        else:
-            var_location = self.builder.gep(var_source, [var_base, var_index])
+
         self.location[target] = var_location
 
     def build_get(self, source, target, **kwargs):
@@ -282,7 +283,10 @@ class LLVMBuilder:
                     The instruction target.
 
         """
-        literal_val = llvm_type_dict[var_type](constant)
+        if var_type == 'char':
+            literal_val = llvm_type_dict[var_type](ord(constant))
+        else:
+            literal_val = llvm_type_dict[var_type](constant)
         literal_location = self.get_location(target)
         if literal_location:
             self.builder.store(literal_val, literal_location)
@@ -433,11 +437,11 @@ class LLVMBuilder:
                     The result target.
 
         """
-        if expr_type == 'float':
-            result_location = self.builder.fadd(self.get_location(left),
+        if expr_type in ['int', 'char']:
+            result_location = self.builder.add(self.get_location(left),
                                                 self.get_location(right))
         else:
-            result_location = self.builder.add(self.get_location(left),
+            result_location = self.builder.fadd(self.get_location(left),
                                                self.get_location(right))
 
         self.location[target] = result_location
@@ -460,11 +464,11 @@ class LLVMBuilder:
                     The result target.
 
         """
-        if expr_type == 'float':
-            result_location = self.builder.fsub(self.get_location(left),
-                                                self.get_location(right))
-        else:
+        if expr_type in ['int', 'char']:
             result_location = self.builder.sub(self.get_location(left),
+                                               self.get_location(right))
+        else:
+            result_location = self.builder.fsub(self.get_location(left),
                                                self.get_location(right))
 
         self.location[target] = result_location
@@ -487,11 +491,11 @@ class LLVMBuilder:
                     The result target.
 
         """
-        if expr_type == 'float':
-            result_location = self.builder.fmul(self.get_location(left),
+        if expr_type in ['int', 'char']:
+            result_location = self.builder.mul(self.get_location(left),
                                                 self.get_location(right))
         else:
-            result_location = self.builder.mul(self.get_location(left),
+            result_location = self.builder.fmul(self.get_location(left),
                                                self.get_location(right))
         self.location[target] = result_location
 
@@ -513,11 +517,11 @@ class LLVMBuilder:
                     The result target.
 
         """
-        if expr_type == 'float':
-            result_location = self.builder.fdiv(self.get_location(left),
+        if expr_type in ['int', 'char']:
+            result_location = self.builder.sdiv(self.get_location(left),
                                                 self.get_location(right))
         else:
-            result_location = self.builder.sdiv(self.get_location(left),
+            result_location = self.builder.fdiv(self.get_location(left),
                                                 self.get_location(right))
 
         self.location[target] = result_location
@@ -540,11 +544,11 @@ class LLVMBuilder:
                     The result target.
 
         """
-        if expr_type == 'float':
-            result_location = self.builder.frem(self.get_location(left),
+        if expr_type in ['int', 'char']:
+            result_location = self.builder.srem(self.get_location(left),
                                                 self.get_location(right))
         else:
-            result_location = self.builder.srem(self.get_location(left),
+            result_location = self.builder.frem(self.get_location(left),
                                                 self.get_location(right))
 
         self.location[target] = result_location
@@ -613,12 +617,12 @@ class LLVMBuilder:
                     The result target.
 
         """
-        if expr_type == 'float':
-            result_location = self.builder.fcmp_ordered('>=',
+        if expr_type in ['int', 'char']:
+            result_location = self.builder.icmp_signed('>=',
                                                         self.get_location(left),
                                                         self.get_location(right))
         else:
-            result_location = self.builder.icmp_signed('>=',
+            result_location = self.builder.fcmp_ordered('>=',
                                                        self.get_location(left),
                                                        self.get_location(right))
 
@@ -642,12 +646,12 @@ class LLVMBuilder:
                     The result target.
 
         """
-        if expr_type == 'float':
-            result_location = self.builder.fcmp_ordered('<=',
+        if expr_type in ['int', 'char']:
+            result_location = self.builder.icmp_signed('<=',
                                                         self.get_location(left),
                                                         self.get_location(right))
         else:
-            result_location = self.builder.icmp_signed('<=',
+            result_location = self.builder.fcmp_ordered('<=',
                                                        self.get_location(left),
                                                        self.get_location(right))
 
@@ -671,12 +675,12 @@ class LLVMBuilder:
                     The result target.
 
         """
-        if expr_type == 'float':
-            result_location = self.builder.fcmp_ordered('>',
+        if expr_type in ['int', 'char']:
+            result_location = self.builder.icmp_signed('>',
                                                         self.get_location(left),
                                                         self.get_location(right))
         else:
-            result_location = self.builder.icmp_signed('>',
+            result_location = self.builder.fcmp_ordered('>',
                                                        self.get_location(left),
                                                        self.get_location(right))
 
@@ -700,12 +704,12 @@ class LLVMBuilder:
                     The result target.
 
         """
-        if expr_type == 'float':
-            result_location = self.builder.fcmp_ordered('<',
+        if expr_type in ['int', 'char']:
+            result_location = self.builder.icmp_signed('<',
                                                         self.get_location(left),
                                                         self.get_location(right))
         else:
-            result_location = self.builder.icmp_signed('<',
+            result_location = self.builder.fcmp_ordered('<',
                                                        self.get_location(left),
                                                        self.get_location(right))
 
@@ -729,12 +733,13 @@ class LLVMBuilder:
                     The result target.
 
         """
-        if expr_type == 'float':
-            result_location = self.builder.fcmp_ordered('==',
-                                                        self.get_location(left),
-                                                        self.get_location(right))
-        else:
+
+        if expr_type in ['int', 'char']:
             result_location = self.builder.icmp_signed('==',
+                                                       self.get_location(left),
+                                                       self.get_location(right))
+        else:
+            result_location = self.builder.fcmp_ordered('==',
                                                        self.get_location(left),
                                                        self.get_location(right))
 
@@ -758,14 +763,14 @@ class LLVMBuilder:
                     The result target.
 
         """
-        if expr_type == 'float':
-            result_location = self.builder.fcmp_ordered('!=',
-                                                        self.get_location(left),
-                                                        self.get_location(right))
-        else:
+        if expr_type in ['int', 'char']:
             result_location = self.builder.icmp_signed('!=',
                                                        self.get_location(left),
                                                        self.get_location(right))
+        else:
+            result_location = self.builder.fcmp_ordered('!=',
+                                                        self.get_location(left),
+                                                        self.get_location(right))
 
         self.location[target] = result_location
 
@@ -825,10 +830,10 @@ class LLVMBuilder:
                     The return target.
 
         """
-        if expr_type == 'void':
-            self.builder.ret_void()
-        else:
+        if target:
             self.builder.ret(self.get_location(target))
+        else:
+            self.builder.ret_void()
 
     def build_jump(self, expr_type, target):
         """
