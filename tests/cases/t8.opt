@@ -1,6 +1,0 @@
-('global_string', '@.str.0', 'assertion_fail on 5:5')
-('define', '@main')
-('jump', '%1')
-('1',)
-('literal_int', 0, '%20')
-('return_int', '%20')

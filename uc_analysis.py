@@ -14,6 +14,7 @@ class DataFlow():
     """
     def __init__(self, blocks_control):
         self.all_blocks = []
+        self.before_opt_blocks = None
         self.blocks_control = blocks_control
         self.code_to_eliminate = set()
         self.code = []
@@ -123,7 +124,10 @@ class DataFlow():
             for block_lb in reversed(block_labels):
 
                 # get the block
-                block = func[block_lb]
+                if block_lb in func:
+                    block = func[block_lb]
+                else:
+                    continue
 
                 # get the actual in and
                 # out before update
@@ -150,7 +154,10 @@ class DataFlow():
         # according to professor spec since we
         # are not optimizing globals
         for block_lb in block_labels:
-            block = func[block_lb]
+            if block_lb in func:
+                block = func[block_lb]
+            else:
+                continue
             for global_inst in self.blocks_control.globals:
                 block.lv.out = block.lv.out.union({global_inst[1]})
 
@@ -359,7 +366,9 @@ class DataFlow():
             # by eliminate the dead codes
             updated_instructions = []
             for inst_pos, inst in enumerate(block.instructions):
-                if inst not in dead_code:
+                if inst[0].startswith('define'):
+                    updated_instructions.append(inst)
+                elif inst not in dead_code:
                     updated_instructions.append(inst)
             block.instructions = updated_instructions
 
@@ -778,11 +787,13 @@ class DataFlow():
                                 predecessor.fall_through = block.next_block
 
                                 # update next block predecessor
-                                block.next_block.predecessors.remove(old_fall)
+                                if old_fall in block.next_block.predecessors:
+                                    block.next_block.predecessors.remove(old_fall)
                                 block.next_block.predecessors.append(predecessor)
 
                                 # update predecessors sucessors
-                                predecessor.successors.remove(old_fall)
+                                if old_fall in predecessor.successors:
+                                    predecessor.successors.remove(old_fall)
                                 predecessor.successors.append(predecessor.fall_through)
 
                                 # add current block to remove set
@@ -798,11 +809,13 @@ class DataFlow():
                                 print(f"        Predecessor {predecessor.label} is a Block.")
 
                             # update predecessor for next block
-                            block.next_block.predecessors.remove(block)
+                            if block in block.next_block.predecessors:
+                                block.next_block.predecessors.remove(block)
                             block.next_block.predecessors.append(predecessor)
 
                             # update sucessor
-                            predecessor.successors.remove(block)
+                            if block in predecessor.successors:
+                                predecessor.successors.remove(block)
                             predecessor.successors.append(block.next_block)
 
                             # update next block

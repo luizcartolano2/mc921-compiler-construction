@@ -706,7 +706,11 @@ class UCParser():
         '''
             primary_expression : CHAR_CONST
         '''
-        p[0] = p[1]
+        p[0] = uc_ast.Constant(
+                        type='string',
+                        value=p[1],
+                        coord=self._token_coord(p,1)
+                    )
 
 
     def p_primary_expression_4(self, p):

@@ -19,6 +19,7 @@ class ControlBlocks():
         self.globals = []
         self.pre_blocks = dict()
         self.cfg_list = []
+        self.non_opt_blocks = None
 
 
     def split_globals(self):
@@ -46,7 +47,7 @@ class ControlBlocks():
         for code in self.ir_list:
             # if code is a define
             # get function name
-            if code[0] == 'define':
+            if code[0].startswith('define'):
                 func_name = code[1][1:]
                 # initialize dict of functions
                 self.functions[func_name] = [code]
@@ -80,7 +81,7 @@ class ControlBlocks():
                     label = f'%{code[0]}'
                     self.functions[key][label] = Block(label=label)
                 # set an entry block
-                elif code[0] == 'define':
+                elif code[0].startswith('define'):
                     label = '%entry'
                     self.functions[key][label] = Block(label=label)
                     self.functions[key][label].append(code)
@@ -177,9 +178,13 @@ class ControlBlocks():
         # get the dict block
         func_blocks = self.functions[func]
         block_labels_names = list(func_blocks.keys())
+        ignore = {}
 
         for counter, label in enumerate(block_labels_names):
-            current_block = func_blocks[label]
+            if label not in ignore:
+                current_block = func_blocks[label]
+            else:
+                continue
 
             if isinstance(current_block, ConditionBlock):
                 # check if exist any jump block
@@ -220,6 +225,9 @@ class ControlBlocks():
                     jump_labels, jump_blocks =\
                         self.get_jump_labels(current_block.instructions, func_blocks)
 
+                    if len(jump_blocks) != 1:
+                        del current_block.instructions[-1]
+
                     # add next block predecessors
                     for next_block in jump_blocks:
                         # add current blocks successors
@@ -249,6 +257,7 @@ class ControlBlocks():
                         current_block.next_block = next_block
                         # add predecessor to next block
                         next_block.predecessors.append(current_block)
+                        current_block.instructions.append(('jump', next_block.label))
 
 
     def create_block_list(self, func):
@@ -301,3 +310,5 @@ class ControlBlocks():
                 # make CFG pdf
                 cfg.view(self.functions[func]['%entry'], all_blocks)
                 self.cfg_list.append(cfg)
+
+        self.non_opt_blocks = self.functions.copy()

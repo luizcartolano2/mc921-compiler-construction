@@ -13,7 +13,7 @@ from graphviz import Digraph
 def format_instruction(t):
     op = t[0]
     if len(t) > 1:
-        if op == 'define':
+        if op.startswith('define'):
             return f"\n{op} {t[1]}"
         else:
             _str = "" if op.startswith('global') else "  "

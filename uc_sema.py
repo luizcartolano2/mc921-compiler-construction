@@ -9,7 +9,6 @@
 """
 
 from uc_ast import *
-from uc_type import *
 from uc_env import *
 
 class Visitor(NodeVisitor):
@@ -171,7 +170,12 @@ class Visitor(NodeVisitor):
                 right_type = node.right_value.type.names[index]
 
             # assert if types match
-            assert left_type == right_type, line + f"Types {right_type.typename} and {left_type.typename} are different on function {func}!"
+            if left_type.typename == 'char' and right_type.typename == 'string':
+                pass
+            elif left_type.typename == 'string' and right_type.typename == 'char':
+                pass
+            else:
+                assert left_type == right_type, line + f"Types {right_type.typename} and {left_type.typename} are different on function {func}!"
 
 
     def __check_operand_match(self, operator, node, operand_type, line, func_name):
@@ -327,12 +331,14 @@ class Visitor(NodeVisitor):
                     # the procedure of the C language, the first
                     # dimension is the only one that can be blank
                     if param_type.type.dimension is None:
-                        assert False, line + f"First array dimension is the only one who can be blank."
+                        param_type.type.dimension = Constant(type='int', value=len(list_exprs[0].expressions), rawtype=IntType)
+                        # here is the right thing to do, but professor wants do the wrong way ¯\_(ツ)_/¯
+                        # assert False, line + f"First array dimension is the only one who can be blank."
 
                     param_type = param_type.type
                     length = len(list_exprs[0].expressions)
 
-                    # check for all subarrays if
+                    # check for all sub arrays if
                     # the length matches with the
                     # given dimension for the array
                     for i, _ in enumerate(list_exprs):
@@ -368,7 +374,7 @@ class Visitor(NodeVisitor):
                             assert var_type == expr.type.names[-1], line + \
                             f"Type mismatch on variable - {var} - initialization, array ref {expr.name.name} should be {var_type.typename}."
                 else:
-                    # check for array dimension if dimensin
+                    # check for array dimension if dimension
                     # has not been declared we make it
                     if param_type.dimension is None:
                         param_type.dimension = Constant(type='int', value=length)
